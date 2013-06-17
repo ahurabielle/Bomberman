@@ -213,7 +213,7 @@
    // I2C
    inout             i2c_sdat;     // i2c data
    output            i2c_sclk;     // i2c clock
-   // PS2
+   // PS2g
    input             ps2_dat;      // ps2 data
    input             ps2_clk;      // ps2 clock
    // USB JTAG link
@@ -294,11 +294,18 @@
 
 
    // Instanciation du module de synchro
-   synchro sync1();
+   synchro sync1(.clock_50 clock_50 , .reset_n reset_n);
 
    // On génère un écran rouge
    always @(*)
-     vga_r <= ....;
+     begin
+        {vga_b, vga_g} <= 0;
+        if(blank)
+          vga_r <= 1023 ;
+        else
+          vga_r <= 0;
+     end
+
 
 
 endmodule

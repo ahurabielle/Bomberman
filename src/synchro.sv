@@ -1,6 +1,5 @@
 module synchro(input clock_50,
                input                      reset_n,
-               input logic
                output logic               HS, //signal ligne, a 0 dans Hsync et 1 dans le reste
                output logic               VS, // signal vertical, a0 dans Vsync et 1 dans le reste
                output logic               SOF, // debut de trame
