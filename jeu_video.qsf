@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "11.1 SP2"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "23:56:10  JUNE 17, 2012"
-set_global_assignment -name LAST_QUARTUS_VERSION "11.1 SP2"
+set_global_assignment -name LAST_QUARTUS_VERSION "12.0 SP2"
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name FLOW_ENABLE_IO_ASSIGNMENT_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
@@ -590,6 +590,7 @@ set_global_assignment -name SYNTH_PROTECT_SDC_CONSTRAINT ON
 set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL OFF
+set_global_assignment -name SYSTEMVERILOG_FILE src/synchro.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/seven_seg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/gene_clk.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/DE2_fpga.sv
