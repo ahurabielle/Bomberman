@@ -102,12 +102,6 @@
 		           vga_r,                        // vga red[9:0]
 		           vga_g,                        // vga green[9:0]
 		           vga_b,                        // vga blue[9:0]
-                   vga_SOF,
-                   vga_SOL,
-                   vga_EOF,
-                   vga_EOL,
-                   vga_spotX,
-                   vga_spotY,
 		           // Ethernet interface
 		           enet_data,                    // dm9000a data bus 16bits
 		           enet_cmd,                     // dm9000a command/data select, 0 = command, 1 = data
@@ -236,12 +230,6 @@
    output [9:0]      vga_r;        // vga red[9:0]
    output [9:0]      vga_g;        // vga green[9:0]
    output [9:0]      vga_b;        // vga blue[9:0]
-   output            vga_SOF;      // debut de trame
-   output            vga_EOF;      // fin de trame
-   output            vga_SOL;      // debut de ligne
-   output            vga_EOL;      // fin de ligne
-   output [10:0]     vga_spotX;    // numéro de ligne dans la zone active
-   output [10:0]     vga_spotY;    // numéro de colonne dans la zone active
 
    // Ethernet interface
    inout [15:0]      enet_data;    // dm9000a data bus 16bits
@@ -305,18 +293,37 @@
    assign  gpio_0          =       36'hzzzzzzzzz;
    assign  gpio_1          =       36'hzzzzzzzzz;
 
+   // Signaux internes
+   logic            vga_SOF;      // debut de trame
+   logic            vga_EOF;      // fin de trame
+   logic            vga_SOL;      // debut de ligne
+   logic            vga_EOL;      // fin de ligne
+   logic [10:0]     vga_spotX;    // numéro de ligne dans la zone active
+   logic [10:0]     vga_spotY;    // numéro de colonne dans la zone active
+
+   always @(*)
+     vga_clk <= clock_50;
 
    // Instanciation du module de synchro
-   synchro sync1(.clock_50(clock_50) , .reset_n(reset_n), .blank(vga_blank), .HS(vga_hs), .VS(vga_vs), .SOF(vga_SOF), .EOF(vga_EOF), .SOL(vga_SOL), .EOL(vga_EOL), .spotX(vga_spotX), .spotY(vga_spotY), .sync(vga_sync));
+   synchro sync1(.clk(vga_clk) ,
+                 .reset_n(reset_n),
+                 .blank(vga_blank),
+                 .HS(vga_hs),
+                 .VS(vga_vs),
+                 .SOF(vga_SOF),
+                 .EOF(vga_EOF),
+                 .SOL(vga_SOL),
+                 .EOL(vga_EOL),
+                 .spotX(vga_spotX),
+                 .spotY(vga_spotY),
+                 .sync(vga_sync));
 
    // On génère un écran rouge
    always @(*)
      begin
-        {vga_b, vga_g} <= 0;
-        if(vga_blank)
+        {vga_r, vga_b, vga_g} <= 0;
+        if (vga_blank)
           vga_r <= 1023 ;
-        else
-          vga_r <= 0;
      end
 
 

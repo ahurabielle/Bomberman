@@ -1,4 +1,4 @@
-module synchro(input clock_50,
+module synchro(input                      clk,
                input                      reset_n,
                output logic               HS, //signal ligne, a 0 dans Hsync et 1 dans le reste
                output logic               VS, // signal vertical, a0 dans Vsync et 1 dans le reste
@@ -11,11 +11,11 @@ module synchro(input clock_50,
                output logic               blank, //a 0 dans la zone inactive
                output logic               sync); // a 0
 
-
    // les compteurs en X et Y
    logic [10:0]                           comptX;
    logic [10:0]                           comptY;
-   /******* Constantes liees a la resolution *******/
+
+   // Constantes liees a la resolution
    localparam integer                     VFP      = 37;
    localparam integer                     VSYNC    = 6;
    localparam integer                     VBP      = 23;
@@ -25,12 +25,8 @@ module synchro(input clock_50,
    localparam integer                     HBP      = 64;
    localparam integer                     HSYNC    = 120;
 
-
-
-
-
-   /************ compteur en X ***************/
-   always @(posedge clock_50 or  negedge reset_n)
+   // compteur en X
+   always @(posedge clk or  negedge reset_n)
      if(~reset_n)
        begin
           comptX <= 0;
@@ -43,33 +39,36 @@ module synchro(input clock_50,
        end // else: !if(~reset_n)
 
 
-   /************ compteur en Y*************/
-   always @(posedge clock_50 or  negedge reset_n)
+   // Compteur en Y
+   always @(posedge clk or  negedge reset_n)
      if(~reset_n)
        begin
           comptY <= 0;
        end
      else
        begin
-          if (comptX == (HBP+HACTIVE+HSYNC+HFP-1) && comptY <(VBP+VACTIVE+VSYNC+VFP-1) )
-            comptY <= comptY + 1;
-          else if (comptX == (HBP+HACTIVE+HSYNC+HFP-1)  && comptY == (VBP+VACTIVE+VSYNC+VFP-1) )
-            comptY <= 0;
+          if (comptX == (HBP+HACTIVE+HSYNC+HFP-1))
+            begin
+               if (comptY < (VBP+VACTIVE+VSYNC+VFP-1))
+                 comptY <= comptY + 1;
+               else
+                 comptY <= 0;
+            end
        end // else: !if(~reset_n)
 
 
-
-   /********* Reglage des sorties *********/
+   // Réglage des sorties
    always @(*)
      begin
         sync  <= 0;
         VS    <= (comptY >= VSYNC);
         HS    <= (comptX >= HSYNC);
-        blank <= ( (comptX >=HSYNC+HBP) && (comptX < HSYNC+HBP+HACTIVE) && (comptY >= VSYNC + VBP ) && (comptY < VSYNC + VBP + VACTIVE) );
-        SOF   <= ( (comptX == (HSYNC+HBP)) && (comptY == (VSYNC + VBP) ) );
-        SOL   <= ( (comptX == (HSYNC+HBP)) && (comptY>= (VSYNC + VBP)) && (comptY < VSYNC+VBP+VACTIVE));
-        EOF   <= ( comptX == (HSYNC + HBP + HACTIVE -1) && comptY == (VSYNC + VBP + VACTIVE -1) );
-        EOL   <= ( comptX == (HSYNC + HBP + HACTIVE -1) && (comptY>= (VSYNC + VBP)) && (comptY < VSYNC+VBP+VACTIVE));
+        blank <= ((comptX >= (HSYNC + HBP)) && (comptX < (HSYNC + HBP + HACTIVE))
+                   && (comptY >= (VSYNC + VBP)) && (comptY < (VSYNC + VBP + VACTIVE)));
+        SOF   <= ((comptX == (HSYNC + HBP)) && (comptY == (VSYNC + VBP)));
+        SOL   <= ((comptX == (HSYNC + HBP)) && (comptY>= (VSYNC + VBP)) && (comptY < VSYNC+VBP+VACTIVE));
+        EOF   <= (comptX == (HSYNC + HBP + HACTIVE -1) && comptY == (VSYNC + VBP + VACTIVE -1));
+        EOL   <= (comptX == (HSYNC + HBP + HACTIVE -1) && (comptY>= (VSYNC + VBP)) && (comptY < VSYNC+VBP+VACTIVE));
 
         if((comptY>= (VSYNC + VBP)) && (comptY < VSYNC+VBP+VACTIVE) && (comptX >=HSYNC+HBP) && (comptX < HSYNC+HBP+HACTIVE))
           begin
@@ -82,9 +81,6 @@ module synchro(input clock_50,
              spotY <= -1;
           end
      end // always @ (*)
-
-
-
 
 endmodule // synchro
 
