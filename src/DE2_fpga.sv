@@ -30,7 +30,7 @@
 		           // sdram interface
 		           dram_dq,                      // sdram data bus 16 bits
 		           dram_addr,                    // sdram address bus 12 bits
-		           dram_ldqm,                    // sdram low-byte data mask 
+		           dram_ldqm,                    // sdram low-byte data mask
 		           dram_udqm,                    // sdram high-byte data mask
 		           dram_we_n,                    // sdram write enable
 		           dram_cas_n,                   // sdram column address strobe
@@ -50,8 +50,8 @@
 		           // sram interface
 		           sram_dq,                      // sram data bus 16 bits
 		           sram_addr,                    // sram address bus 18 bits
-		           sram_ub_n,                    // sram high-byte data mask 
-		           sram_lb_n,                    // sram low-byte data mask 
+		           sram_ub_n,                    // sram high-byte data mask
+		           sram_lb_n,                    // sram low-byte data mask
 		           sram_we_n,                    // sram write enable
 		           sram_ce_n,                    // sram chip enable
 		           sram_oe_n,                    // sram output enable
@@ -137,7 +137,7 @@
    input [3:0]       key;          // pushbutton[3:0]
    // switches
    input [17:0]      sw;           // toggle switch[17:0]
-   // 7-seg display 
+   // 7-seg display
    output [6:0]      hex0;         // seven segment digit 0
    output [6:0]      hex1;         // seven segment digit 1
    output [6:0]      hex2;         // seven segment digit 2
@@ -158,7 +158,7 @@
    // SDRAM interface
    inout [15:0]      dram_dq;      // sdram data bus 16 bits
    output [11:0]     dram_addr;    // sdram address bus 12 bits
-   output            dram_ldqm;    // sdram low-byte data mask 
+   output            dram_ldqm;    // sdram low-byte data mask
    output            dram_udqm;    // sdram high-byte data mask
    output            dram_we_n;    // sdram write enable
    output            dram_cas_n;   // sdram column address strobe
@@ -178,8 +178,8 @@
    // SRAM interface
    inout [15:0]      sram_dq;      // sram data bus 16 bits
    output [17:0]     sram_addr;    // sram address bus 18 bits
-   output            sram_ub_n;    // sram high-byte data mask 
-   output            sram_lb_n;    // sram low-byte data mask 
+   output            sram_ub_n;    // sram high-byte data mask
+   output            sram_lb_n;    // sram low-byte data mask
    output            sram_we_n;    // sram write enable
    output            sram_ce_n;    // sram chip enable
    output            sram_oe_n;    // sram output enable
@@ -264,10 +264,10 @@
    logic             clk_1s;
    gene_clk gene_clkl(.clk_50(clock_50), .clk_1s(clk_1s));
    assign ledg[8] = clk_1s;
-   
-   
+
+
    // Turn on all displays except LCD
-   assign  hex0            =       0; 
+   assign  hex0            =       0;
    assign  hex1            =       0;
    assign  hex2            =       0;
    assign  hex3            =       0;
@@ -280,7 +280,7 @@
    assign  lcd_on          =       1'b0;
    assign  lcd_blon        =       1'b0;
 
-   
+
    // Turn unused ports to tri-state
    assign  dram_dq         =       16'hzzzz;
    assign  fl_dq           =       8'hzz;
@@ -292,5 +292,13 @@
    assign  gpio_0          =       36'hzzzzzzzzz;
    assign  gpio_1          =       36'hzzzzzzzzz;
 
-   
+
+   // Instanciation du module de synchro
+   synchro sync1();
+
+   // On génère un écran rouge
+   always @(*)
+     vga_r <= ....;
+
+
 endmodule
