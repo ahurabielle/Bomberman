@@ -300,8 +300,9 @@
    logic            vga_EOL;      // fin de ligne
    logic [10:0]     vga_spotX;    // numéro de ligne dans la zone active
    logic [10:0]     vga_spotY;    // numéro de colonne dans la zone active
+   logic [7:0]      bck_r, bck_b, bck_g;        // fond rouge, bleu, vert
 
-   always @(*)
+   always  @(*)
      vga_clk <= clock_50;
 
    // Instanciation du module de synchro
@@ -318,14 +319,21 @@
                  .spotY(vga_spotY),
                  .sync(vga_sync));
 
-   // On génère un écran rouge
-   always @(*)
-     begin
-        {vga_r, vga_b, vga_g} <= 0;
-        if (vga_blank)
-          vga_r <= 1023 ;
-     end
+ // Instantiation du module background
+   background bck( .spotX(vga_spotX),
+                   .spotY(vga_spotY),
+                   .bck_r(bck_r),
+                   .bck_b(bck_b),
+                   .bck_g(bck_g));
 
+// Instantiation du mixer
+   mixer mix( .blank(vga_blank),
+              .bck_r(bck_r),
+              .bck_b(bck_b),
+              .bck_g(bck_g),
+              .vga_r(vga_r),
+              .vga_g(vga_g),
+              .vga_b(vga_b));
 
 
 endmodule
