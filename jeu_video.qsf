@@ -590,6 +590,8 @@ set_global_assignment -name SYNTH_PROTECT_SDC_CONSTRAINT ON
 set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL OFF
+set_global_assignment -name SYSTEMVERILOG_FILE src/mixer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/background.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/synchro.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/seven_seg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/gene_clk.sv

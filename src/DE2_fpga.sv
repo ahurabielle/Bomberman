@@ -298,8 +298,8 @@
    logic            vga_EOF;      // fin de trame
    logic            vga_SOL;      // debut de ligne
    logic            vga_EOL;      // fin de ligne
-   logic [10:0]     vga_spotX;    // numéro de ligne dans la zone active
-   logic [10:0]     vga_spotY;    // numéro de colonne dans la zone active
+   logic signed [10:0] vga_spotX;    // numéro de ligne dans la zone active
+   logic signed [10:0] vga_spotY;    // numéro de colonne dans la zone active
    logic [7:0]      bck_r, bck_b, bck_g;        // fond rouge, bleu, vert
 
    always  @(*)
@@ -320,14 +320,15 @@
                  .sync(vga_sync));
 
  // Instantiation du module background
-   background bck( .spotX(vga_spotX),
+   background bck( .clk(vga_clk),
+                   .spotX(vga_spotX),
                    .spotY(vga_spotY),
                    .bck_r(bck_r),
                    .bck_b(bck_b),
                    .bck_g(bck_g));
 
 // Instantiation du mixer
-   mixer mix( .blank(vga_blank),
+   mixer mix( .active(vga_blank),
               .bck_r(bck_r),
               .bck_b(bck_b),
               .bck_g(bck_g),

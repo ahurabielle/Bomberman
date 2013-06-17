@@ -58,7 +58,7 @@ module synchro(input                      clk,
 
 
    // Réglage des sorties
-   always @(*)
+   always @(posedge clk)
      begin
         sync  <= 0;
         VS    <= (comptY >= VSYNC);
