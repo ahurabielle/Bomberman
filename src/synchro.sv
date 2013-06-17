@@ -33,14 +33,35 @@ module synchro(input clock_50,
      else
 
        begin
-          comptX <= comptX + 1;
+            if (comptX < 1049)
+              comptX <= comptX + 1;
+            else
+              comptX <= 0;
+
           if(comptX<120)
             HS <= 0;
           else if(comptX < 184)
             HS <= 1;
           else if( comptX == 184)
             begin
+               SOL <= 1;
+            end
+          else if(comptX <983)
+            begin
+               SOL <= 0;
+            end
+          else if( comptX == 983)
+            begin
                EOL <= 1;
+            end
+          else if( comptX <1049)
+            begin
+               EOL <= 0;
+            end
+        end
+
+
+
 
 
 
