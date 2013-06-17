@@ -102,6 +102,12 @@
 		           vga_r,                        // vga red[9:0]
 		           vga_g,                        // vga green[9:0]
 		           vga_b,                        // vga blue[9:0]
+                   vga_SOF,
+                   vga_SOL,
+                   vga_EOF,
+                   vga_EOL,
+                   vga_spotX,
+                   vga_spotY,
 		           // Ethernet interface
 		           enet_data,                    // dm9000a data bus 16bits
 		           enet_cmd,                     // dm9000a command/data select, 0 = command, 1 = data
@@ -307,7 +313,7 @@
    always @(*)
      begin
         {vga_b, vga_g} <= 0;
-        if(blank)
+        if(vga_blank)
           vga_r <= 1023 ;
         else
           vga_r <= 0;
