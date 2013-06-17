@@ -1,59 +1,88 @@
-module synchro(input clock_50,
-               input              reset_n,
-               output logic       HS,        //signal ligne, a 0 dans Hsync et 1 dans le reste
-               output logic       VS,        // signal vertical, a0 dans Vsync et 1 dans le reste
-               output logic       SOF,       // debut de trame
-               output logic       EOF,       // fin de trame
-               output logic       SOL,       // debut de ligne
-               output logic       EOL,       // fin de ligne
-               output logic [9:0] spotX,     // position X
-               output logic [9:0] spotY,     // position Y
-               output logic       Blank,     //a 0 dans la zone inactive
-               output logic       Sync,      // a 0
-               output logic [9:0] R,G,B);    // couleurs rouge vert bleu
+   module synchro(input clock_50,
+                  input                      reset_n,
+                  input logic
+                  output logic               HS, //signal ligne, a 0 dans Hsync et 1 dans le reste
+                  output logic               VS, // signal vertical, a0 dans Vsync et 1 dans le reste
+                  output logic               SOF, // debut de trame
+                  output logic               EOF, // fin de trame
+                  output logic               SOL, // debut de ligne
+                  output logic               EOL, // fin de ligne
+                  output logic signed [10:0] spotX, // position X
+                  output logic signed [10:0] spotY, // position Y
+                  output logic               blank, //a 0 dans la zone inactive
+                  output logic               sync); // a 0
+
 
    // les compteurs en X et Y
    logic [10:0]                   comptX;
    logic [10:0]                   comptY;
- /************ compteur en X ***************/
+/******* Constantes liees a la resolution *******/
+   localparam integer             VFP      = 37;
+   localparam integer             VSYNC    = 6;
+   localparam integer             VBP      = 23;
+   localparam integer             VACTIVE  = 600 ;
+   localparam integer             HFP      = 56;
+   localparam integer             HACTIVE  = 800;
+   localparam integer             HBP      = 64;
+   localparam integer             HSYNC    = 120;
+
+
+
+
+
+   /************ compteur en X ***************/
    always @(posedge clock_50 or  negedge reset_n)
-
-
      if(~reset_n)
-
        begin
-         comptX <= 0;
+          comptX <= 0;
        end
-
-
      else
        begin
-          if (comptX <1049)
+          if (comptX < (HBP+HACTIVE+HSYNC+HFP-1) )
             comptX <= comptX + 1;
           else comptX <= 0;
        end // else: !if(~reset_n)
 
-  /************ compteur en Y*************/
 
-
-
+   /************ compteur en Y*************/
    always @(posedge clock_50 or  negedge reset_n)
-
-
      if(~reset_n)
-
        begin
-         comptY <= 0;
+          comptY <= 0;
        end
-
-
      else
        begin
-          if (comptX == 1049 && comptY < 665)
+          if (comptX == (HBP+HACTIVE+HSYNC+HFP-1) && comptY <(VBP+VACTIVE+VSYNC+VFP-1) )
             comptY <= comptY + 1;
-          else if (comptX == 1049 && comptY == 665)
+          else if (comptX == (HBP+HACTIVE+HSYNC+HFP-1)  && comptY == (VBP+VACTIVE+VSYNC+VFP-1) )
             comptY <= 0;
-       end // else: !if(~reset_n)
+                 end // else: !if(~reset_n)
+
+
+
+/********* Reglage des sorties *********/
+   always @(*)
+     begin
+        sync <= 0;
+        VS   <= (comptY >= VSYNC);
+        HS   <= (comptX >= HSYNC);
+        blank <= ( (comptX >=HSYNC+HBP) && (comptX < HSYNC+HBP+HACTIVE) && (comptY >= VSYNC + VBP ) && (comptY < VSYNC + VBP + VACTIVE) );
+
+
+   /******* premières colonnes ****/
+        if(comptX<121)
+        begin
+           {R,G,B,SOF,SOL,EOF,EOF,blank}<=0;
+           spotX <= 0;
+           spotY <= -1;
+
+        end // if (comptX<121)
+        else
+
+
+
+
+
 
 
 
