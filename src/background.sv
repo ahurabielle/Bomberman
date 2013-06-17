@@ -15,33 +15,28 @@ module background(input logic                clk,
        bck_r <= 0;
        bck_g <= 0;
        bck_b <= 0;
-       if (spotX < (HACTIVE/8))
+       if (spotY < (VACTIVE/6))
          bck_r <= 255;
-       else if (spotX < (HACTIVE*2/8))
+       else if (spotY < (VACTIVE*2/6))
          bck_g <= 255;
-       else if (spotX < (HACTIVE*3/8))
+       else if (spotY < (VACTIVE*3/6))
          bck_b <= 255;
-       else if (spotX < (HACTIVE*4/8))
+       else if (spotY < (VACTIVE*4/6))
          begin
             bck_r <= 255;
             bck_b <= 255;
          end
-       else if (spotX < (HACTIVE*5/8))
+       else if (spotY < (VACTIVE*5/6))
          begin
             bck_r <= 255;
             bck_g <= 255;
          end
-       else if (spotX < (HACTIVE*6/8))
+       else if (spotY < (VACTIVE*6/6))
          begin
             bck_b <= 255;
             bck_g <= 255;
          end
-       else if (spotX >= (HACTIVE*7/8))
-         begin
-            bck_r <= 255;
-            bck_g <= 255;
-            bck_b <= 255;
-         end
+
     end // always @ (*)
 
 endmodule // background
