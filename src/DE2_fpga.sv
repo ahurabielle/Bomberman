@@ -294,7 +294,7 @@
 
 
    // Instanciation du module de synchro
-   synchro sync1(.clock_50 clock_50 , .reset_n reset_n);
+   synchro sync1(.clock_50(clock_50) , .reset_n(reset_n));
 
    // On génère un écran rouge
    always @(*)
