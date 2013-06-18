@@ -352,6 +352,8 @@
 		 .bck_r1(bck_r1),
                  .bck_b1(bck_b1),
                  .bck_g1(bck_g1)
+		 );
+   
 
    // Instantiation du mixer
    mixer mix( .active(vga_blank),
