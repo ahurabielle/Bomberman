@@ -9,7 +9,7 @@ module controleur (input                      clk,
 
 
    logic 				      verou_trame ;
-   logic [10:0] 			      compt;
+   logic [11:0] 			      compt;
    localparam integer 			      HACTIVE = 800;
    localparam integer 			      VACTIVE = 600;
  			      
@@ -38,7 +38,7 @@ module controleur (input                      clk,
 	  centerX <= 400;
 	  centerY <= 300;
        end
-     else if(~verou_trame && compt == 2047)
+     else if(~verou_trame && compt == 3000)
        case(key)
 	 4'b1110 : if(centerX < HACTIVE)   centerX <= centerX + 1;
 	 4'b1101 : if(centerY < VACTIVE)   centerY <= centerY + 1;
