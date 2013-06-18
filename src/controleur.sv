@@ -44,6 +44,27 @@ module controleur (input                      clk,
 	 4'b1101 : if(centerY < VACTIVE)   centerY <= centerY + 1;
 	 4'b1011 : if(centerY >= 0)        centerY <= centerY - 1;
 	 4'b0111 : if(centerX >= 0)        centerX <= centerX - 1;
+	 4'b1100 : if((centerX < HACTIVE) && (centerY < VACTIVE))
+	   begin
+	      centerX <= centerX + 1;
+	      centerY <= centerY +1 ;
+	   end
+	 
+	 4'b1010 : if((centerX < HACTIVE) && (centerY >= 0))
+	   begin
+	      centerX <= centerX + 1;
+	      centerY <= centerY - 1;
+	   end	 
+	 4'b0011 : if ((centerX >= 0) && (centerY >= 0))
+	   begin
+	      centerX <= centerX - 1;
+	      centerY <= centerY - 1;
+	   end	 
+	 4'b0101 : if((centerX >= 0) && (centerY < VACTIVE))
+	   begin
+	      centerX <= centerX - 1;
+	      centerY <= centerY + 1;
+	   end	 
 	 default : 
 	   begin
 	      centerX <= centerX;
