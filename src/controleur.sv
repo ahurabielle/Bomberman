@@ -38,10 +38,10 @@ module controleur (input                      clk,
        end
      else if(~verou_trame && compt == 2047)
        case(key)
-	 4'b1110 : centerX <= centerX + 1;
-	 4'b1101 : centerY <= centerY + 1;
-	 4'b1011 : centerY <= centerY - 1;
-	 4'b0111 : centerX <= centerX - 1;
+	 4'b1110 : if(centerX < HACTIVE)   centerX <= centerX + 1;
+	 4'b1101 : if(centerY < VACTIVE)   centerY <= centerY + 1;
+	 4'b1011 : if(centerY >= 0)        centerY <= centerY - 1;
+	 4'b0111 : if(centerX >= 0)        centerX <= centerX - 1;
 	 default : 
 	   begin
 	      centerX <= centerX;
