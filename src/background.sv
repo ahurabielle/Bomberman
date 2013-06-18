@@ -1,33 +1,40 @@
-module background(input logic                clk,
-                  input logic signed [10:0] spotX,
-                  input logic signed [10:0] spotY,
-		          input logic signed [10:0] centerX,                // centre du cercle en X
-		          input logic signed [10:0] centerY,                // centre du cerlce en Y
-                  output logic [7:0]        bck_r2, bck_g2, bck_b2  // composantes couleurs
-                  );
+module background(input logic clk,
+	           input logic signed [10:0] spotX,
+               input logic signed [10:0] spotY,
+               output logic [7:0]        bck_r, bck_g, bck_b // composantes couleurs du fond
+               );
 
    // taille de la partie active, fonction de la résolution
-   localparam integer                       VACTIVE = 600;
-   localparam integer                       HACTIVE = 800;
-   localparam integer                       R       = 50;
+   localparam integer                    VACTIVE = 600;
+   localparam integer                    HACTIVE = 800;
 
 
-
-   // création de cercle blanc sur fond noir
+   // création de mire horizontale
    always @(posedge clk)
      begin
-        bck_r2 <= 0;
-        bck_g2 <= 0;
-        bck_b2 <= 0;
+	    {bck_r, bck_g, bck_b} <= 0;
 
-        if ((spotX - centerX)*(spotX -centerX) + (spotY - centerY)*(spotY - centerY) < (R*R))
+	    if(spotY < (VACTIVE / 6))
+	      bck_r <= 255;
+	    else if (spotY < ((VACTIVE * 2) / 6))
+	      bck_g <= 255;
+	    else if (spotY < ((VACTIVE * 3) / 6))
+	      bck_b <= 255;
+	    else if (spotY < ((VACTIVE * 4) /6))
 	      begin
-	         bck_r2 <= 255;
-	         bck_g2 <= 255;
-	         bck_b2 <= 255;
+	         bck_r <= 255;
+	         bck_g <= 255;
 	      end
-
-
+	    else if (spotY < ((VACTIVE * 5) / 6))
+	      begin
+	         bck_r <= 255;
+	         bck_b <= 255;
+	      end
+	    else if (spotY < ((VACTIVE*6) /6))
+	      begin
+	         bck_g <= 255;
+	         bck_b <= 255;
+	      end
      end
 
 endmodule // background

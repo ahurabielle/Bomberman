@@ -300,7 +300,8 @@
    logic 	     vga_EOL;                                                     // fin de ligne
    logic signed [10:0] vga_spotX;                                             // numéro de ligne dans la zone active
    logic signed [10:0] vga_spotY;                                             // numéro de colonne dans la zone active
-   logic [7:0] 	       bck_r1, bck_b1, bck_g1, bck_r2, bck_b2, bck_g2;        // fond rouge, bleu, vert
+   logic [7:0] 	       bck_r, bck_b, bck_g;
+   logic [31:0]        spr1_rgba;        // fond rouge, bleu, vert
    logic signed [10:0] centerX, centerY;                                      // centre du background
   // logic [8:0] 	       compt;                                             // compteur inutile
 
@@ -325,47 +326,44 @@
                  .sync(vga_sync));
 
    // Instantiation du module controleur
-   controleur ctr( .clk(vga_clk),
-		   .reset_n(reset_n),
-		   .SOF(vga_SOF),
-		   .EOF(vga_EOF),
-		   .key(key),
-		   .centerX(centerX),
-		   .centerY(centerY)
+   controleur ctr(.clk(vga_clk),
+		  .reset_n(reset_n),
+		  .SOF(vga_SOF),
+		  .EOF(vga_EOF),
+		  .key(key),
+		  .centerX(centerX),
+		  .centerY(centerY)
 		   );
 
    // Instantiation du module background
-   background bck( .clk(vga_clk),
-                   .spotX(vga_spotX),
-                   .spotY(vga_spotY),
-		   .centerX(centerX),
-		   .centerY(centerY),
-                   .bck_r2(bck_r2),
-                   .bck_b2(bck_b2),
-                   .bck_g2(bck_g2)
-		   );
+   background bck(.clk(vga_clk),
+		  .spotX(vga_spotX),
+ 		  .spotY(vga_spotY),
+		  .bck_r(bck_r),
+                  .bck_b(bck_b),
+                  .bck_g(bck_g)
+		  );
 
    //Instantiation du module sprite1
-   sprite1 spr1( .clk(vga_clk),
-		 .spotX(vga_spotX),
-		 .spotY(vga_spotY),
-		 .bck_r1(bck_r1),
-                 .bck_b1(bck_b1),
-                 .bck_g1(bck_g1)
-		 );
+   sprite1 spr1(.clk(vga_clk),
+                .spotX(vga_spotX),
+                .spotY(vga_spotY),
+		.centerX(centerX),
+		.centerY(centerY),
+                .spr1_rgba(spr1_rgba)
+		);
 
 
    // Instantiation du mixer
-   mixer mix( .active(vga_blank),
-              .bck_r1(bck_r1),
-              .bck_b1(bck_b1),
-              .bck_g1(bck_g1),
-	      .bck_r2(bck_r2),
-              .bck_b2(bck_b2),
-              .bck_g2(bck_g2),
-              .vga_r(vga_r),
-              .vga_g(vga_g),
-              .vga_b(vga_b));
+   mixer mix(.active(vga_blank),
+             .bck_r(bck_r),
+             .bck_b(bck_b),
+             .bck_g(bck_g),
+	     .spr1_rgba(spr1_rgba),
+             .vga_r(vga_r),
+             .vga_g(vga_g),
+             .vga_b(vga_b)
+	     );
 
 
 endmodule
