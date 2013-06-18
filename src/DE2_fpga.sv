@@ -300,7 +300,7 @@
    logic 	     vga_EOL;      // fin de ligne
    logic signed [10:0] vga_spotX;    // numéro de ligne dans la zone active
    logic signed [10:0] vga_spotY;    // numéro de colonne dans la zone active
-   logic [7:0] 	       bck_r, bck_b, bck_g;        // fond rouge, bleu, vert
+   logic [7:0] 	       bck_r1, bck_b1, bck_g1, bck_r2, bck_b2, bck_g2;        // fond rouge, bleu, vert
    logic signed [10:0] centerX, centerY;
    logic [8:0] 	       compt;
    
@@ -340,15 +340,27 @@
                    .spotY(vga_spotY),
 		   .centerX(centerX),
 		   .centerY(centerY),
-                   .bck_r(bck_r),
-                   .bck_b(bck_b),
-                   .bck_g(bck_g));
+                   .bck_r2(bck_r2),
+                   .bck_b2(bck_b2),
+                   .bck_g2(bck_g2)
+		   );
+
+   //Instantiation du module sprite1
+   sprite1 spr1( .clk(vga_clk),
+		 .spotX(vga_spotX),
+		 .spotY(vga_spotY),
+		 .bck_r1(bck_r1),
+                 .bck_b1(bck_b1),
+                 .bck_g1(bck_g1)
 
    // Instantiation du mixer
    mixer mix( .active(vga_blank),
-              .bck_r(bck_r),
-              .bck_b(bck_b),
-              .bck_g(bck_g),
+              .bck_r1(bck_r1),
+              .bck_b1(bck_b1),
+              .bck_g1(bck_g1),
+	      .bck_r2(bck_r2),
+              .bck_b2(bck_b2),
+              .bck_g2(bck_g2),
               .vga_r(vga_r),
               .vga_g(vga_g),
               .vga_b(vga_b));

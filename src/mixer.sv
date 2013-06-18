@@ -1,7 +1,7 @@
 module mixer(input logic        active,
-             input logic  [7:0] bck_r,
-             input logic  [7:0] bck_g,
-             input logic  [7:0] bck_b,
+             input logic  [7:0] bck_r1, bck_r2,
+             input logic  [7:0] bck_g1, bck_g2,
+             input logic  [7:0] bck_b1, bck_b2,
              output logic [9:0] vga_r,
              output logic [9:0] vga_g,
              output logic [9:0] vga_b);
@@ -10,11 +10,20 @@ module mixer(input logic        active,
    always @(*)
      if(active)
        begin
-          vga_r <= {bck_r, bck_r[0], bck_r[0]};
-          vga_g <= {bck_g, bck_g[0], bck_g[0]};
-          vga_b <= {bck_b, bck_b[0], bck_b[0]};
+	  if(bck_r2 !=0)                         // on sait alors qu'on est dans le cercle blanc, donc on affiche le background2
+	    begin
+               vga_r <= {bck_r2, bck_r2[0], bck_r2[0]};
+               vga_g <= {bck_g2, bck_g2[0], bck_g2[0]};
+               vga_b <= {bck_b2, bck_b2[0], bck_b2[0]};
+	    end
+	  else
+	    begin
+	       vga_r <= {bck_r1, bck_r1[0], bck_r1[0]};
+               vga_g <= {bck_g1, bck_g1[0], bck_g1[0]};
+               vga_b <= {bck_b1, bck_b1[0], bck_b1[0]};
+	    end // else: !if(bck_r2 !=0)
        end
-     else
+     else                                     // on affiche l'autre background (sprite 1)
        {vga_r,vga_b,vga_g} <= 0;
 
 endmodule
