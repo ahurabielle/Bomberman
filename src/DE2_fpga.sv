@@ -294,21 +294,21 @@
    assign  gpio_1          =       36'hzzzzzzzzz;
 
    // Signaux internes
-   logic 	     vga_SOF;      // debut de trame
-   logic 	     vga_EOF;      // fin de trame
-   logic 	     vga_SOL;      // debut de ligne
-   logic 	     vga_EOL;      // fin de ligne
-   logic signed [10:0] vga_spotX;    // numéro de ligne dans la zone active
-   logic signed [10:0] vga_spotY;    // numéro de colonne dans la zone active
+   logic 	     vga_SOF;                                                     // debut de trame
+   logic 	     vga_EOF;                                                     // fin de trame
+   logic 	     vga_SOL;                                                     // debut de ligne
+   logic 	     vga_EOL;                                                     // fin de ligne
+   logic signed [10:0] vga_spotX;                                             // numéro de ligne dans la zone active
+   logic signed [10:0] vga_spotY;                                             // numéro de colonne dans la zone active
    logic [7:0] 	       bck_r1, bck_b1, bck_g1, bck_r2, bck_b2, bck_g2;        // fond rouge, bleu, vert
-   logic signed [10:0] centerX, centerY;
-   logic [8:0] 	       compt;
-   
-   
+   logic signed [10:0] centerX, centerY;                                      // centre du background
+  // logic [8:0] 	       compt;                                             // compteur inutile
+
+
    always  @(*)
      vga_clk <= clock_50;
-    
-   
+
+
 
    // Instanciation du module de synchro
    synchro sync1(.clk(vga_clk) ,
@@ -333,7 +333,7 @@
 		   .centerX(centerX),
 		   .centerY(centerY)
 		   );
-   
+
    // Instantiation du module background
    background bck( .clk(vga_clk),
                    .spotX(vga_spotX),
@@ -353,7 +353,7 @@
                  .bck_b1(bck_b1),
                  .bck_g1(bck_g1)
 		 );
-   
+
 
    // Instantiation du mixer
    mixer mix( .active(vga_blank),
