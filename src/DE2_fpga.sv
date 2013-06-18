@@ -301,9 +301,17 @@
    logic signed [10:0] vga_spotX;    // numéro de ligne dans la zone active
    logic signed [10:0] vga_spotY;    // numéro de colonne dans la zone active
    logic [7:0]      bck_r, bck_b, bck_g;        // fond rouge, bleu, vert
-
+   logic signed [10:0] centerX, centerY;
+   logic [8:0] 	       compt;
+   
+ 
    always  @(*)
-     vga_clk <= clock_50;
+     begin
+	vga_clk <= clock_50;
+	centerX <= 400;
+	centerY <=300;
+     end
+   
 
    // Instanciation du module de synchro
    synchro sync1(.clk(vga_clk) ,
@@ -323,6 +331,8 @@
    background bck( .clk(vga_clk),
                    .spotX(vga_spotX),
                    .spotY(vga_spotY),
+		   .centerX(centerX),
+		   .centerY(centerY),
                    .bck_r(bck_r),
                    .bck_b(bck_b),
                    .bck_g(bck_g));
