@@ -10,7 +10,9 @@ module controleur (input                      clk,
 
    logic 				      verou_trame ;
    logic [10:0] 			      compt;
-   
+   localparam integer 			      HACTIVE = 800;
+   localparam integer 			      VACTIVE = 600;
+ 			      
    // instantiation du verou, a 1 quand le spot trace l'image sur l ecran    
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
