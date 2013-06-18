@@ -26,7 +26,7 @@ module controleur (input                      clk,
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
        compt <= 0;
-     else if(EOF)
+     else if(~verou_trame)
        compt <= compt + 1;
     
    // bouger le centre a l aide de key
