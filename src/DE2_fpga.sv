@@ -248,7 +248,7 @@
    output            aud_bclk;     // audio codec bit-stream clock
    output            aud_mclk;     // audio codec chip clock
    // TV  Decoder
-   input [7:0]       td_data;      // tv decoder data bus 8 bits
+   input [7:0] 	     td_data;      // tv decoder data bus 8 bits
    input             td_hs;        // tv decoder h_sync
    input             td_vs;        // tv decoder v_sync
    output            td_reset;     // tv decoder reset
@@ -294,23 +294,20 @@
    assign  gpio_1          =       36'hzzzzzzzzz;
 
    // Signaux internes
-   logic            vga_SOF;      // debut de trame
-   logic            vga_EOF;      // fin de trame
-   logic            vga_SOL;      // debut de ligne
-   logic            vga_EOL;      // fin de ligne
+   logic 	     vga_SOF;      // debut de trame
+   logic 	     vga_EOF;      // fin de trame
+   logic 	     vga_SOL;      // debut de ligne
+   logic 	     vga_EOL;      // fin de ligne
    logic signed [10:0] vga_spotX;    // numéro de ligne dans la zone active
    logic signed [10:0] vga_spotY;    // numéro de colonne dans la zone active
-   logic [7:0]      bck_r, bck_b, bck_g;        // fond rouge, bleu, vert
+   logic [7:0] 	       bck_r, bck_b, bck_g;        // fond rouge, bleu, vert
    logic signed [10:0] centerX, centerY;
    logic [8:0] 	       compt;
    
- 
+   
    always  @(*)
-     begin
-	vga_clk <= clock_50;
-	centerX <= 400;
-	centerY <=300;
-     end
+     vga_clk <= clock_50;
+    
    
 
    // Instanciation du module de synchro
@@ -327,7 +324,17 @@
                  .spotY(vga_spotY),
                  .sync(vga_sync));
 
- // Instantiation du module background
+   // Instantiation du module controleur
+   controleur ctr( .clk(vga_clk),
+		   .reset_n(reset_n),
+		   .SOF(vga_SOF),
+		   .EOF(vga_EOF),
+		   .key(key),
+		   .centerX(centerX),
+		   .centerY(centerY)
+		   );
+   
+   // Instantiation du module background
    background bck( .clk(vga_clk),
                    .spotX(vga_spotX),
                    .spotY(vga_spotY),
@@ -337,7 +344,7 @@
                    .bck_b(bck_b),
                    .bck_g(bck_g));
 
-// Instantiation du mixer
+   // Instantiation du mixer
    mixer mix( .active(vga_blank),
               .bck_r(bck_r),
               .bck_b(bck_b),
