@@ -13,17 +13,13 @@ module controleur (input                      clk,
    localparam integer                         HACTIVE = 800;// taille horizontale de la frame
    localparam integer                         VACTIVE = 600;// taille verticale de la frame
 
-   // instantiation du verou, a 1 quand le spot trace l'image sur l ecran
+   // instantiation du verou, est à 1 quand on est à la fin d'une trame pendant un front d'horloge
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
-       verou_trame <= 1;
-     else if(EOF)
        verou_trame <= 0;
-     else if(SOF)
-       verou_trame <= 1;
-     else
-       verou_trame <= verou_trame;
-
+     else 
+       verou_trame <= (EOF);
+   
    // instantiation du compteur pour reduire la vistesse de l horloge
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
@@ -38,7 +34,7 @@ module controleur (input                      clk,
 	      centerX <= 400;
 	      centerY <= 300;
        end
-     else if(~verou_trame && compt == 2047)
+     else if(verou_trame)
        case(key)
 	     4'b1110 : if(centerX < HACTIVE)   centerX <= centerX + 1; // aller a droite
 	     4'b1101 : if(centerY < VACTIVE)   centerY <= centerY + 1; // aller en bas
