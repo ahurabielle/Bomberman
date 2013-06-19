@@ -261,21 +261,7 @@
    logic             reset_n;
    gene_reset gene_reset(.clk(clock_50), .reset_n(reset_n));
 
-   // Génération d'une horloge lente (1s de période)
-   logic             clk_1s;
-   gene_clk gene_clkl(.clk_50(clock_50), .clk_1s(clk_1s));
-   assign ledg[8] = clk_1s;
-
-
    // Turn on all displays except LCD
-   assign  hex0            =       0;
-   assign  hex1            =       0;
-   assign  hex2            =       0;
-   assign  hex3            =       0;
-   assign  hex4            =       0;
-   assign  hex5            =       0;
-   assign  hex6            =       0;
-   assign  hex7            =       0;
    assign  ledg[3:0]       =       key;
    assign  ledr            =       sw;
    assign  lcd_on          =       1'b0;
@@ -304,14 +290,23 @@
    logic [31:0]        spr1_rgba;                                             // fond rouge, bleu, vert
    logic signed [10:0] centerX, centerY;                                      // centre du background
    logic [7:0]         data_out;
-   logic               data_valide;
+   logic               data_valid;
    // logic [8:0] 	       compt;                                             // compteur inutile
 
 
    always  @(*)
      vga_clk <= clock_50;
 
-
+   // Instanciation des décodeurs 7 segments pour le debug
+   logic [31:0]        debug;
+   seven_seg s0 (debug[3:0],   hex0);
+   seven_seg s1 (debug[7:4],   hex1);
+   seven_seg s2 (debug[11:8],  hex2);
+   seven_seg s3 (debug[15:12], hex3);
+   seven_seg s4 (debug[19:16], hex4);
+   seven_seg s5 (debug[23:20], hex5);
+   seven_seg s6 (debug[27:24], hex6);
+   seven_seg s7 (debug[31:28], hex7);
 
    // Instanciation du module de synchro
    synchro sync1(.clk(vga_clk) ,
@@ -330,9 +325,9 @@
    //Instantiation du clavier PS/2
    keyboard kb(  .clk(vga_clk),
                  .reset_n(reset_n),
-                 .ps2_clk(vga_clk),
+                 .ps2_clk(ps2_clk),
                  .ps2_data(ps2_dat),
-                 .data_valide(data_valide),
+                 .data_valid(data_valid),
                  .data_out(data_out)
                  );
 
@@ -343,7 +338,7 @@
 		          .SOF(vga_SOF),
 		          .EOF(vga_EOF),
                   .data_out(data_out),
-		          .data_valide(data_valide),
+		          .data_valid(data_valid),
 		          .centerX(centerX),
 		          .centerY(centerY)
 		          );
@@ -374,5 +369,9 @@
              .vga_b(vga_b)
 	         );
 
+
+   // Debug
+   assign debug = data_out;
+   assign ledg[8] = data_valid;
 
 endmodule
