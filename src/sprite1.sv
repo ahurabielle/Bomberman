@@ -29,7 +29,6 @@ module sprite1(input logic                clk,
    always @(posedge clk)
      begin
         spr1_rgba <= {8'd0, 8'd0, 8'd0, 8'd255};
-
         if ((spotX>=centerX) && (spotX<(centerX+64)) &&
             (spotY>=centerY) && (spotY<(centerY+64)))
 	      spr1_rgba <= pixel;
