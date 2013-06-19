@@ -1,10 +1,18 @@
 module controleur (input                      clk,
 		           input                      reset_n,
-		           input logic                SOF, // va délimiter le temps durant lequel center pourra etre modifie
-		           input logic                EOF, // va délimiter le temps durant lequel center pourra etre modifie
-		           input logic [7:0]          data_out, // va permettre de modifier le centre
-                   input logic                data_valid,
-		           output logic signed [10:0] centerX,// coordonnee en X du centre
+		           input logic                SOF, // va délimiter le temps durant lequel
+                   //  center pourra etre modifie
+		           input logic                EOF, // va délimiter le temps durant lequel
+                   //  center pourra etre modifie
+                   input logic                j1_up,
+                   input logic                j1_down,
+                   input logic                j1_left,
+                   input logic                j1_right,
+                   input logic                j2_up,
+                   input logic                j2_down,
+                   input logic                j2_left,
+                   input logic                j2_right,
+                   output logic signed [10:0] centerX,// coordonnee en X du centre
 		           output logic signed [10:0] centerY // coordonnee en Y du centre
 		           );
 
@@ -30,49 +38,24 @@ module controleur (input                      clk,
 
    // bouger le centre a l aide de key et le bloquer lorsque le centre touche un bord
    always @(posedge clk or negedge reset_n)
-     if(~reset_n)                                                  // on commence au milieu
+     if(~reset_n)               // on commence au milieu
        begin
 	      centerX <= 400;
 	      centerY <= 300;
        end
-     else if((verou_trame) && (data_valid))                           // si le verou est a un et que j ai recu une donnée du clavier alors
+    // si le verou est a un et que j ai recu une donnée du clavier alors je bouge
+     else if(verou_trame)
        begin
-          if(data_out == 8'b00010110)
+         if(j1_up &&  (centerY >= 0))
+            centerY <= centerY - 1;
+          if(j1_down && (centerY < VACTIVE))
+            centerY <= centerY + 1;
+          if(j1_right && (centerX < HACTIVE))
             centerX <= centerX + 1;
-          if(data_out == 8'b00011110)
+          if(j1_left && (centerX >= 0))
             centerX <= centerX -1;
-       end
+       end // if (verou_trame)
 
-               // aller a droite
-	    /* 4'b1101 : if(centerY < VACTIVE)   centerY <= centerY + 1; // aller en bas
-	     4'b1011 : if(centerY >= 0)        centerY <= centerY - 1; // aller en haut
-	     4'b0111 : if(centerX >= 0)        centerX <= centerX - 1; // aller a gauche
-	     4'b1100 : if((centerX < HACTIVE) && (centerY < VACTIVE))  // aller en bas a droite
-	       begin
-	          centerX <= centerX + 1;
-	          centerY <= centerY +1 ;
-	       end
-	     4'b1010 : if((centerX < HACTIVE) && (centerY >= 0))       // aller en haut a droite
-	       begin
-	          centerX <= centerX + 1;
-	          centerY <= centerY - 1;
-	       end
-	     4'b0011 : if ((centerX >= 0) && (centerY >= 0))           // aller en haut a gauche
-	       begin
-	          centerX <= centerX - 1;
-	          centerY <= centerY - 1;
-	       end
-	     4'b0101 : if((centerX >= 0) && (centerY < VACTIVE))       // aller en bas a gauche
-	       begin
-	          centerX <= centerX - 1;
-	          centerY <= centerY + 1;
-	       end
-	     default :                                                 // par defaut ne pas bouger
-	       begin
-	          centerX <= centerX;
-	          centerY <= centerY;
-	       end*/
-       //endcase // case (key)
 endmodule // controleur
 
 
