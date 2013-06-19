@@ -342,7 +342,8 @@
 		          .reset_n(reset_n),
 		          .SOF(vga_SOF),
 		          .EOF(vga_EOF),
-		          .data_out(data_out),
+                  .data_out(data_out),
+		          .data_valide(data_valide),
 		          .centerX(centerX),
 		          .centerY(centerY)
 		          );
