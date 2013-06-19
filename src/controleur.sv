@@ -35,8 +35,8 @@ module controleur (input                      clk,
 	      centerX <= 400;
 	      centerY <= 300;
        end
-     else if(verou_trame && data_valide)
-       if(~(data_out==0))
+     else if(verou_trame && data_valide)                           // si le verou est a un et que j ai recu une donnée du clavier alors
+       if(~(data_out == 0))
 	      centerX <= centerX + 1; // aller a droite
 	    /* 4'b1101 : if(centerY < VACTIVE)   centerY <= centerY + 1; // aller en bas
 	     4'b1011 : if(centerY >= 0)        centerY <= centerY - 1; // aller en haut

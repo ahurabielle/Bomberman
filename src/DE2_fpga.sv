@@ -328,7 +328,8 @@
                  .sync(vga_sync));
 
    //Instantiation du clavier PS/2
-   keyboard kb(  .reset_n(reset_n),
+   keyboard kb(  .clk(vga_clk),
+                 .reset_n(reset_n),
                  .ps2_clk(vga_clk),
                  .ps2_data(ps2_dat),
                  .data_valide(data_valide),
