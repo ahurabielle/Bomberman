@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Programme qui permet de générer les différentes listes à stocker sur les ROM ainsi que la palette de 256 couleurs associée
+# Programme qui permet de générer les différentes listes à stocker sur les ROM
+# ainsi que la palette de 256 couleurs associée
 
 #Imports
 from PIL import Image  #Librairie Image
@@ -16,14 +17,17 @@ def generate_palette(filename):
     rentrée en parametre en argv[1].
     """
     im = Image.open("%s" %filename)
-    if im.mode == 'P' :
-        #On crée le fichier palette.lst
-        fichier = open("palette.lst", "w")
-        palette = im.palette
-        s = [ord(x) for x in palette.getdata()[1]]
-        for i in range(0, 255*3, 3):
-            fichier.write ("%02x%02x%02x\n"%(s[i], s[i+1], s[i+2]))
-        fichier.close()
+    if im.mode != 'P' :
+        print "Erreur, l'image %s n'est pas en mode palette"%(filename)
+        sys.exit(-1)
+
+    #On crée le fichier palette.lst
+    fichier = open("palette.lst", "w")
+    palette = im.palette
+    s = [ord(x) for x in palette.getdata()[1]]
+    for i in range(0, 255*3, 3):
+        fichier.write ("%02x%02x%02x\n"%(s[i], s[i+1], s[i+2]))
+    fichier.close()
 
 
 def generate_sprite(filename):
@@ -41,7 +45,7 @@ def generate_sprite(filename):
 
     #On crée le fichier sprite correspondant
     basename, extension = os.path.splitext(filename)
-    fichier = open("%s.lst" %basename,"w")
+    fichier = open("%s.lst"%basename, "w")
 
     #On y stocke une donnée par ligne qui corespond à un nombre entre
     # 0 et 255 pour chaque pixel de l'image
@@ -51,11 +55,13 @@ def generate_sprite(filename):
             fichier.write("%d\n"%nombre)
     fichier.close()
 
+
 def usage():
     """
     Explique comment utiliser ce programme.
     """
     print "Usage : %s fichier1 [fichier2] [fichier3] [etc]"%(sys.argv[0])
+
 
 def main():
     """
