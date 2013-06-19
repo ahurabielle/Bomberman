@@ -15,6 +15,7 @@ def generate_palette(filename):
     Génération de la Liste Palette.
     Comme elle est la meme pour toutes les images, on la prend pour l'image dont le nom est
     rentrée en parametre en argv[1].
+    Attention : notre palette ne fait que 254 couleurs, d'ou le 253*3 dans cette fonction.
     """
     im = Image.open("%s" %filename)
     if im.mode != 'P' :
@@ -25,7 +26,7 @@ def generate_palette(filename):
     fichier = open("palette.lst", "w")
     palette = im.palette
     s = [ord(x) for x in palette.getdata()[1]]
-    for i in range(0, 255*3, 3):
+    for i in range(0, 253*3, 3):
         fichier.write ("%02x%02x%02x\n"%(s[i], s[i+1], s[i+2]))
     fichier.close()
 
