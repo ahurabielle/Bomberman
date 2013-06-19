@@ -3,8 +3,8 @@
                    input logic        reset_n,
                    input logic        ps2_clk,
                    input logic        ps2_data,
-                   output logic [7:0] data_out,
-                   output logic [7:0] lafin,
+                   output logic [7:0] data_out,       // XXX a mettre en interne apres avoir pris tous les codes
+                   output logic [7:0] lafin,          // ne sert plus a rien la fin = 0f
                    // Sorties
                    output logic       j1_up,
                    output logic       j1_down,
@@ -103,6 +103,11 @@
    //  qu'on est entrain denvoyer des données
      else
        begin
+          // si on a recu un message de fin au front precedent venant de la touche data_out,
+          // signal qu'on recoit maintenant on remet a 0 les j1_*
+          // si on a pas recu de fin au coup précédent et que on recoit des données de
+          // la touche data_out avec data_valide (ie un quelqu'un appuye sur la touche)
+          // alors on passe le j*_* correspondant
           if((data_out_r == fin) && (data_out == 8'b10111000 ))
             j1_up <= 0;
           if((~(data_out_r == fin)) && (data_out == 8'b10111000) && ( data_valid))
