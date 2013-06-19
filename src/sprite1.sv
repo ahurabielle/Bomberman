@@ -11,16 +11,27 @@ module sprite1(input logic                clk,
    localparam integer                    HACTIVE = 800;
    localparam integer                    R       = 50;
 
+   // ROM qui contient les pixels du sprite (64x64 pixels)
+   logic [31:0]  rom[0:64*64-1];
+   logic [11:0]  rom_addr;
+   logic [31:0]  pixel;
+
+   always@(*)
+     rom_addr <= spotX-centerX + (spotY-centerY)*64;
+
+   always @(posedge clk)
+     pixel <= rom[rom_addr];
+
+   initial
+     $readmemh("../sprites/sprite1.lst", rom);
+
    // création de cercle blanc sur fond noir
    always @(posedge clk)
      begin
         spr1_rgba <= {8'd0, 8'd0, 8'd0, 8'd255};
-
-        if ((spotX - centerX)*(spotX -centerX) + (spotY - centerY)*(spotY - centerY) < (R*R))
-	      begin
-	         spr1_rgba <= {8'd255, 8'd255, 8'd255, 8'd100};
-	      end
-
+        if ((spotX>=centerX) && (spotX<(centerX+64)) &&
+            (spotY>=centerY) && (spotY<(centerY+64)))
+	      spr1_rgba <= pixel;
      end
 
 endmodule // sprite1

@@ -301,8 +301,10 @@
    logic signed [10:0] vga_spotX;                                             // numéro de ligne dans la zone active
    logic signed [10:0] vga_spotY;                                             // numéro de colonne dans la zone active
    logic [23:0]         bck_rgb;
-   logic [31:0]        spr1_rgba;        // fond rouge, bleu, vert
+   logic [31:0]        spr1_rgba;                                             // fond rouge, bleu, vert
    logic signed [10:0] centerX, centerY;                                      // centre du background
+   logic [7:0]         data_out;
+   logic               data_valide;
    // logic [8:0] 	       compt;                                             // compteur inutile
 
 
@@ -325,12 +327,23 @@
                  .spotY(vga_spotY),
                  .sync(vga_sync));
 
+   //Instantiation du clavier PS/2
+   keyboard kb(  .clk(vga_clk),
+                 .reset_n(reset_n),
+                 .ps2_clk(vga_clk),
+                 .ps2_data(ps2_dat),
+                 .data_valide(data_valide),
+                 .data_out(data_out)
+                 );
+
+
    // Instantiation du module controleur
    controleur ctr(.clk(vga_clk),
 		          .reset_n(reset_n),
 		          .SOF(vga_SOF),
 		          .EOF(vga_EOF),
-		          .key(key),
+                  .data_out(data_out),
+		          .data_valide(data_valide),
 		          .centerX(centerX),
 		          .centerY(centerY)
 		          );
