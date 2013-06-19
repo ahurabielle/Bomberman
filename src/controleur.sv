@@ -3,7 +3,7 @@ module controleur (input                      clk,
 		           input logic                SOF, // va délimiter le temps durant lequel center pourra etre modifie
 		           input logic                EOF, // va délimiter le temps durant lequel center pourra etre modifie
 		           input logic [7:0]          data_out, // va permettre de modifier le centre
-                   input logic                data_valide,
+                   input logic                data_valid,
 		           output logic signed [10:0] centerX,// coordonnee en X du centre
 		           output logic signed [10:0] centerY // coordonnee en Y du centre
 		           );
@@ -35,7 +35,7 @@ module controleur (input                      clk,
 	      centerX <= 400;
 	      centerY <= 300;
        end
-     else if((verou_trame) && (data_valide))                           // si le verou est a un et que j ai recu une donnée du clavier alors
+     else if((verou_trame) && (data_valid))                           // si le verou est a un et que j ai recu une donnée du clavier alors
        begin
           if(data_out == 8'b00010110)
             centerX <= centerX + 1;
