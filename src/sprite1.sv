@@ -18,7 +18,7 @@ module sprite1(input logic                clk,
 
         if ((spotX - centerX)*(spotX -centerX) + (spotY - centerY)*(spotY - centerY) < (R*R))
 	      begin
-	         spr1_rgba <= {8'd255, 8'd255, 8'd255, 8'd0};
+	         spr1_rgba <= {8'd255, 8'd255, 8'd255, 8'd100};
 	      end
 
      end
