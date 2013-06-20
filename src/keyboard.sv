@@ -3,17 +3,36 @@
                    input logic        reset_n,
                    input logic        ps2_clk,
                    input logic        ps2_data,
-                   output logic [7:0] data_out,
-                   output logic       data_valid
+                   output logic [7:0] data_out,       // XXX a mettre en interne apres avoir pris tous les codes
+                   output logic [7:0] lafin,          // ne sert plus a rien la fin = 0f
+                   // Sorties
+                   output logic       j1_up,
+                   output logic       j1_down,
+                   output logic       j1_left,
+                   output logic       j1_right,
+                   output logic       j1_drop,
+
+                   output logic       j2_up,
+                   output logic       j2_down,
+                   output logic       j2_left,
+                   output logic       j2_right,
+                   output logic       j2_drop
                    );
    // buffer
    logic [11:0]                       buffer;
-   logic                              parity;
-   logic [3:0]                        compt;
-
+  // logic [7:0]                        data_out;
+   logic                              data_valid;
+   logic [7:0]                        fin;
    // Dé-métastabilisateur
    logic                              ps2_clk_r, ps2_clk_clean;
    logic                              ps2_data_r, ps2_data_clean;
+
+   always @(*)
+     fin <=8'h0f;
+   // vérification du code de fin d'émission
+   always @(posedge clk)
+     if ( (~(data_out == 8'hb8)) & (~(data_out == 0)))
+       lafin <= data_out;
 
    always @(posedge clk)
      begin
@@ -22,10 +41,6 @@
         ps2_clk_r  <=  ps2_clk;
         ps2_data_r <= ps2_data;
      end
-
-   //bit de parite
-   always @(*)
-     parity <= (buffer[2] ^ buffer[3] ^ buffer[4] ^ buffer[5] ^ buffer[6] ^ buffer[7] ^ buffer[8] ^ buffer[9]);
 
    // Détecte le front descendant de ps2_clk
    logic   ps2_clk_falling_edge;
@@ -51,7 +66,7 @@
             buffer <= {buffer[10:0], ps2_data_clean};
 
           // Si on a un 1 dans le MSB du registre à décalage, c'est qu'il est rempli
-          // On vérifie alors la trame (start, stop, parity) et on envoi la donnée à l'extérieur,
+          // On envoi la donnée à l'extérieur,
           // et on remet le registre dans un état de départ
           if (buffer[11])
             begin
@@ -61,6 +76,43 @@
             end
        end
 
+   // Décodage des touches
+   logic [7:0] data_out_r;
+   always @(posedge clk)
+     data_out_r <= data_out;
+
+
+   // j1_up
+   always @(posedge clk or negedge reset_n)
+     if(~reset_n)
+       // Au début rien ne se passe les joueurs sont au repos
+       begin
+          j1_up <= 0;
+          j1_down <= 0;
+          j1_left <= 0;
+          j1_right <= 0;
+          j1_drop <= 0;
+          j2_up <= 0;
+          j2_down <= 0;
+          j2_left <= 0;
+          j2_right <= 0;
+          j2_drop <= 0;
+       end // if (~reset_n)
+
+   // Si on a pas eut de message de fin au front de clock précédent et
+   //  qu'on est entrain denvoyer des données
+     else
+       begin
+          // si on a recu un message de fin au front precedent venant de la touche data_out,
+          // signal qu'on recoit maintenant on remet a 0 les j1_*
+          // si on a pas recu de fin au coup précédent et que on recoit des données de
+          // la touche data_out avec data_valide (ie un quelqu'un appuye sur la touche)
+          // alors on passe le j*_* correspondant
+          if((data_out_r == fin) && (data_out == 8'b10111000 ))
+            j1_up <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'b10111000) && ( data_valid))
+            j1_up <= 1;
+       end // else: !if(~reset_n)
 
 endmodule // keyboard
 

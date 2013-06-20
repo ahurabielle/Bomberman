@@ -257,7 +257,7 @@
    inout [35:0]      gpio_0;       // gpio connection 0
    inout [35:0]      gpio_1;       // gpio connection 1
 
-   // Génération d'un reset
+   // GÃ©nÃ©ration d'un reset
    logic             reset_n;
    gene_reset gene_reset(.clk(clock_50), .reset_n(reset_n));
 
@@ -284,20 +284,30 @@
    logic             vga_EOF;                                                     // fin de trame
    logic             vga_SOL;                                                     // debut de ligne
    logic             vga_EOL;                                                     // fin de ligne
-   logic signed [10:0] vga_spotX;                                             // numéro de ligne dans la zone active
-   logic signed [10:0] vga_spotY;                                             // numéro de colonne dans la zone active
+   logic signed [10:0] vga_spotX;                                             // numÃ©ro de ligne dans la zone active
+   logic signed [10:0] vga_spotY;                                             // numÃ©ro de colonne dans la zone active
    logic [23:0]         bck_rgb;
    logic [31:0]        spr1_rgba;                                             // fond rouge, bleu, vert
    logic signed [10:0] centerX, centerY;                                      // centre du background
    logic [7:0]         data_out;
    logic               data_valid;
-   // logic [8:0] 	       compt;                                             // compteur inutile
+   logic               j1_up;
+   logic               j1_down;
+   logic               j1_left;
+   logic               j1_right;
+   logic               j1_drop;
+   logic               j2_up;
+   logic               j2_down;
+   logic               j2_left;
+   logic               j2_right;
+   logic               j2_drop;
+   logic [7:0]         lafin;
 
 
    always  @(*)
      vga_clk <= clock_50;
 
-   // Instanciation des décodeurs 7 segments pour le debug
+   // Instanciation des dÃ©codeurs 7 segments pour le debug
    logic [31:0]        debug;
    seven_seg s0 (debug[3:0],   hex0);
    seven_seg s1 (debug[7:4],   hex1);
@@ -327,8 +337,18 @@
                  .reset_n(reset_n),
                  .ps2_clk(ps2_clk),
                  .ps2_data(ps2_dat),
-                 .data_valid(data_valid),
-                 .data_out(data_out)
+                 .j1_up(j1_up),
+                 .j1_down(j1_down),
+                 .j1_right(j1_right),
+                 .j1_left(j1_left),
+                 .j1_drop(j1_drop),
+                 .j2_up(j2_up),
+                 .j2_down(j2_down),
+                 .j2_right(j2_right),
+                 .j2_left(j2_left),
+                 .j2_drop(j2_drop),
+                 .data_out(data_out),
+                 .lafin(lafin)
                  );
 
 
@@ -337,8 +357,14 @@
 		          .reset_n(reset_n),
 		          .SOF(vga_SOF),
 		          .EOF(vga_EOF),
-                  .data_out(data_out),
-		          .data_valid(data_valid),
+                  .j1_up(j1_up),
+                  .j1_down(j1_down),
+                  .j1_right(j1_right),
+                  .j1_left(j1_left),
+                  .j2_up(j2_up),
+                  .j2_down(j2_down),
+                  .j2_right(j2_right),
+                  .j2_left(j2_left),
 		          .centerX(centerX),
 		          .centerY(centerY)
 		          );
@@ -371,7 +397,7 @@
 
 
    // Debug
-   assign debug = data_out;
+   assign debug = {lafin,data_out};
    assign ledg[8] = data_valid;
 
 endmodule
