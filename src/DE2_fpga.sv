@@ -389,8 +389,10 @@
                   .j2_down(j2_down),
                   .j2_right(j2_right),
                   .j2_left(j2_left),
-		          .centerX(centerX1),
-		          .centerY(centerY1)
+		          .centerX1(centerX1),
+		          .centerY1(centerY1),
+                  .centerX2(centerX2),
+                  .centerY2(centerY2)
 		          );
 
    // Instantiation du module background

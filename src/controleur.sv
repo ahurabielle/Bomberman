@@ -50,21 +50,21 @@ module controleur (input                      clk,
      else if(verou_trame)
        begin
           if(j1_up &&  (centerY1 >= 0))
-            centerY <= centerY1 - 1;
-          if(j1_down && (centerY < VACTIVE))
-            centerY <= centerY1 + 1;
+            centerY1 <= centerY1 - 1;
+          if(j1_down && (centerY1 < VACTIVE))
+            centerY1 <= centerY1 + 1;
           if(j1_right && (centerX1 < (HACTIVE - 32)))
-            centerX <= centerX1 + 1;
+            centerX1 <= centerX1 + 1;
           if(j1_left && (centerX1 >= 0))
-            centerX <= centerX1 - 1;
+            centerX1 <= centerX1 - 1;
           if(j2_up &&  (centerY2 >= 0))
-             centerY <= centerY2 - 1;
-          if(j2_down && (centerY < VACTIVE))
-            centerY <= centerY2 + 1;
+             centerY2 <= centerY2 - 1;
+          if(j2_down && (centerY2 < VACTIVE))
+            centerY2 <= centerY2 + 1;
           if(j2_right && (centerX2 < (HACTIVE - 32)))
-            centerX <= centerX2 + 1;
+            centerX2 <= centerX2 + 1;
           if(j2_left && (centerX2 >= 0))
-            centerX <= centerX2 - 1;
+            centerX2 <= centerX2 - 1;
        end // if (verou_trame)
 
 endmodule // controleur

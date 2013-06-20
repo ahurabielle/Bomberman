@@ -19,7 +19,7 @@ module flame(input logic                clk,
 
    always@(*)
      if (sprite_num <7)
-     rom_addr <= spotX-centerXF + (spotY-centerYF)*32 + sprite_num*32*32;
+     rom_addr <= ((spotX-centerXF) + ((spotY-centerYF)*32) + (sprite_num*32*32));
 
    always @(posedge clk)
      color_pixel <= rom[rom_addr];
@@ -31,7 +31,7 @@ module flame(input logic                clk,
    // rectangle du sprite
    always @(posedge clk)
      begin
-        flame_color <= {137};
+        flame_color <= 8'd137;
         if ((spotX>=centerXF) && (spotX<(centerXF+32)) &&
             (spotY>=centerYF) && (spotY<(centerYF+32)))
 	      flame_color <= color_pixel;

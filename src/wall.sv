@@ -31,7 +31,7 @@ module wall(input logic                clk,
    // rectangle du sprite
    always @(posedge clk)
      begin
-        wall_color <= {137};
+        wall_color <= 8'd137;
         if ((spotX>=centerXW) && (spotX<(centerXW+32)) &&
             (spotY>=centerYW) && (spotY<(centerYW+32)))
 	      wall_color <= color_pixel;

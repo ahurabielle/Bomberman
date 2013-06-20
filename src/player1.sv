@@ -31,7 +31,7 @@ module player1(input logic                clk,
    // rectangle du sprite
    always @(posedge clk)
      begin
-        player1_color <= {137};
+        player1_color <= 8'd137;
         if ((spotX>=centerX1) && (spotX<(centerX1+32)) &&
             (spotY>=centerY1) && (spotY<(centerY1+32)))
 	      player1_color <= color_pixel;
