@@ -433,7 +433,10 @@
    // Instantiation du mixer
    mixer mix(.active(vga_blank),
              .bck_rgb(bck_rgb),
-	         .spr1_rgba(player1_color),
+	         .player2_color(player2_color),
+             .flame_color(flame_color),
+             .wall_color(wall_color),
+             .player1_color(player1_color),
              .vga_r(vga_r),
              .vga_g(vga_g),
              .vga_b(vga_b)
