@@ -267,12 +267,6 @@
    assign  lcd_on          =       1'b0;
    assign  lcd_blon        =       1'b0;
 
-   //Commande du numéro des sprites par les switchs
-   assign  play1_num       =       sw[17:15];   //les sw de 17 à 15 controlent le numéro du sprite pour le player2
-   assign  play2_num       =       sw[14:12];   //les sw de 14 à 12 controlent le numéro du sprite pour le player2
-   assign  flame_num       =       sw[11:10];   //les 11 et 10 controlent les flammes
-   assign  wall_num        =       sw[9:6];     //les 9 à 6 controlent le murs et les objets
-
    // Turn unused ports to tri-state
    assign  dram_dq         =       16'hzzzz;
    assign  fl_dq           =       8'hzz;
@@ -326,6 +320,13 @@
    logic               j2_right;
    logic               j2_drop;
    logic [7:0]         lafin;
+
+
+   //Commande du numéro des sprites par les switchs
+   assign  play1_num       =       sw[17:15];   //les sw de 17 à 15 controlent le numéro du sprite pour le player2
+   assign  play2_num       =       sw[14:12];   //les sw de 14 à 12 controlent le numéro du sprite pour le player2
+   assign  flame_num       =       sw[11:10];   //les 11 et 10 controlent les flammes
+   assign  wall_num        =       sw[9:6];     //les 9 à 6 controlent le murs et les objets
 
 
    always  @(*)
