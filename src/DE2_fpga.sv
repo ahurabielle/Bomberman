@@ -257,7 +257,7 @@
    inout [35:0]      gpio_0;       // gpio connection 0
    inout [35:0]      gpio_1;       // gpio connection 1
 
-   // GÃ©nÃ©ration d'un reset
+   // Génération d'un reset
    logic             reset_n;
    gene_reset gene_reset(.clk(clock_50), .reset_n(reset_n));
 
@@ -267,6 +267,11 @@
    assign  lcd_on          =       1'b0;
    assign  lcd_blon        =       1'b0;
 
+   //Commande du numéro des sprites par les switchs
+   assign  play1_num       =       sw[17:15];   //les sw de 17 à 15 controlent le numéro du sprite pour le player2
+   assign  play2_num       =       sw[14:12];   //les sw de 14 à 12 controlent le numéro du sprite pour le player2
+   assign  flame_num       =       sw[11:10];   //les 11 et 10 controlent les flammes
+   assign  wall_num        =       sw[9:6];     //les 9 à 6 controlent le murs et les objets
 
    // Turn unused ports to tri-state
    assign  dram_dq         =       16'hzzzz;
@@ -284,11 +289,21 @@
    logic             vga_EOF;                                                     // fin de trame
    logic             vga_SOL;                                                     // debut de ligne
    logic             vga_EOL;                                                     // fin de ligne
-   logic signed [10:0] vga_spotX;                                             // numÃ©ro de ligne dans la zone active
-   logic signed [10:0] vga_spotY;                                             // numÃ©ro de colonne dans la zone active
-   logic [23:0]         bck_rgb;
-   logic [31:0]        spr1_rgba;                                             // fond rouge, bleu, vert
-   logic signed [10:0] centerX, centerY;                                      // centre du background
+   logic signed [10:0] vga_spotX;                                             // numero de ligne dans la zone active
+   logic signed [10:0] vga_spotY;                                             // numero de colonne dans la zone active
+   logic [23:0]        bck_rgb;                                               // fond rouge, bleu, vert
+   logic [2:0]         play1_num;
+   logic [7:0]         player1_color;
+   logic [2:0]         play2_num;
+   logic [7:0]         player2_color;
+   logic [1:0]         flame_num;
+   logic [7:0]         flame_color;
+   logic [3:0]         wall_num;
+   logic [7:0]         wall_color;
+   logic signed [10:0] centerX1, centerY1;                 // coin haut gauche du sprite du joueur1
+   logic signed [10:0] centerX2, centerY2;                 // coin haut gauche du sprite du joueur2
+   logic signed [10:0] centerXF, centerYF;                 // coin haut gauche du sprite des flammes
+   logic signed [10:0] centerXM, centerYM;                 // coin haut gauche du sprite des murs
    logic [7:0]         data_out;
    logic               data_valid;
    logic               j1_up;
@@ -307,7 +322,7 @@
    always  @(*)
      vga_clk <= clock_50;
 
-   // Instanciation des dÃ©codeurs 7 segments pour le debug
+   // Instanciation des decodeurs 7 segments pour le debug
    logic [31:0]        debug;
    seven_seg s0 (debug[3:0],   hex0);
    seven_seg s1 (debug[7:4],   hex1);
@@ -376,15 +391,45 @@
 		          .bck_rgb(bck_rgb)
 		          );
 
-   //Instantiation du module sprite1
-   sprite1 spr1(.clk(vga_clk),
+   //Instantiation du module joueur1
+   player1 ply1(.clk(vga_clk),
                 .spotX(vga_spotX),
                 .spotY(vga_spotY),
-		        .centerX(centerX),
-		        .centerY(centerY),
-                .spr1_rgba(spr1_rgba)
+		        .centerX1(centerX1),
+		        .centerY1(centerY1),
+                .sprite_num(play1_num),
+                .player1_color(player1_color)
 		        );
 
+   //Instantiation du module joueur2
+   player2 play2(.clk(vga_clk),
+                .spotX(vga_spotX),
+                .spotY(vga_spotY),
+		        .centerX2(centerX2),
+		        .centerY2(centerY2),
+                .sprite_num(play2_num),
+                .player2_color(player2_color)
+		        );
+
+   //Instantiation du module flame
+   flame flame(.clk(vga_clk),
+               .spotX(vga_spotX),
+               .spotY(vga_spotY),
+		       .centerXF(centerXF),
+		       .centerYF(centerYF),
+               .sprite_num(flame_num),
+               .flame_color(flame_color)
+		       );
+
+    //Instantiation du module wall
+   wall wall(.clk(vga_clk),
+             .spotX(vga_spotX),
+             .spotY(vga_spotY),
+		     .centerXW(centerXW),
+		     .centerYW(centerYW),
+             .sprite_num(wall_num),
+             .wall_color(wall_color)
+		     );
 
    // Instantiation du mixer
    mixer mix(.active(vga_blank),
