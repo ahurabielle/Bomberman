@@ -26,7 +26,7 @@ def generate_palette(filename):
     fichier = open("palette.lst", "w")
     palette = im.palette
     s = [ord(x) for x in palette.getdata()[1]]
-    for i in range(0, len(palette.getdata()[1])*3, 3):
+    for i in range(0, (len(palette.getdata()[1]))-1, 3):
         fichier.write ("%02x%02x%02x\n"%(s[i], s[i+1], s[i+2]))
     fichier.close()
 
