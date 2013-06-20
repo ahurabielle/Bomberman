@@ -284,6 +284,15 @@
    assign  gpio_0          =       36'hzzzzzzzzz;
    assign  gpio_1          =       36'hzzzzzzzzz;
 
+   // XXX Pour le moment, on donne des valeurs de centerXF et centerYF
+   // ainsi que des valeurs pour centerXW et centerYW
+   // alors qu'à terme ces positions seront données par le maze
+   assign  centerXF        =        100;
+   assign  centerYF        =        100;
+   assign  centerXW        =        300;
+   assign  centerYW        =        300;
+
+
    // Signaux internes
    logic             vga_SOF;                                                     // debut de trame
    logic             vga_EOF;                                                     // fin de trame
@@ -433,7 +442,10 @@
    // Instantiation du mixer
    mixer mix(.active(vga_blank),
              .bck_rgb(bck_rgb),
-	         .spr1_rgba(player1_color),
+	         .player2_color(player2_color),
+             .flame_color(flame_color),
+             .wall_color(wall_color),
+             .player1_color(player1_color),
              .vga_r(vga_r),
              .vga_g(vga_g),
              .vga_b(vga_b)
