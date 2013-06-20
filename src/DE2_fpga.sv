@@ -387,7 +387,6 @@
    // Instantiation du module background
    background bck(.clk(vga_clk),
 		          .spotX(vga_spotX),
- 		          .spotY(vga_spotY),
 		          .bck_rgb(bck_rgb)
 		          );
 
