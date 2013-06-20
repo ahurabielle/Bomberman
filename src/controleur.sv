@@ -12,8 +12,11 @@ module controleur (input                      clk,
                    input logic                j2_down,
                    input logic                j2_left,
                    input logic                j2_right,
-                   output logic signed [10:0] centerX,// coordonnee en X du centre
-		           output logic signed [10:0] centerY // coordonnee en Y du centre
+                   output logic signed [10:0] centerX1,// coordonnee en X du centre
+		           output logic signed [10:0] centerY1, // coordonnee en Y du centre
+                   output logic signed [10:0] centerX2,
+                   output logic signed [10:0] centerY2
+
 		           );
 
    // variables locales
@@ -40,20 +43,28 @@ module controleur (input                      clk,
    always @(posedge clk or negedge reset_n)
      if(~reset_n)               // on commence au milieu
        begin
-	      centerX <= 400;
-	      centerY <= 300;
+	      centerX1 <= 400;
+	      centerY1 <= 300;
        end
     // si le verou est a un et que j ai recu une donnée du clavier alors je bouge
      else if(verou_trame)
        begin
-         if(j1_up &&  (centerY >= 0))
-            centerY <= centerY - 1;
+          if(j1_up &&  (centerY1 >= 0))
+            centerY <= centerY1 - 1;
           if(j1_down && (centerY < VACTIVE))
-            centerY <= centerY + 1;
-          if(j1_right && (centerX < HACTIVE))
-            centerX <= centerX + 1;
-          if(j1_left && (centerX >= 0))
-            centerX <= centerX -1;
+            centerY <= centerY1 + 1;
+          if(j1_right && (centerX1 < (HACTIVE - 32)))
+            centerX <= centerX1 + 1;
+          if(j1_left && (centerX1 >= 0))
+            centerX <= centerX1 - 1;
+          if(j2_up &&  (centerY2 >= 0))
+             centerY <= centerY2 - 1;
+          if(j2_down && (centerY < VACTIVE))
+            centerY <= centerY2 + 1;
+          if(j2_right && (centerX2 < (HACTIVE - 32)))
+            centerX <= centerX2 + 1;
+          if(j2_left && (centerX2 >= 0))
+            centerX <= centerX2 - 1;
        end // if (verou_trame)
 
 endmodule // controleur
