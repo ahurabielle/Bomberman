@@ -303,7 +303,7 @@
    logic signed [10:0] centerX1, centerY1;                 // coin haut gauche du sprite du joueur1
    logic signed [10:0] centerX2, centerY2;                 // coin haut gauche du sprite du joueur2
    logic signed [10:0] centerXF, centerYF;                 // coin haut gauche du sprite des flammes
-   logic signed [10:0] centerXM, centerYM;                 // coin haut gauche du sprite des murs
+   logic signed [10:0] centerXW, centerYW;                 // coin haut gauche du sprite des murs
    logic [7:0]         data_out;
    logic               data_valid;
    logic               j1_up;
@@ -380,8 +380,8 @@
                   .j2_down(j2_down),
                   .j2_right(j2_right),
                   .j2_left(j2_left),
-		          .centerX(centerX),
-		          .centerY(centerY)
+		          .centerX(centerX1),
+		          .centerY(centerY1)
 		          );
 
    // Instantiation du module background
@@ -434,12 +434,11 @@
    // Instantiation du mixer
    mixer mix(.active(vga_blank),
              .bck_rgb(bck_rgb),
-	         .spr1_rgba(spr1_rgba),
+	         .spr1_rgba(player1_color),
              .vga_r(vga_r),
              .vga_g(vga_g),
              .vga_b(vga_b)
 	         );
-
 
    // Debug
    assign debug = {lafin,data_out};
