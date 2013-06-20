@@ -50,8 +50,8 @@ def generate_sprite(filename):
 
     #On y stocke une donnée par ligne qui corespond à un nombre entre
     # 0 et 255 pour chaque pixel de l'image
-    for i in range(x):
-        for j in range(y):
+    for j in range(y):
+        for i in range(x):
             nombre = im.getpixel((i,j))
             fichier.write("%d\n"%nombre)
     fichier.close()
