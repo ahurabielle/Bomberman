@@ -112,6 +112,51 @@
             j1_up <= 0;
           if((~(data_out_r == fin)) && (data_out == 8'b10111000) && ( data_valid))
             j1_up <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'hd8 ))
+            j1_down <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'hd8) && ( data_valid))
+            j1_down <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'h38 ))
+            j1_left <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'h38) && ( data_valid))
+            j1_left <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'hc4 ))
+            j1_right <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'hc4) && ( data_valid))
+            j1_right <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'h94 ))
+            j1_drop <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'h94) && ( data_valid))
+            j1_drop <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'h22 ))
+            j2_up <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'h22) && ( data_valid))
+            j2_up <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'hd2 ))
+            j2_down <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'hd2) && ( data_valid))
+            j2_down <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'h42 ))
+            j2_left <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'h42) && ( data_valid))
+            j2_left <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'h32 ))
+            j2_right <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'h32) && ( data_valid))
+            j2_right <= 1;
+
+          if((data_out_r == fin) && (data_out == 8'hba ))
+            j2_drop <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'hba) && ( data_valid))
+            j2_drop <= 1;
        end // else: !if(~reset_n)
 
 endmodule // keyboard
