@@ -53,7 +53,7 @@ def generate_sprite(filename):
     for j in range(y):
         for i in range(x):
             nombre = im.getpixel((i,j))
-            fichier.write("%d\n"%nombre)
+            fichier.write("%x\n"%nombre)
     fichier.close()
 
 

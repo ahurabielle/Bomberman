@@ -12,13 +12,12 @@ module wall(input logic                clk,
    localparam integer                    VACTIVE = 600;
    localparam integer                    HACTIVE = 800;
 
-   // ROM qui contient les pixels du sprite (64x64 pixels)
-   logic [31:0]  rom[0:32*32-1];
-   logic [11:0]  rom_addr;
+   // ROM qui contient les pixels des 12 sprites (64x64 pixels)
+   logic [7:0]  rom[0:12*1024-1];
+   logic [13:0]  rom_addr;
    logic [7:0]   color_pixel;
 
    always@(*)
-     if (sprite_num <7)
      rom_addr <= spotX-centerXW + (spotY-centerYW)*32 + sprite_num*32*32;
 
    always @(posedge clk)
@@ -29,7 +28,7 @@ module wall(input logic                clk,
 
    // On n'affiche le contenu de la ROM que si le spot est dans le
    // rectangle du sprite
-   always @(posedge clk)
+   always @(*)
      begin
         wall_color <= 8'd137;
         if ((spotX>=centerXW) && (spotX<(centerXW+32)) &&

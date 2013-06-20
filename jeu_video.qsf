@@ -595,7 +595,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE src/player2.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/player1.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/wall.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/keyboard.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/sprite1.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/controleur.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/mixer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/background.sv
