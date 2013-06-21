@@ -46,16 +46,10 @@ module maze (input logic         clk,
    // Génération de la position du mur sur lequel se trouve le spot
    // On le fait de façon synchrone, pour que wall_centerX/Y soient
    // synchronisés avec wall_num
-   // XXX : normalement on ne devrait avoi qu'un seul cycle de retard, pas deux ! CHECK THIS !
-   logic [9:0] wcX;
-   logic [9:0] wcY;
-
    always @(posedge clk)
      begin
-        wall_centerX <= wcX;
-        wall_centerY <= wcY;
-        wcX <= num_carreX*32;
-        wcY <= num_carreY*32;
+        wall_centerX <= num_carreX*32;
+        wall_centerY <= num_carreY*32;
      end
 
 endmodule // maze
