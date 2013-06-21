@@ -7,17 +7,15 @@ module flame(input logic                clk,
 		     output logic [7:0]        flame_color
              );
 
-   // taille de la partie active, fonction de la résolution
-   localparam integer                  VACTIVE = 600;
-   localparam integer                  HACTIVE = 800;
-
    // ROM qui contient les pixels des 5 sprite (64x64 pixels) (3 sprites)
    logic [7:0]                         rom[0:5*1024-1];
    logic [12:0]                        rom_addr;
    logic [7:0]                         color_pixel;
+   logic [4:0]                         offsetX, offsetY;
 
-   always@(*)
-     rom_addr <= ((spotX-flame_centerX) + ((spotY-flame_centerY)*32) + (sprite_num*32*32));
+   assign offsetX = spotX - flame_centerX;
+   assign offsetY = spotY - flame_centerY;
+   assign rom_addr = {sprite_num, offsetY, offsetX};
 
    always @(posedge clk)
      color_pixel <= rom[rom_addr];
