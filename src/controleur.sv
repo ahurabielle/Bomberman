@@ -1,9 +1,9 @@
 module controleur (input                      clk,
 		           input                      reset_n,
-		           input logic                SOF, // va délimiter le temps durant lequel
-                   //  center pourra etre modifie
-		           input logic                EOF, // va délimiter le temps durant lequel
-                   //  center pourra etre modifie
+                    // va délimiter le temps durant lequel center pourra etre modifie
+		           input logic                SOF,
+		           input logic                EOF,
+                   // commandes des joueurs
                    input logic                j1_up,
                    input logic                j1_down,
                    input logic                j1_left,
@@ -12,20 +12,27 @@ module controleur (input                      clk,
                    input logic                j2_down,
                    input logic                j2_left,
                    input logic                j2_right,
-                   output logic [2:0]          player1_num, // correspond au sprite du j1 affiché
-                   output logic [2:0]          player2_num, // correspond au sprite du j2 affiché
-                   output logic signed [10:0] centerX1,// coordonnee en X du centre
-		           output logic signed [10:0] centerY1, // coordonnee en Y du centre
+                   // correspond au sprite du j1 affiché
+                   output logic [2:0]         player1_num,
+                   // correspond au sprite du j2 affiché
+                   output logic [2:0]         player2_num,
+                   // coordonnee du centre
+                   output logic signed [10:0] centerX1,
+		           output logic signed [10:0] centerY1,
                    output logic signed [10:0] centerX2,
                    output logic signed [10:0] centerY2
 
 		           );
 
    // variables locales
-   logic                                      verou_trame ; // est on ou pas dans la trame
-   logic [10:0]                               compt;        // compteur
-   localparam integer                         HACTIVE = 800;// taille horizontale de la frame
-   localparam integer                         VACTIVE = 600;// taille verticale de la frame
+   // est on ou pas dans la trame
+   logic                                      verou_trame ;
+   // compteur permettant la réduction de vitesse de l'horloge
+   logic [10:0]                               compt;
+   // taille de la fenetre active
+   localparam integer                         HACTIVE = 800;
+   localparam integer                         VACTIVE = 600;
+   // compteur permettant de faire marcher les sprites
    logic [24:0]                                compt_player1;
    logic [25:0]                                compt_player2;
 
@@ -38,6 +45,8 @@ module controleur (input                      clk,
        end
      else
        begin
+          // si on appuye sur une touche de mouvement le compteur correspondant
+          // est incrémenté
           if((j1_up)|(j1_down)|(j1_left)|(j1_right))
             compt_player1 <= compt_player1 + 1;
           if((j2_up)|(j2_down)|(j2_left)|(j2_right))
@@ -70,6 +79,7 @@ module controleur (input                      clk,
     // si le verou est a un et que j ai recu une donnée du clavier alors je bouge
      else if(verou_trame)
        begin
+          // On conditionne pour que le sprite (32*32) ne sorte pas de la fenetre
           if(j1_up &&  (centerY1 >= 0))
             centerY1 <= centerY1 - 1;
           if(j1_down && (centerY1 < VACTIVE-32))
@@ -95,19 +105,19 @@ module controleur (input                      clk,
         // De base le bonhomme nous fait fasse
         player1_num <= 2;
         player2_num <= 2;
+        // On alterne les sprites pour donner l'illusion qu'il marche
         if(j1_up | j1_down)
-          player1_num <= (compt_player1 > 16777215); // permet l'alternance des sprites pour donner l'illusion qu'il marche
+          player1_num <= (compt_player1 > 16777215);
         else if(j1_left)
-          player1_num <= 5 + (compt_player1 > 16777215); // meme chose
+          player1_num <= 5 + (compt_player1 > 16777215);
         else if(j1_right)
-          player1_num <= 3 + (compt_player1 > 16777215); // meme chose
-// permet l'alternance des sprites pour donner l'illusion qu'il marche
+          player1_num <= 3 + (compt_player1 > 16777215);
         if(j2_up | j2_down)
           player2_num <= 5 + (compt_player2 > 16777215);
         else if(j2_left)
-          player2_num <= 3 + (compt_player2 > 16777215); // meme chose
+          player2_num <= 3 + (compt_player2 > 16777215);
         else if(j2_right)
-          player2_num <= (compt_player2 > 16777215); // meme chose
+          player2_num <= (compt_player2 > 16777215);
      end // always @ (posedge clk)
 
 endmodule // controleur
