@@ -72,8 +72,10 @@ module synchro(input                      clk,
 
         if((comptY>= (VSYNC + VBP)) && (comptY < VSYNC+VBP+VACTIVE) && (comptX >=HSYNC+HBP) && (comptX < HSYNC+HBP+HACTIVE))
           begin
-             spotX <= (comptX -(HSYNC+HBP)); // dans la zone active on incremente le long d une ligne
-             spotY <= (comptY -(VSYNC+VBP)); // dans la zone active on incremente le long d une colonne
+             // dans la zone active on incremente le long d une ligne
+             spotX <= (comptX -(HSYNC+HBP));
+             // et d'une colonne
+             spotY <= (comptY -(VSYNC+VBP));
           end
         else
           begin
