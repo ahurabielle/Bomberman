@@ -273,8 +273,7 @@
    logic [2:0]       flame_num;
    logic [3:0]       wall_num;
 
-   assign  play1_num       =       sw[17:15];   //les sw de 17 à 15 controlent le numéro du sprite pour le player2
-   assign  play2_num       =       sw[14:12];   //les sw de 14 à 12 controlent le numéro du sprite pour le player2
+
    assign  flame_num       =       sw[11:10];   //les 11 et 10 controlent les flammes
    assign  wall_num        =       sw[9:6];     //les 9 à 6 controlent le murs et les objets
 
@@ -388,6 +387,8 @@
                   .j2_down(j2_down),
                   .j2_right(j2_right),
                   .j2_left(j2_left),
+                  .player1_num(play1_num),
+                  .player2_num(play2_num),
 		          .centerX1(centerX1),
 		          .centerY1(centerY1),
                   .centerX2(centerX2),

@@ -13,9 +13,9 @@ module player1(input logic                clk,
    localparam integer                    HACTIVE = 800;
 
    // ROM qui contient les pixels des 7 sprites (64x64 pixels)
-   logic [7:0]  rom[0:7*1024-1];
-   logic [12:0]  rom_addr;
-   logic [7:0]   color_pixel;
+   logic [7:0]                           rom[0:7*1024-1];
+   logic [12:0]                          rom_addr;
+   logic [7:0]                           color_pixel;
 
    always@(*)
      rom_addr <= spotX-centerX1 + (spotY-centerY1)*32 + sprite_num*32*32;
