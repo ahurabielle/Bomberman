@@ -273,9 +273,12 @@
    logic [2:0]       flame_num;
    logic [3:0]       wall_num;
 
-   assign  play1_num       =       sw[17:15];   //les sw de 17 à 15 controlent le numéro du sprite pour le player2
-   assign  play2_num       =       sw[14:12];   //les sw de 14 à 12 controlent le numéro du sprite pour le player2
-   assign  flame_num       =       sw[11:10];   //les 11 et 10 controlent les flammes
+   //les sw de 17 à 15 controlent le numéro du sprite pour le player1
+   assign  play1_num       =       sw[17:15];
+   //les sw de 17 à 15 controlent le numéro du sprite pour le player2
+   assign  play2_num       =       sw[14:12];
+   //les sw de 11 à 10 controlent le numéro du sprite pour la flamme
+   assign  flame_num       =       sw[11:10];
 
    // Turn unused ports to tri-state
    assign  dram_dq         =       16'hzzzz;
@@ -302,7 +305,7 @@
    logic             vga_SOL;
    // fin de ligne
    logic             vga_EOL;
-// numero de ligne dans la zone active
+   // numero de ligne dans la zone active
    logic signed [10:0] vga_spotX;
    // numero de colonne dans la zone active
    logic signed [10:0] vga_spotY;
@@ -313,10 +316,14 @@
    logic [7:0]         player2_color;
    logic [7:0]         flame_color;
    logic [7:0]         wall_color;
-   logic signed [10:0] centerX1, centerY1;                 // coin haut gauche du sprite du joueur1
-   logic signed [10:0] centerX2, centerY2;                 // coin haut gauche du sprite du joueur2
-   logic signed [10:0] centerXF, centerYF;                 // coin haut gauche du sprite des flammes
-   logic [9:0] wall_centerX, wall_centerY;                 // coin haut gauche du sprite des murs
+   // coin haut gauche du sprite du joueur1
+   logic signed [10:0] centerX1, centerY1;
+   // coin haut gauche du sprite du joueur2
+   logic signed [10:0] centerX2, centerY2;
+   // coin haut gauche du sprite des flammes
+   logic signed [10:0] centerXF, centerYF;
+   // coin haut gauche du sprite des murs et objets
+   logic [9:0] wall_centerX, wall_centerY;
    logic [7:0]         data_out;
    logic               j1_up;
    logic               j1_down;

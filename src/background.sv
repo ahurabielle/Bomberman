@@ -1,6 +1,7 @@
 module background(input logic clk,
 	              input logic signed [10:0] spotX,
-                  output logic [23:0]       bck_rgb // composantes couleurs du fond
+                  // composantes couleurs du fond
+                  output logic [23:0]       bck_rgb
                   );
 
    // taille de la partie active, fonction de la résolution
