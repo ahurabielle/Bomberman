@@ -4,7 +4,6 @@ module mixer(input              clk,
              // composantes rouges vertes et bleues du fond
              input logic [23:0] bck_rgb,
              // composantes rouges bleues vertes et d'opacité des sprites
-	         input logic [31:0] spr1_rgba,
              input logic [7:0]  player1_color,
              input logic [7:0]  player2_color,
              input logic [7:0]  wall_color,
