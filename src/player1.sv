@@ -1,24 +1,21 @@
 module player1(input logic                clk,
                input logic signed [10:0] spotX,
                input logic signed [10:0] spotY,
-               input logic signed [10:0] centerX1,
-               input logic signed [10:0] centerY1,
+               input logic [9:0]         player1_centerX,
+               input logic [9:0]         player1_centerY,
                input logic [2:0]         sprite_num,
-		       output logic [7:0]        player1_color  // code couleur (qui peut eventuellement etre
-                                                       // un code de transparence
+		       output logic [7:0]        player1_color
                );
-
-   // taille de la partie active, fonction de la résolution
-   localparam integer                    VACTIVE = 600;
-   localparam integer                    HACTIVE = 800;
 
    // ROM qui contient les pixels des 7 sprites (64x64 pixels)
    logic [7:0]                           rom[0:7*1024-1];
    logic [12:0]                          rom_addr;
    logic [7:0]                           color_pixel;
+   logic [4:0]                           offsetX, offsetY;
 
-   always@(*)
-     rom_addr <= spotX-centerX1 + (spotY-centerY1)*32 + sprite_num*32*32;
+   assign offsetX = spotX-wall_centerX;
+   assign offsetY = spotY-wall_centerY;
+   assign rom_addr = {sprite_num, offsetY, offsetX};
 
    always @(posedge clk)
      color_pixel <= rom[rom_addr];
@@ -31,8 +28,8 @@ module player1(input logic                clk,
    always @(*)
      begin
         player1_color <= 8'd137;
-        if ((spotX>=centerX1) && (spotX<(centerX1+32)) &&
-            (spotY>=centerY1) && (spotY<(centerY1+32)))
+        if ((spotX>=player1_centerX) && (spotX<(player1_centerX+32)) &&
+            (spotY>=player1_centerY) && (spotY<(player1_centerY+32)))
 	      player1_color <= color_pixel;
      end
 

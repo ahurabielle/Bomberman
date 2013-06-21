@@ -274,7 +274,7 @@
    logic [3:0]       wall_num;
 
    //les sw 11 et 10 controlent les flammes
-   assign  flame_num       =       sw[11:10];   //les 11 et 10 controlent les flammes
+   assign  flame_num       =       sw[11:10];
 
    // Turn unused ports to tri-state
    assign  dram_dq         =       16'hzzzz;
