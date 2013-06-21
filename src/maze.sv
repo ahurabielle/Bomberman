@@ -36,7 +36,7 @@ module maze (input logic         clk,
 
    // On charge le plan du jeu dans la ROM
    initial
-     $readmemh("../maze/maze1.lst", rom);
+     $readmemh("../maze/maze2.lst", rom);
 
    always @(posedge clk)
      // Si on est en dehors du labyrinthe, on affiche du vide
@@ -46,7 +46,12 @@ module maze (input logic         clk,
        wall_num <= rom[rom_addr];
 
    // Génération de la position du mur sur lequel se trouve le spot
-   assign wall_centerX = num_carreX*32;
-   assign wall_centerY = num_carreY*32;
+   // On le fait de façon synchrone, pour que wall_centerX/Y soient
+   // synchronisés avec wall_num
+   always @(posedge clk)
+     begin
+        wall_centerX <= num_carreX*32;
+        wall_centerY <= num_carreY*32;
+     end
 
 endmodule // maze

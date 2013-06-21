@@ -13,7 +13,7 @@ module flame(input logic                clk,
    logic [7:0]                         color_pixel;
    logic [4:0]                         offsetX, offsetY;
 
-   assign offsetX = spotX - flame_centerX;
+   assign offsetX = spotX - flame_centerX+1;
    assign offsetY = spotY - flame_centerY;
    assign rom_addr = {sprite_num, offsetY, offsetX};
 

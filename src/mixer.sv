@@ -25,7 +25,7 @@ module mixer(input              clk,
      $readmemh("../sprites/palette.lst",rom);
 
    always @(posedge clk)
-     pixel <= rom[rom_addr+1]     ;
+     pixel <= rom[rom_addr];
 
    // Vérifie qu'on est dans la zone active, sinon, c'est noir
    always @(*)

@@ -10,7 +10,7 @@
 #   2 : position initiale du joueur 2
 #   o : mur destructible
 *************************
-*1      <      o       **
+*1 *    <      o       **
 *v**o****o***********  **
 *  *  * * *            **
 *  *  <     ***o**o***^**

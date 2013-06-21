@@ -446,7 +446,7 @@
                .flame_color(flame_color)
 		       );
 
-    //Instantiation du module wall
+   //Instantiation du module wall
    wall wall(.clk(vga_clk),
              .spotX(vga_spotX),
              .spotY(vga_spotY),

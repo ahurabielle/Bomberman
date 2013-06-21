@@ -13,7 +13,7 @@ module player1(input logic                clk,
    logic [7:0]                           color_pixel;
    logic [4:0]                           offsetX, offsetY;
 
-   assign offsetX = spotX - player1_centerX;
+   assign offsetX = spotX - player1_centerX+1;
    assign offsetY = spotY - player1_centerY;
    assign rom_addr = {sprite_num, offsetY, offsetX};
 
