@@ -1,6 +1,6 @@
 module seven_seg(E, HEX);
-   input [3:0] E;
-   output [6:0] HEX;
+   input logic [3:0] E;
+   output logic [6:0] HEX;
 
    always_comb
      begin
@@ -26,4 +26,3 @@ module seven_seg(E, HEX);
 endmodule // seven_seg
 
 
-                   
