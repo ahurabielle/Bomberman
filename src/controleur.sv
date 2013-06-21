@@ -17,10 +17,10 @@ module controleur (input                      clk,
                    // correspond au sprite du j2 affiché
                    output logic [2:0]         player2_num,
                    // coordonnee du centre
-                   output logic signed [10:0] centerX1,
-		           output logic signed [10:0] centerY1,
-                   output logic signed [10:0] centerX2,
-                   output logic signed [10:0] centerY2
+                   output logic signed [10:0] player1_centerX,
+		           output logic signed [10:0] player1_centerY,
+                   output logic signed [10:0] player2_centerX,
+                   output logic signed [10:0] player2_centerY
 
 		           );
 
@@ -71,31 +71,31 @@ module controleur (input                      clk,
    always @(posedge clk or negedge reset_n)
      if(~reset_n)               // on commence au milieu
        begin
-	      centerX1 <= 400;
-	      centerY1 <= 300;
-          centerX2 <= 450;
-          centerY2 <= 300;
+	      player1_centerX <= 400;
+	      player1_centerY <= 300;
+          player2_centerX <= 450;
+          player2_centerY <= 300;
        end
     // si le verou est a un et que j ai recu une donnée du clavier alors je bouge
      else if(verou_trame)
        begin
           // On conditionne pour que le sprite (32*32) ne sorte pas de la fenetre
-          if(j1_up &&  (centerY1 >= 0))
-            centerY1 <= centerY1 - 1;
-          if(j1_down && (centerY1 < VACTIVE-32))
-            centerY1 <= centerY1 + 1;
-          if(j1_right && (centerX1 < (HACTIVE - 32)))
-            centerX1 <= centerX1 + 1;
-          if(j1_left && (centerX1 >= 32))
-            centerX1 <= centerX1 - 1;
-          if(j2_up &&  (centerY2 >= 0))
-             centerY2 <= centerY2 - 1;
-          if(j2_down && (centerY2 < VACTIVE-32))
-            centerY2 <= centerY2 + 1;
-          if(j2_right && (centerX2 < (HACTIVE - 32)))
-            centerX2 <= centerX2 + 1;
-          if(j2_left && (centerX2 >= 32))
-            centerX2 <= centerX2 - 1;
+          if(j1_up &&  (player1_centerY >= 0))
+            player1_centerY <= player1_centerY - 1;
+          if(j1_down && (player1_centerY < VACTIVE-32))
+            player1_centerY <= player1_centerY + 1;
+          if(j1_right && (player1_centerX < (HACTIVE - 32)))
+            player1_centerX <= player1_centerX + 1;
+          if(j1_left && (player1_centerX >= 32))
+            player1_centerX <= player1_centerX - 1;
+          if(j2_up &&  (player2_centerY >= 0))
+             player2_centerY <= player2_centerY - 1;
+          if(j2_down && (player2_centerY < VACTIVE-32))
+            player2_centerY <= player2_centerY + 1;
+          if(j2_right && (player2_centerX < (HACTIVE - 32)))
+            player2_centerX <= player2_centerX + 1;
+          if(j2_left && (player2_centerX >= 32))
+            player2_centerX <= player2_centerX - 1;
        end // if (verou_trame)
 
 

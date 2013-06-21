@@ -1,14 +1,18 @@
 module mixer(input              clk,
-             input logic        active, // correspond au blank
-             input logic [23:0] bck_rgb, // composantes rouges vertes et bleues du fond
-	         input logic [31:0] spr1_rgba, // composantes rouges bleues vertes et d'opacité du sprite1
+             // correspond au blank
+             input logic        active,
+             // composantes rouges vertes et bleues du fond
+             input logic [23:0] bck_rgb,
+             // composantes rouges bleues vertes et d'opacité des sprites
+	         input logic [31:0] spr1_rgba,
              input logic [7:0]  player1_color,
              input logic [7:0]  player2_color,
              input logic [7:0]  wall_color,
              input logic [7:0]  flame_color,
-             output logic [9:0] vga_r, // sortie rouge
-             output logic [9:0] vga_g, // sortie verte
-             output logic [9:0] vga_b);            // sortie bleue
+             output logic [9:0] vga_r,
+             output logic [9:0] vga_g,
+             output logic [9:0] vga_b
+             );
 
 
 
@@ -21,7 +25,7 @@ module mixer(input              clk,
      $readmemh("../sprites/palette.lst",rom);
 
    always @(posedge clk)
-     pixel <= rom[rom_addr]     ;
+     pixel <= rom[rom_addr+1]     ;
 
    // Vérifie qu'on est dans la zone active, sinon, c'est noir
    always @(*)

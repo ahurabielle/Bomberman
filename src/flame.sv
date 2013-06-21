@@ -1,8 +1,8 @@
 module flame(input logic                clk,
              input logic signed [10:0] spotX,
              input logic signed [10:0] spotY,
-             input logic signed [10:0] flame_centerX,
-             input logic signed [10:0] flame centerY,
+             input logic [9:0]         flame_centerX,
+             input logic [9:0]         flame_centerY,
              input logic [2:0]         sprite_num,
 		     output logic [7:0]        flame_color
              );
@@ -17,7 +17,7 @@ module flame(input logic                clk,
    logic [7:0]                         color_pixel;
 
    always@(*)
-     rom_addr <= ((spotX-flame_centerX) + ((spotY-centerYF)*32) + (sprite_num*32*32));
+     rom_addr <= ((spotX-flame_centerX) + ((spotY-flame_centerY)*32) + (sprite_num*32*32));
 
    always @(posedge clk)
      color_pixel <= rom[rom_addr];
