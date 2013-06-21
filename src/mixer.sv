@@ -18,7 +18,7 @@ module mixer(input              clk,
 
    // Définition de la rom
    logic [23:0]                 rom[0:255];
-   logic [7:0]                  rom_addr;
+   logic [7:0]                  rom_addr, rom_addr_r;
    logic [23:0]                 pixel;
    // Chargement de la pallette
    initial
@@ -43,6 +43,8 @@ module mixer(input              clk,
           rom_addr <= wall_color;
      end
 
+   always@(posedge clk)
+     rom_addr_r <= rom_addr;
 
    // Génération du pixel de sortie
    always_comb
@@ -53,7 +55,7 @@ module mixer(input              clk,
                                     bck_rgb[15:8], bck_rgb[8] ,  bck_rgb[8],
                                     bck_rgb[7:0],  bck_rgb[0],  bck_rgb[0]};
 
-          if (rom_addr != 137)
+          if (rom_addr_r != 137)
             {vga_r, vga_g, vga_b} <=  {pixel[23:16], pixel[16],pixel[16] ,
                                        pixel[15:8], pixel[8] ,  pixel[8],
                                        pixel[7:0],  pixel[0],  pixel[0]};

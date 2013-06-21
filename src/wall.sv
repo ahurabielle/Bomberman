@@ -9,6 +9,7 @@ module wall(input logic                clk,
 
    // wall_xxx a un coup de retard par rapport à spotX. Il faut donc retarder
    // aussi spotX d'un coup d'horloge.
+   logic signed [10:0]                spotX_r;
    always @(posedge clk)
      spotX_r <= spotX;
 
