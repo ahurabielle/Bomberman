@@ -275,7 +275,6 @@
 
 
    assign  flame_num       =       sw[11:10];   //les 11 et 10 controlent les flammes
-   assign  wall_num        =       sw[9:6];     //les 9 à 6 controlent le murs et les objets
 
    // Turn unused ports to tri-state
    assign  dram_dq         =       16'hzzzz;
@@ -289,22 +288,26 @@
    assign  gpio_1          =       36'hzzzzzzzzz;
 
    // XXX Pour le moment, on donne des valeurs de centerXF et centerYF
-   // ainsi que des valeurs pour centerXW et centerYW
    // alors qu'à terme ces positions seront données par le maze
    assign  centerXF        =        100;
    assign  centerYF        =        100;
-   assign  centerXW        =        300;
-   assign  centerYW        =        300;
-
 
    // Signaux internes
-   logic             vga_SOF;                                                     // debut de trame
-   logic             vga_EOF;                                                     // fin de trame
-   logic             vga_SOL;                                                     // debut de ligne
-   logic             vga_EOL;                                                     // fin de ligne
-   logic signed [10:0] vga_spotX;                                             // numero de ligne dans la zone active
-   logic signed [10:0] vga_spotY;                                             // numero de colonne dans la zone active
-   logic [23:0]        bck_rgb;                                               // fond rouge, bleu, vert
+   // debut de trame
+   logic             vga_SOF;
+   // fin de trame
+   logic             vga_EOF;
+   // debut de ligne
+   logic             vga_SOL;
+   // fin de ligne
+   logic             vga_EOL;
+// numero de ligne dans la zone active
+   logic signed [10:0] vga_spotX;
+   // numero de colonne dans la zone active
+   logic signed [10:0] vga_spotY;
+   // fond rouge, bleu, vert
+   logic [23:0]        bck_rgb;
+
    logic [7:0]         player1_color;
    logic [7:0]         player2_color;
    logic [7:0]         flame_color;
@@ -312,7 +315,7 @@
    logic signed [10:0] centerX1, centerY1;                 // coin haut gauche du sprite du joueur1
    logic signed [10:0] centerX2, centerY2;                 // coin haut gauche du sprite du joueur2
    logic signed [10:0] centerXF, centerYF;                 // coin haut gauche du sprite des flammes
-   logic signed [10:0] centerXW, centerYW;                 // coin haut gauche du sprite des murs
+   logic [9:0] wall_centerX, wall_centerY;                 // coin haut gauche du sprite des murs
    logic [7:0]         data_out;
    logic               j1_up;
    logic               j1_down;
@@ -395,6 +398,14 @@
                   .centerY2(centerY2)
 		          );
 
+   // Instanciation du module maze
+   maze maze(.clk(vga_clk),
+             .spotX(vga_spotX),
+             .spotY(vga_spotY),
+             .wall_num(wall_num),
+		     .wall_centerX(wall_centerX),
+		     .wall_centerY(wall_centerY)
+             );
    // Instantiation du module background
    background bck(.clk(vga_clk),
 		          .spotX(vga_spotX),
@@ -435,8 +446,8 @@
    wall wall(.clk(vga_clk),
              .spotX(vga_spotX),
              .spotY(vga_spotY),
-		     .centerXW(centerXW),
-		     .centerYW(centerYW),
+		     .wall_centerX(wall_centerX),
+		     .wall_centerY(wall_centerY),
              .sprite_num(wall_num),
              .wall_color(wall_color)
 		     );

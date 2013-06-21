@@ -25,23 +25,34 @@ def gen_maze(filename):
 
     # On y stocke une donnée par ligne qui corespond à un nombre entre
     # 1 et 6
-    while 1:
-        txt = fs.read(1)
-        if txt == "*" : txt = "1"
-        elif txt == "o" : txt = "2"
-        elif txt == "^" : txt = "5"
-        elif txt == " " : txt = "0"
-        elif txt == "v" : txt = "6"
-        elif txt == "<" : txt = "4"
-        elif txt == ">" : txt = "3"
-        elif txt == "1" : txt = "p"
-        elif txt == "2" : txt = "P"
-        elif txt == "#" :
-            txt = fs.readline()
-            txt = ""
-        elif txt =="": break
+    for line in fs:
+        # si une ligne commence par # c'est un commentaire, on l'ignore
+        if line[0] == '#':
+            continue
 
-        fd.write(txt)
+        # Vérifie que la ligne fait bien 25 caractères de large
+        line = line.strip("\r\n")
+        if len(line) != 25:
+            raise Exception("La ligne %s ne contient pas 25 caractères"%line)
+
+        # Lit les caractère de la ligne courante un par un, et génère le fichier de sortie
+        for txt in line:
+            if txt == "*" : fd.write("1\n")
+            if txt == "o" : fd.write("2\n")
+            if txt == "^" : fd.write("5\n")
+            if txt == " " : fd.write("0\n")
+            if txt == "v" : fd.write("6\n")
+            if txt == "<" : fd.write("4\n")
+            if txt == ">" : fd.write("3\n")
+            if txt == "1" : fd.write("7\n")
+            if txt == "2" : fd.write("8\n")
+
+        # On comble par 7 octets à 0 (==sprite vide) pour aligner les lignes sur
+        # des frontières de 8 mots
+        for i in range(7):
+            fd.write("0\n")
+
+    # Fermeture des fichiers
     fs.close()
     fd.close()
     return
