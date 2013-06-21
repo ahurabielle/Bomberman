@@ -326,7 +326,6 @@
    logic                  j2_left;
    logic                  j2_right;
    logic                  j2_drop;
-   logic [7:0]            lafin;
 
    // Horloge VGA
    always  @(*)
@@ -377,8 +376,7 @@
                  .j2_right(j2_right),
                  .j2_left(j2_left),
                  .j2_drop(j2_drop),
-                 .data_out(data_out),
-                 .lafin(lafin)
+                 .data_out(data_out)
                  );
 
 
@@ -471,6 +469,6 @@
 	         );
 
    // Debug
-   assign debug = {lafin,data_out};
+   assign debug = {data_out};
 
 endmodule
