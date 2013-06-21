@@ -4,4 +4,7 @@ incremental_db
 jeu_video*
 *.bak
 .#*
-
+transcript
+work
+*.wlf
+.*tag*
