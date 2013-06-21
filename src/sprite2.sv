@@ -2,8 +2,8 @@
 module joueur1(input logic                clk,
                input logic signed [10:0] spotX,
                input logic signed [10:0] spotY,
-               input logic signed [10:0] centerX,
-               input logic signed [10:0] centerY,
+               input logic [9:0]         centerX,
+               input logic [9:0]         centerY,
                input logic [3:0]         sprite_num,
 		       output logic [31:0]       joueur1_  // composantes couleurs
                );

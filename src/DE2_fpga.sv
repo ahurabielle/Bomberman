@@ -313,11 +313,11 @@
    logic [7:0]         flame_color;
    logic [7:0]         wall_color;
    // coin haut gauche du sprite du joueur1
-   logic signed [10:0] player1_centerX, player1_centerY;
+   logic [9:0] player1_centerX, player1_centerY;
    // coin haut gauche du sprite du joueur2
-   logic signed [10:0] player2_centerX, player2_centerY;
+   logic [9:0] player2_centerX, player2_centerY;
    // coin haut gauche du sprite des flammes
-   logic signed [10:0] flame_centerX, flame_centerY;
+   logic [9:0] flame_centerX, flame_centerY;
    // coin haut gauche du sprite des murs et objets
    logic [9:0] wall_centerX, wall_centerY;
    logic [7:0]         data_out;
