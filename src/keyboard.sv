@@ -1,38 +1,30 @@
-`default_nettype none
-  module keyboard( input  logic clk,
-                   input logic        reset_n,
-                   input logic        ps2_clk,
-                   input logic        ps2_data,
-                   output logic [7:0] data_out,       // XXX a mettre en interne apres avoir pris tous les codes
-                   output logic [7:0] lafin,          // ne sert plus a rien la fin = 0f
-                   // Sorties
-                   output logic       j1_up,
-                   output logic       j1_down,
-                   output logic       j1_left,
-                   output logic       j1_right,
-                   output logic       j1_drop,
+module keyboard( input  logic       clk,
+                 input logic        reset_n,
+                 input logic        ps2_clk,
+                 input logic        ps2_data,
+                 output logic [7:0] data_out,
+                 // Sorties
+                 output logic       j1_up,
+                 output logic       j1_down,
+                 output logic       j1_left,
+                 output logic       j1_right,
+                 output logic       j1_drop,
 
-                   output logic       j2_up,
-                   output logic       j2_down,
-                   output logic       j2_left,
-                   output logic       j2_right,
-                   output logic       j2_drop
-                   );
+                 output logic       j2_up,
+                 output logic       j2_down,
+                 output logic       j2_left,
+                 output logic       j2_right,
+                 output logic       j2_drop
+                 );
    // buffer
-   logic [11:0]                       buffer;
-  // logic [7:0]                        data_out;
-   logic                              data_valid;
-   logic [7:0]                        fin;
-   // Dé-métastabilisateur
-   logic                              ps2_clk_r, ps2_clk_clean;
-   logic                              ps2_data_r, ps2_data_clean;
+   logic [11:0]                     buffer;
+   logic                            data_valid;
 
-   always @(*)
-     fin <=8'h0f;
-   // vérification du code de fin d'émission
-   always @(posedge clk)
-     if ( (~(data_out == 8'hb8)) & (~(data_out == 0)))
-       lafin <= data_out;
+   // Dé-métastabilisateur
+   logic                            ps2_clk_r, ps2_clk_clean;
+   logic                            ps2_data_r, ps2_data_clean;
+
+   localparam [7:0] fin =8'h0f;
 
    always @(posedge clk)
      begin
