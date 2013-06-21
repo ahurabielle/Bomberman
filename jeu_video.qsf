@@ -590,6 +590,7 @@ set_global_assignment -name SYNTH_PROTECT_SDC_CONSTRAINT ON
 set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL OFF
+set_global_assignment -name SYSTEMVERILOG_FILE src/maze.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/flame.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/player2.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/player1.sv

@@ -287,10 +287,10 @@
    assign  gpio_0          =       36'hzzzzzzzzz;
    assign  gpio_1          =       36'hzzzzzzzzz;
 
-   // XXX Pour le moment, on donne des valeurs de centerXF et centerYF
+   // XXX Pour le moment, on donne des valeurs de flame_centerX et flame_centerY
    // alors qu'à terme ces positions seront données par le maze
-   assign  centerXF        =        100;
-   assign  centerYF        =        100;
+   assign  flame_centerX        =        100;
+   assign  flame_centerY        =        100;
 
    // Signaux internes
    // debut de trame
@@ -313,11 +313,11 @@
    logic [7:0]         flame_color;
    logic [7:0]         wall_color;
    // coin haut gauche du sprite du joueur1
-   logic signed [10:0] centerX1, centerY1;
+   logic signed [10:0] player1_centerX, player1_centerY;
    // coin haut gauche du sprite du joueur2
-   logic signed [10:0] centerX2, centerY2;
+   logic signed [10:0] player2_centerX, player2_centerY;
    // coin haut gauche du sprite des flammes
-   logic signed [10:0] centerXF, centerYF;
+   logic signed [10:0] flame_centerX, flame_centerY;
    // coin haut gauche du sprite des murs et objets
    logic [9:0] wall_centerX, wall_centerY;
    logic [7:0]         data_out;
@@ -396,10 +396,10 @@
                   .j2_left(j2_left),
                   .player1_num(play1_num),
                   .player2_num(play2_num),
-		          .centerX1(centerX1),
-		          .centerY1(centerY1),
-                  .centerX2(centerX2),
-                  .centerY2(centerY2)
+		          .player1_centerX(player1_centerX),
+		          .player1_centerY(player1_centerY),
+                  .player2_centerX(player2_centerX),
+                  .player2_centerY(player2_centerY)
 		          );
 
    // Instanciation du module maze
@@ -420,8 +420,8 @@
    player1 ply1(.clk(vga_clk),
                 .spotX(vga_spotX),
                 .spotY(vga_spotY),
-		        .centerX1(centerX1),
-		        .centerY1(centerY1),
+		        .player1_centerX(player1_centerX),
+		        .player1_centerY(player1_centerY),
                 .sprite_num(play1_num),
                 .player1_color(player1_color)
 		        );
@@ -430,8 +430,8 @@
    player2 play2(.clk(vga_clk),
                 .spotX(vga_spotX),
                 .spotY(vga_spotY),
-		        .centerX2(centerX2),
-		        .centerY2(centerY2),
+		        .player2_centerX(player2_centerX),
+		        .player2_centerY(player2_centerY),
                 .sprite_num(play2_num),
                 .player2_color(player2_color)
 		        );
@@ -440,8 +440,8 @@
    flame flame(.clk(vga_clk),
                .spotX(vga_spotX),
                .spotY(vga_spotY),
-		       .centerXF(centerXF),
-		       .centerYF(centerYF),
+		       .flame_centerX(flame_centerX),
+		       .flame_centerY(flame_centerY),
                .sprite_num(flame_num),
                .flame_color(flame_color)
 		       );
