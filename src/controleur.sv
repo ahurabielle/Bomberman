@@ -24,6 +24,15 @@ module controleur (input              clk,
 
 		           );
 
+   localparam FACE    = 0;
+   localparam UP1     = 1;
+   localparam UP2     = 2;
+   localparam RIGHT1  = 3;
+   localparam RIGHT2  = 4;
+   localparam LEFT1   = 5;
+   localparam LEFT2   = 6;
+
+
    // variables locales
    // est on ou pas dans la trame
    logic                              verou_trame ;
@@ -34,7 +43,7 @@ module controleur (input              clk,
    localparam integer                 VACTIVE = 600;
    // compteur permettant de faire marcher les sprites
    logic [24:0]                       compt_player1;
-   logic [25:0]                       compt_player2;
+   logic [24:0]                       compt_player2;
 
    // instantiation des compteurs qui vont servir a alterner les sprites quand le bonhomme marche
    always @(posedge clk or negedge reset_n)
@@ -102,22 +111,24 @@ module controleur (input              clk,
    // En fonction du mouvement du bonhomme on va afficher des sprites différents
    always @ (posedge clk)
      begin
-        // De base le bonhomme nous fait fasse
-        player1_num <= 2;
-        player2_num <= 2;
+        // De base le bonhomme nous fait face
+        player1_num <= FACE;
+        player2_num <= FACE;
+
         // On alterne les sprites pour donner l'illusion qu'il marche
         if(j1_up | j1_down)
-          player1_num <= (compt_player1 > 16777215);
+          player1_num <= UP1 + (compt_player1 > 16777215);
         else if(j1_left)
-          player1_num <= 5 + (compt_player1 > 16777215);
+          player1_num <= LEFT1 + (compt_player1 > 16777215);
         else if(j1_right)
-          player1_num <= 3 + (compt_player1 > 16777215);
+          player1_num <= RIGHT1 + (compt_player1 > 16777215);
+
         if(j2_up | j2_down)
-          player2_num <= 5 + (compt_player2 > 16777215);
+          player2_num <= UP1 + (compt_player2 > 16777215);
         else if(j2_left)
-          player2_num <= 3 + (compt_player2 > 16777215);
+          player2_num <= LEFT1 + (compt_player2 > 16777215);
         else if(j2_right)
-          player2_num <= (compt_player2 > 16777215);
+          player2_num <= RIGHT1 + (compt_player2 > 16777215);
      end // always @ (posedge clk)
 
 endmodule // controleur
