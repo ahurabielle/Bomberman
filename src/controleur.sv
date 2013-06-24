@@ -31,6 +31,9 @@ module controleur (input              clk,
    localparam RIGHT2  = 4;
    localparam LEFT1   = 5;
    localparam LEFT2   = 6;
+   // taille de l'écran en fonction du nombre de sprites (25 horizontaux et 17 verticaux)
+   localparam HSPRITE= 25*32;
+   localparam VSPRITE= 17*32;
 
 
    // variables locales
@@ -89,19 +92,19 @@ module controleur (input              clk,
      else if(verou_trame)
        begin
           // On conditionne pour que le sprite (32*32) ne sorte pas de la fenetre
-          if(j1_up &&  (player1_centerY >= 0))
+          if(j1_up &&  (player1_centerY >= 32))
             player1_centerY <= player1_centerY - 1;
-          if(j1_down && (player1_centerY < VACTIVE-32))
+          if(j1_down && (player1_centerY < VSPRITE-32))
             player1_centerY <= player1_centerY + 1;
-          if(j1_right && (player1_centerX < (HACTIVE - 32)))
+          if(j1_right && (player1_centerX < (HSPRITE - 32)))
             player1_centerX <= player1_centerX + 1;
           if(j1_left && (player1_centerX >= 32))
             player1_centerX <= player1_centerX - 1;
-          if(j2_up &&  (player2_centerY >= 0))
+          if(j2_up &&  (player2_centerY >= 32))
             player2_centerY <= player2_centerY - 1;
-          if(j2_down && (player2_centerY < VACTIVE-32))
+          if(j2_down && (player2_centerY < VSPRITE-32))
             player2_centerY <= player2_centerY + 1;
-          if(j2_right && (player2_centerX < (HACTIVE - 32)))
+          if(j2_right && (player2_centerX < (HSPRITE - 32)))
             player2_centerX <= player2_centerX + 1;
           if(j2_left && (player2_centerX >= 32))
             player2_centerX <= player2_centerX - 1;
