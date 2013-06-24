@@ -86,62 +86,7 @@ module controleur (input              clk,
            state <= 100;
 
 
-<<<<<<< HEAD
-   // bouger le centre a l aide de key et le bloquer lorsque le centre touche un bord
-   always @(posedge clk or negedge reset_n)
-     if(~reset_n)               // on commence au milieu
-       begin
-	      player1_centerX <= 400;
-	      player1_centerY <= 300;
-          player2_centerX <= 450;
-          player2_centerY <= 300;
-       end
-   // si le verou est a un et que j ai recu une donnée du clavier alors je bouge
-     else if(verou_trame)
-       begin
-          // On conditionne pour que le sprite (32*32) ne sorte pas de la fenetre
-          if(j1_up &&  (player1_centerY >= 32))
-            player1_centerY <= player1_centerY - 1;
-          if(j1_down && (player1_centerY < VSPRITE-32))
-            player1_centerY <= player1_centerY + 1;
-          if(j1_right && (player1_centerX < (HSPRITE - 32)))
-            player1_centerX <= player1_centerX + 1;
-          if(j1_left && (player1_centerX >= 32))
-            player1_centerX <= player1_centerX - 1;
-          if(j2_up &&  (player2_centerY >= 32))
-            player2_centerY <= player2_centerY - 1;
-          if(j2_down && (player2_centerY < VSPRITE-32))
-            player2_centerY <= player2_centerY + 1;
-          if(j2_right && (player2_centerX < (HSPRITE - 32)))
-            player2_centerX <= player2_centerX + 1;
-          if(j2_left && (player2_centerX >= 32))
-            player2_centerX <= player2_centerX - 1;
-       end // if (verou_trame)
 
-
-   // En fonction du mouvement du bonhomme on va afficher des sprites différents
-   always @ (posedge clk)
-     begin
-        // De base le bonhomme nous fait face
-        player1_num <= FACE;
-        player2_num <= FACE;
-
-        // On alterne les sprites pour donner l'illusion qu'il marche
-        if(j1_up | j1_down)
-          player1_num <= UP1 + (compt_player1 > 16777215);
-        else if(j1_left)
-          player1_num <= LEFT1 + (compt_player1 > 16777215);
-        else if(j1_right)
-          player1_num <= RIGHT1 + (compt_player1 > 16777215);
-
-        if(j2_up | j2_down)
-          player2_num <= UP1 + (compt_player2 > 16777215);
-        else if(j2_left)
-          player2_num <= LEFT1 + (compt_player2 > 16777215);
-        else if(j2_right)
-          player2_num <= RIGHT1 + (compt_player2 > 16777215);
-     end // always @ (posedge clk)
-=======
          /**************************
           * Traitement du jeu
           **************************/
@@ -151,7 +96,6 @@ module controleur (input              clk,
               if (EOF)
                 state <= 101;
            end
->>>>>>> a147b96dac694f44ea187f8c00dcaece3a0fffdb
 
          101:begin
             // Gère le déplacement du joueur 1

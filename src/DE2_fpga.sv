@@ -267,19 +267,12 @@
    assign  lcd_on          =       1'b0;
    assign  lcd_blon        =       1'b0;
 
-<<<<<<< HEAD
-   //Commande du numÃ©ro des sprites par les switchs
-   logic [2:0]            play1_num;
-   logic [2:0]            play2_num;
-   logic [2:0]            flame_num;
-   logic [3:0]            wall_num;
-=======
+
    //Commande du numéro des sprites par les switchs
    logic [2:0]            player1_sprite;
    logic [2:0]            player2_sprite;
    logic [2:0]            flame_sprite;
    logic [3:0]            wall_sprite;
->>>>>>> a147b96dac694f44ea187f8c00dcaece3a0fffdb
 
    //les sw 11 et 10 controlent les flammes
    assign  flame_sprite       =       sw[11:10];
