@@ -79,7 +79,7 @@ module controleur (input              clk,
           player1Y <= 128;
           player2X <= 448;
           player2Y <= 448;
-          v1 <= 16;
+          v1 <= 32;
           v2 <= 3;
           ram_raddr <= 0;
           ram_waddr <= 0;
@@ -133,9 +133,9 @@ module controleur (input              clk,
               begin
                  // Si on n'est pas déjà en train de se déplacer, on regarde les touches et on déclenche éventuellement
                  // un nouveau déplacement. Sinon, on continue le déplacement.
-                 state <= 201;
                  if (player1_state == WAITING)
                    begin
+                      state <= 201;
                       if(j1_up)
                         begin
                            player1_state <= MOVING;
@@ -171,11 +171,43 @@ module controleur (input              clk,
                       else
                         // On n'a appuyé sur aucune touche, le traitement du déplacement est fini !
                         state <= 102;
-                   end // if (player1_state == WAITING)
-              end // case: 200
+                   end
+                 else
+                   // On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
+                   state <= 220;
+              end
 
-            201 : begin
-               // On sait qu'on est en état MOVING.
+            201: begin
+               // On se prépare à bouge. On vérifie d'abord si la case de destination est libre
+               ram_raddr <= {player1_goalY[13:9], player1_goalX[13:9]};
+               state <= 202;
+            end
+
+            202: begin
+               // État d'attente (dans l'état actuel on présente à la RAM l'adresse de la valeur à lire,
+               // on n'aura la donnée qu'au prochain cycle)
+               state <= 203;
+            end
+
+            203: begin
+               // Vérifie que la case de dstination est bien vide.
+               // Si oui, on effectue le mouvement, si non on annule le mouvement
+               if (ram_rdata == 0)
+                state <= 220;
+               else
+                 begin
+                    // Annule le mouvement
+                    dx1 <= 0;
+                    dy1 <= 0;
+                    player1_state <= WAITING;
+                    player1_goalX <= {player1X, 4'b0000};
+                    player1_goalY <= {player1Y, 4'b0000};
+                    state <= 102;
+                 end
+            end
+
+            220 : begin
+               // On est en état MOVING.
                // Si on est sur le point d'arriver à destination ou de dépasser le cible,
                // on se positionne directement dessus
                if ((((dx1 > 0) && (({player1X, fplayer1X} + dx1) >= player1_goalX)) || ((dx1 < 0) && (({player1X, fplayer1X} + dx1) <= player1_goalX)) || (dx1==0))
@@ -194,6 +226,8 @@ module controleur (input              clk,
                  end // else: !if((((dx1 > 0) && ((player1X+dx1) >= player1_goalX)) ||...
 
                // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
+
+               // Revient à la routine de gestion principale
                state <= 102;
             end // case: 201
 
