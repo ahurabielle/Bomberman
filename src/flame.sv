@@ -21,7 +21,7 @@ module flame(input logic                clk,
      color_pixel <= rom[rom_addr];
 
    initial
-     $readmemh("../sprites/flame.lst", rom);
+     $readmemh("../sprites/flames.lst", rom);
 
    // On n'affiche le contenu de la ROM que si le spot est dans le
    // rectangle du sprite
