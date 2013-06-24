@@ -36,7 +36,7 @@ module maze (input logic         clk,
 
    // On charge le plan du jeu dans la ROM
    initial
-     $readmemh("../maze/maze1.lst", rom);
+     $readmemh("../maze/maze2.lst", rom);
 
    always @(posedge clk)
      // Si on est en dehors du labyrinthe, on affiche du vide
