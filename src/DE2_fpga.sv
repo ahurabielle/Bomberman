@@ -326,6 +326,9 @@
    logic                  j2_left;
    logic                  j2_right;
    logic                  j2_drop;
+   // la vie
+   logic [6:0]            life;
+   logic [23:0]           life_rgb;
 
    // Horloge VGA
    always  @(*)
@@ -335,7 +338,8 @@
    // alors qu'à terme ces positions seront données par le maze
    assign  flame_centerX        =        100;
    assign  flame_centerY        =        100;
-
+   // pour le moment on donne des valeurs à life
+   assign  life = 60;
    // Instanciation des decodeurs 7 segments pour le debug
    logic [31:0]           debug;
    seven_seg s0 (debug[3:0],   hex0);
@@ -346,6 +350,14 @@
    seven_seg s5 (debug[23:20], hex5);
    seven_seg s6 (debug[27:24], hex6);
    seven_seg s7 (debug[31:28], hex7);
+
+   // Instantiation de life
+   life vie(.clk(vga_clk),
+            .spotX(vga_spotX),
+            .spotY(vga_spotY),
+            .life(life),
+            .life_rgb(life_rgb)
+            );
 
    // Instanciation du module de synchro
    synchro sync1(.clk(vga_clk) ,
@@ -465,7 +477,8 @@
              .player1_color(player1_color),
              .vga_r(vga_r),
              .vga_g(vga_g),
-             .vga_b(vga_b)
+             .vga_b(vga_b),
+             .life_rgb(life_rgb)
 	         );
 
    // Debug

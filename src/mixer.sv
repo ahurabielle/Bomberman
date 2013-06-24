@@ -3,6 +3,7 @@ module mixer(input              clk,
              input logic        active,
              // composantes rouges vertes et bleues du fond
              input logic [23:0] bck_rgb,
+             input logic [23:0] life_rgb,
              // composantes rouges bleues vertes et d'opacité des sprites
              input logic [7:0]  player1_color,
              input logic [7:0]  player2_color,
@@ -49,15 +50,22 @@ module mixer(input              clk,
    always_comb
      if(active)
        begin
-          // De base on affiche le background
-          {vga_r, vga_g, vga_b} <= {bck_rgb[23:16], bck_rgb[16],bck_rgb[16] ,
-                                    bck_rgb[15:8], bck_rgb[8] ,  bck_rgb[8],
-                                    bck_rgb[7:0],  bck_rgb[0],  bck_rgb[0]};
+          // De base on affiche le background et la vie
+          if(life_rgb != {8'd255,8'd255,8'd255})
+            {vga_r, vga_g, vga_b} <= {life_rgb[23:16], life_rgb[16],life_rgb[16] ,
+                                      life_rgb[15:8], life_rgb[8] ,  life_rgb[8],
+                                      life_rgb[7:0],  life_rgb[0],  life_rgb[0]};
+          else
+            {vga_r, vga_g, vga_b} <= {bck_rgb[23:16], bck_rgb[16],bck_rgb[16] ,
+                                      bck_rgb[15:8], bck_rgb[8] ,  bck_rgb[8],
+                                      bck_rgb[7:0],  bck_rgb[0],  bck_rgb[0]};
 
           if (rom_addr_r != 137)
             {vga_r, vga_g, vga_b} <=  {pixel[23:16], pixel[16],pixel[16] ,
                                        pixel[15:8], pixel[8] ,  pixel[8],
                                        pixel[7:0],  pixel[0],  pixel[0]};
+
+
        end // if (active)
      else
        {vga_r, vga_g, vga_b} <= 0;
