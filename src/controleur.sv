@@ -13,10 +13,10 @@ module controleur (input              clk,
                    input logic        j2_left,
                    input logic        j2_right,
                    // coordonnee des joueurs
-                   output logic signed [9:0] player1X,
-		           output logic signed [9:0] player1Y,
-                   output logic signed [9:0] player2X,
-                   output logic signed [9:0] player2Y,
+                   output logic signed [10:0] player1X,
+		           output logic signed [10:0] player1Y,
+                   output logic signed [10:0] player2X,
+                   output logic signed [10:0] player2Y,
 
                    // numéros des sprites joueur
                    output logic [2:0] player1_sprite,
@@ -36,10 +36,10 @@ module controleur (input              clk,
    localparam SIZE    = 32;
 
    // Déplacement en x, y
-   logic signed [9:0]                 dx,dy;
+   logic signed [10:0]                dx,dy;
 
    // Destination en x, y
-   logic signed [9:0]                 player1_goalX, player1_goalY;
+   logic signed [10:0]                player1_goalX, player1_goalY;
 
    // Machine à etat
    integer                            state;
@@ -48,7 +48,9 @@ module controleur (input              clk,
    logic [1:0]                        player1_state, player2_state;
    localparam WAITING = 0;
    localparam MOVING  = 1;
-
+   // Vitesse des joueurs 1 et 2
+   logic signed [9:0]                 v1;
+   logic signed [9:0]                 v2;
 
    //déplacement du joueur 1
    always @(posedge clk or negedge reset_n)
@@ -61,6 +63,8 @@ module controleur (input              clk,
           player1Y <= 128;
           player2X <= 448;
           player2Y <= 448;
+          v1 <= 3;
+          v2 <= 3;
        end
      else
        case(state)
@@ -108,7 +112,7 @@ module controleur (input              clk,
                         player1_goalX <= player1X;
                         player1_goalY <= player1Y - SIZE ;
                         dx <= 0;
-                        dy <= -1;
+                        dy <= -v1;
                      end
                    else if(j1_down)
                      begin
@@ -116,14 +120,14 @@ module controleur (input              clk,
                         player1_goalX <= player1X;
                         player1_goalY <= player1Y + SIZE ;
                         dx <= 0;
-                        dy <= 1;
+                        dy <= v1;
                      end
                    else if(j1_right)
                      begin
                         player1_state <= MOVING;
                         player1_goalX <= player1X + SIZE ;
                         player1_goalY <= player1Y;
-                        dx <= 1;
+                        dx <= v1;
                         dy <= 0;
                      end
                    else if(j1_left)
@@ -131,7 +135,7 @@ module controleur (input              clk,
                         player1_state <= MOVING;
                         player1_goalX <= player1X - SIZE ;
                         player1_goalY <= player1Y;
-                        dx <= -1;
+                        dx <= -v1;
                         dy <= 0;
                      end
                    else
@@ -142,18 +146,27 @@ module controleur (input              clk,
 
          201 : begin
             // On sait qu'on est en état MOVING.
-            // Let's move !
-            if((player1X != player1_goalX) || (player1Y != player1_goalY))
+            // Si on est sur le point d'arriver à destination ou de dépasser le cible,
+            // on se positionne directement dessus
+            if ((((dx > 0) && ((player1X+dx) >= player1_goalX)) || ((dx < 0) && ((player1X+dx) <= player1_goalX)) || (dx==0))
+              && (((dy > 0) && ((player1Y+dy) >= player1_goalY)) || ((dy < 0) && ((player1Y+dy) <= player1_goalY)) || (dy ==0)))
               begin
+                 player1X <= player1_goalX;
+                 player1Y <= player1_goalY;
+                 player1_state <= WAITING;
+              end // if ((((dx > 0) && ((player1X+dx) >= player1_goalX)) ||...
+
+            else
+              begin
+                 // On n'est pas encore arrivé (et pas sur le point d'y arriver), on bouge tranquilou bilou
                  player1X <= player1X + dx;
                  player1Y <= player1Y + dy;
-              end
-            else
-              player1_state <= WAITING;
+              end // else: !if((((dx > 0) && ((player1X+dx) >= player1_goalX)) ||...
 
-            // Back to start
+            // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
             state <= 102;
-         end
+         end // case: 201
+
 
        endcase // case (state)
 
