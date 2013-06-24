@@ -332,6 +332,12 @@
    logic [6:0]            life2;
    logic [23:0]           life_rgb;
 
+   // Interface avec la RAM qui stocke le labyrinthe
+   logic [9:0]      maze_ram_raddr, maze_ram_waddr;
+   logic [3:0]      maze_ram_wdata;
+   logic            maze_ram_we;
+   logic [3:0]      maze_ram_rdata;
+
    // Horloge VGA
    always  @(*)
      vga_clk <= clock_50;
@@ -414,7 +420,12 @@
 		          .player1X(player1X),
 		          .player1Y(player1Y),
                   .player2X(player2X),
-                  .player2Y(player2Y)
+                  .player2Y(player2Y),
+                  .ram_waddr(maze_ram_waddr),
+                  .ram_wdata(maze_ram_wdata),
+                  .ram_we(maze_ram_we),
+                  .ram_raddr(maze_ram_raddr),
+                  .ram_rdata(maze_ram_rdata)
 		          );
 
    // Instanciation du module maze
@@ -423,7 +434,13 @@
              .spotY(vga_spotY),
              .wall_num(wall_sprite),
 		     .wall_centerX(wall_centerX),
-		     .wall_centerY(wall_centerY)
+		     .wall_centerY(wall_centerY),
+             .ram_waddr(maze_ram_waddr),
+             .ram_wdata(maze_ram_wdata),
+             .ram_we(maze_ram_we),
+             .ram_raddr(maze_ram_raddr),
+             .ram_rdata(maze_ram_rdata),
+             .active(vga_blank)
              );
    // Instantiation du module background
    background bck(.clk(vga_clk),
