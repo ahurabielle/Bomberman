@@ -9,13 +9,21 @@ module life(input logic clk,
 
 
    // paramètre pour la barre de vie du joueur 1
+   // debut de la barre de vie 1 (support)
    localparam integer                 STARTX1  = 10;
    localparam integer                 STARTY1  = 17*32+10;
+   // debut de la barre de vie 2 (support)
+   localparam integer                 STARTX2  = 800-10;
+   // eppaisseur du support de la barre et paramètres dessus
    localparam integer                 LARGEUR = 3;
    localparam integer                 LONGUEUR_SUPPORT_VERTICAL  = 15;
+   // espace entre le support et la barre
    localparam integer                 ESPACE  = 1;
+   // inutile pour l'instant mais ....
    localparam integer                 CONTOUR = 0;
+   // longueur du support horizontal
    localparam integer                 LONGUEUR_SUPPORT_HORIZONTAL = 100;
+   // début de la barre de vie en elle meme
    localparam integer                 LIFE1_STARTX  = STARTX1 + ESPACE + CONTOUR + LARGEUR;
    localparam integer                 LIFE1_STARTY  = STARTY1 + CONTOUR;
    // paramètre pour la barre de vie du joueur 2
@@ -57,14 +65,14 @@ module life(input logic clk,
 
         // pour le joueur 2
         // barre verticale
-        if ((spotX >= 800 -13) && (spotX <800-10) && (spotY >= STARTY1) && (spotY < (STARTY1 + LONGUEUR_SUPPORT_VERTICAL)))
+        if ((spotX >= STARTX2 - LARGEUR) && (spotX < STARTX2) && (spotY >= STARTY1) && (spotY < (STARTY1 + LONGUEUR_SUPPORT_VERTICAL)))
           case(spotX - (800-13))
             0: life_rgb <=  {8'd193,8'd191,8'd177};
             1: life_rgb <=  {8'd206,8'd206,8'd206};
             2: life_rgb <=  {8'd230,8'd230,8'd230};
           endcase // case (spotX - STARTX)
         // barre horizontale
-        if ((spotX >= 800 -13 - 100) && (spotX < 800-10) && (spotY >= (STARTY1 + LONGUEUR_SUPPORT_VERTICAL))
+        if ((spotX >= STARTX2 - LARGEUR - 100) && (spotX < STARTX2) && (spotY >= (STARTY1 + LONGUEUR_SUPPORT_VERTICAL))
             && (spotY <= STARTY1 + LONGUEUR_SUPPORT_VERTICAL + LARGEUR))
           case ( spotY - (STARTY1 + LONGUEUR_SUPPORT_VERTICAL))
             0: life_rgb <= {8'd193,8'd191,8'd177};
@@ -72,7 +80,7 @@ module life(input logic clk,
             2: life_rgb <= {8'd230,8'd230,8'd230};
           endcase // case ( spotY - (STARTY1 + LONGUEUR_SUPPORT_VERTICAL))
         // barre de vie
-        if((spotX >= 800-15-life2) && (spotX <= 800-15) && (spotY <= (LIFE1_STARTY + LONGUEUR_SUPPORT_VERTICAL - ESPACE)) && (spotY >= LIFE1_STARTY))
+        if((spotX >= STARTX2 - ESPACE - LARGEUR - life2) && (spotX <= STARTX2 - ESPACE - LARGEUR) && (spotY <= (LIFE1_STARTY + LONGUEUR_SUPPORT_VERTICAL - ESPACE)) && (spotY >= LIFE1_STARTY))
           begin
              if ( life2 >= 50 )
                life_rgb <= {8'd20,8'd148,8'd20};
