@@ -12,18 +12,18 @@ module controleur (input              clk,
                    input logic        j2_down,
                    input logic        j2_left,
                    input logic        j2_right,
-                   // correspond au sprite du j1 affiché
-                   output logic [2:0] player1_num,
-                   // correspond au sprite du j2 affiché
-                   output logic [2:0] player2_num,
-                   // coordonnee du centre
-                   output logic [9:0] player1_centerX,
-		           output logic [9:0] player1_centerY,
-                   output logic [9:0] player2_centerX,
-                   output logic [9:0] player2_centerY
+                   // coordonnee des joueurs
+                   output logic signed [9:0] player1X,
+		           output logic signed [9:0] player1Y,
+                   output logic signed [9:0] player2X,
+                   output logic signed [9:0] player2Y,
 
+                   // numéros des sprites joueur
+                   output logic [2:0] player1_sprite,
+                   output logic [2:0] player2_sprite
 		           );
 
+   // Numéros des sprites joueurs
    localparam FACE    = 0;
    localparam UP1     = 1;
    localparam UP2     = 2;
@@ -32,116 +32,130 @@ module controleur (input              clk,
    localparam LEFT1   = 5;
    localparam LEFT2   = 6;
 
+   // Constante de déplacement = 32 (taille du sprite)
+   localparam SIZE    = 32;
 
-   // variables locales
-   // est on ou pas dans la trame
-   logic                              verou_trame ;
-   // compteur permettant la réduction de vitesse de l'horloge
-   logic [10:0]                       compt;
-   // taille de la fenetre active
-   localparam integer                 HACTIVE = 800;
-   localparam integer                 VACTIVE = 600;
-   // compteur permettant de faire marcher les sprites
-   logic [24:0]                       compt_player1;
-   logic [24:0]                       compt_player2;
+   // Déplacement en x, y
+   logic signed [9:0]                 dx,dy;
 
-   // instantiation des compteurs qui vont servir a alterner les sprites quand le bonhomme marche
+   // Destination en x, y
+   logic signed [9:0]                 player1_goalX, player1_goalY;
+
+   // Machine à etat
+   integer                            state;
+
+   // État des joueurs
+   logic [1:0]                        player1_state, player2_state;
+   localparam WAITING = 0;
+   localparam MOVING  = 1;
+
+
+   //déplacement du joueur 1
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
+       //On place les joueus au milieu
        begin
-          compt_player1 <= 0;
-          compt_player2 <= 0;
+          player1_state <= 0;
+          state <= 0;
+          player1X <= 128;
+          player1Y <= 128;
+          player2X <= 448;
+          player2Y <= 448;
        end
      else
-       begin
-          // si on appuye sur une touche de mouvement le compteur correspondant
-          // est incrémenté
-          if((j1_up)|(j1_down)|(j1_left)|(j1_right))
-            compt_player1 <= compt_player1 + 1;
-          if((j2_up)|(j2_down)|(j2_left)|(j2_right))
-            compt_player2 <= compt_player2 + 1;
-       end
-
-   // instantiation du verou, est à 1 quand on est à la fin d'une trame pendant un front d'horloge
-   always @(posedge clk or negedge reset_n)
-     if(~reset_n)
-       verou_trame <= 0;
-     else
-       verou_trame <= (EOF);
-
-   // instantiation du compteur pour reduire la vistesse de l horloge
-   always @(posedge clk or negedge reset_n)
-     if(~reset_n)
-       compt <= 0;
-     else if(~verou_trame)
-       compt <= compt + 1;
-
-   // bouger le centre a l aide de key et le bloquer lorsque le centre touche un bord
-   always @(posedge clk or negedge reset_n)
-     if(~reset_n)               // on commence au milieu
-       begin
-	      player1_centerX <= 400;
-	      player1_centerY <= 300;
-          player2_centerX <= 450;
-          player2_centerY <= 300;
-       end
-   // si le verou est a un et que j ai recu une donnée du clavier alors je bouge
-     else if(verou_trame)
-       begin
-          // On conditionne pour que le sprite (32*32) ne sorte pas de la fenetre
-          if(j1_up &&  (player1_centerY >= 0))
-            player1_centerY <= player1_centerY - 1;
-          if(j1_down && (player1_centerY < VACTIVE-32))
-            player1_centerY <= player1_centerY + 1;
-          if(j1_right && (player1_centerX < (HACTIVE - 32)))
-            player1_centerX <= player1_centerX + 1;
-          if(j1_left && (player1_centerX >= 32))
-            player1_centerX <= player1_centerX - 1;
-          if(j2_up &&  (player2_centerY >= 0))
-            player2_centerY <= player2_centerY - 1;
-          if(j2_down && (player2_centerY < VACTIVE-32))
-            player2_centerY <= player2_centerY + 1;
-          if(j2_right && (player2_centerX < (HACTIVE - 32)))
-            player2_centerX <= player2_centerX + 1;
-          if(j2_left && (player2_centerX >= 32))
-            player2_centerX <= player2_centerX - 1;
-       end // if (verou_trame)
+       case(state)
+         /**************************
+          * Phases d'initialistations
+          **************************/
+         // Pour l'instant : rien à faire, on passe directement au traitement du jeu
+         0:
+           state <= 100;
 
 
-   // En fonction du mouvement du bonhomme on va afficher des sprites différents
-   always @ (posedge clk)
-     begin
-        // De base le bonhomme nous fait face
-        player1_num <= FACE;
-        player2_num <= FACE;
+         /**************************
+          * Traitement du jeu
+          **************************/
+         100:
+           begin
+              // On commence par attendre que EOF soit haut
+              if (EOF)
+                state <= 101;
+           end
 
-        // On alterne les sprites pour donner l'illusion qu'il marche
-        if(j1_up | j1_down)
-          player1_num <= UP1 + (compt_player1 > 16777215);
-        else if(j1_left)
-          player1_num <= LEFT1 + (compt_player1 > 16777215);
-        else if(j1_right)
-          player1_num <= RIGHT1 + (compt_player1 > 16777215);
+         101:begin
+            // Gère le déplacement du joueur 1
+            state <= 200;
+         end
 
-        if(j2_up | j2_down)
-          player2_num <= UP1 + (compt_player2 > 16777215);
-        else if(j2_left)
-          player2_num <= LEFT1 + (compt_player2 > 16777215);
-        else if(j2_right)
-          player2_num <= RIGHT1 + (compt_player2 > 16777215);
-     end // always @ (posedge clk)
+         102: begin
+            // On repart en attente du EOF
+            state <= 100;
+         end
+
+         /**************************
+          * Déplacement du joueur 1
+          **************************/
+         200 :
+           begin
+              // Si on n'est pas déjà en train de se déplacer, on regarde les touches et on déclenche éventuellement
+              // un nouveau déplacement. Sinon, on continue le déplacement.
+              state <= 201;
+              if (player1_state == WAITING)
+                begin
+                   if(j1_up)
+                     begin
+                        player1_state <= MOVING;
+                        player1_goalX <= player1X;
+                        player1_goalY <= player1Y - SIZE ;
+                        dx <= 0;
+                        dy <= -1;
+                     end
+                   else if(j1_down)
+                     begin
+                        player1_state <= MOVING;
+                        player1_goalX <= player1X;
+                        player1_goalY <= player1Y + SIZE ;
+                        dx <= 0;
+                        dy <= 1;
+                     end
+                   else if(j1_right)
+                     begin
+                        player1_state <= MOVING;
+                        player1_goalX <= player1X + SIZE ;
+                        player1_goalY <= player1Y;
+                        dx <= 1;
+                        dy <= 0;
+                     end
+                   else if(j1_left)
+                     begin
+                        player1_state <= MOVING;
+                        player1_goalX <= player1X - SIZE ;
+                        player1_goalY <= player1Y;
+                        dx <= -1;
+                        dy <= 0;
+                     end
+                   else
+                     // On n'a appuyé sur aucune touche, le traitement du déplacement est fini !
+                     state <= 102;
+                end // if (player1_state == WAITING)
+           end // case: 200
+
+         201 : begin
+            // On sait qu'on est en état MOVING.
+            // Let's move !
+            if((player1X != player1_goalX) || (player1Y != player1_goalY))
+              begin
+                 player1X <= player1X + dx;
+                 player1Y <= player1Y + dy;
+              end
+            else
+              player1_state <= WAITING;
+
+            // Back to start
+            state <= 102;
+         end
+
+       endcase // case (state)
+
 
 endmodule // controleur
-
-
-
-
-
-
-
-
-
-
-
-
-
