@@ -257,7 +257,7 @@
    inout wire [35:0]      gpio_0;       // gpio connection 0
    inout wire [35:0]      gpio_1;       // gpio connection 1
 
-   // Génération d'un reset
+   // GÃ©nÃ©ration d'un reset
    logic                  reset_n;
    gene_reset gene_reset(.clk(clock_50), .reset_n(reset_n));
 
@@ -267,7 +267,7 @@
    assign  lcd_on          =       1'b0;
    assign  lcd_blon        =       1'b0;
 
-   //Commande du numéro des sprites par les switchs
+   //Commande du numÃ©ro des sprites par les switchs
    logic [2:0]            play1_num;
    logic [2:0]            play2_num;
    logic [2:0]            flame_num;
@@ -327,7 +327,8 @@
    logic                  j2_right;
    logic                  j2_drop;
    // la vie
-   logic [6:0]            life;
+   logic [6:0]            life1;
+   logic [6:0]            life2;
    logic [23:0]           life_rgb;
 
    // Horloge VGA
@@ -335,11 +336,12 @@
      vga_clk <= clock_50;
 
    // XXX Pour le moment, on donne des valeurs de flame_centerX et flame_centerY
-   // alors qu'à terme ces positions seront données par le maze
+   // alors qu'Ã  terme ces positions seront donnÃ©es par le maze
    assign  flame_centerX        =        100;
    assign  flame_centerY        =        100;
-   // pour le moment on donne des valeurs à life
-   assign  life = 60;
+   // pour le moment on donne des valeurs Ã  life
+   assign  life1 = 35;
+   assign  life2 = 75;
    // Instanciation des decodeurs 7 segments pour le debug
    logic [31:0]           debug;
    seven_seg s0 (debug[3:0],   hex0);
@@ -355,7 +357,8 @@
    life vie(.clk(vga_clk),
             .spotX(vga_spotX),
             .spotY(vga_spotY),
-            .life(life),
+            .life1(life1),
+            .life2(life2),
             .life_rgb(life_rgb)
             );
 
