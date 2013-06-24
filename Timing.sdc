@@ -1,22 +1,22 @@
 #************************************************************
-# THIS IS A WIZARD-GENERATED FILE.                           
+# THIS IS A WIZARD-GENERATED FILE.
 #
 # Version 11.0 Build 208 07/03/2011 Service Pack 1 SJ Full Version
 #
 #************************************************************
 
 # Copyright (C) 1991-2011 Altera Corporation
-# Your use of Altera Corporation's design tools, logic functions 
-# and other software and tools, and its AMPP partner logic 
-# functions, and any output files from any of the foregoing 
-# (including device programming or simulation files), and any 
-# associated documentation or information are expressly subject 
-# to the terms and conditions of the Altera Program License 
-# Subscription Agreement, Altera MegaCore Function License 
-# Agreement, or other applicable license agreement, including, 
-# without limitation, that your use is for the sole purpose of 
-# programming logic devices manufactured by Altera and sold by 
-# Altera or its authorized distributors.  Please refer to the 
+# Your use of Altera Corporation's design tools, logic functions
+# and other software and tools, and its AMPP partner logic
+# functions, and any output files from any of the foregoing
+# (including device programming or simulation files), and any
+# associated documentation or information are expressly subject
+# to the terms and conditions of the Altera Program License
+# Subscription Agreement, Altera MegaCore Function License
+# Agreement, or other applicable license agreement, including,
+# without limitation, that your use is for the sole purpose of
+# programming logic devices manufactured by Altera and sold by
+# Altera or its authorized distributors.  Please refer to the
 # applicable agreement for further details.
 
 
@@ -46,8 +46,8 @@ set_max_delay -from [all_inputs] -to [all_outputs] 15.000ns
 #set_input_delay -clock virt_clk50 -min -1.5ns [all_inputs]
 
 # tco constraints
-#set_output_delay -clock "clock_50" -max 18ns [get_ports {*}] 
-#set_output_delay -clock "clock_50" -min -1.000ns [get_ports {*}] 
+#set_output_delay -clock "clock_50" -max 18ns [get_ports {*}]
+#set_output_delay -clock "clock_50" -min -1.000ns [get_ports {*}]
 
 
 # tpd constraints

@@ -29,8 +29,6 @@ module maze (input logic         clk,
 
    always @(*)
      begin
-        // XXX : TODO : modier le python pour la génération du maze pour prendre
-        // en compte que les lignes sont alignées sur des frontières de 32 mots.
         rom_addr <= {num_carreY, num_carreX};
      end
 
@@ -46,7 +44,12 @@ module maze (input logic         clk,
        wall_num <= rom[rom_addr];
 
    // Génération de la position du mur sur lequel se trouve le spot
-   assign wall_centerX = num_carreX*32;
-   assign wall_centerY = num_carreY*32;
+   // On le fait de façon synchrone, pour que wall_centerX/Y soient
+   // synchronisés avec wall_num
+   always @(posedge clk)
+     begin
+        wall_centerX <= num_carreX*32;
+        wall_centerY <= num_carreY*32;
+     end
 
 endmodule // maze
