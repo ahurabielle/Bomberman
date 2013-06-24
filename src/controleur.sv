@@ -37,9 +37,19 @@ module controleur (input              clk,
    localparam RIGHT2  = 4;
    localparam LEFT1   = 5;
    localparam LEFT2   = 6;
-   // taille de l'écran en fonction du nombre de sprites (25 horizontaux et 17 verticaux)
+
+   // Taille de l'écran en fonction du nombre de sprites (25 horizontaux et 17 verticaux)
    localparam HSPRITE= 25*32;
    localparam VSPRITE= 17*32;
+
+   // Numéros de sprites des portes
+   localparam WALL_EMPTY = 0;
+   localparam WALL_1     = 1;
+   localparam WALL_2     = 2;
+   localparam GATE_RIGHT = 3;
+   localparam GATE_LEFT  = 4;
+   localparam GATE_UP    = 5;
+   localparam GATE_DOWN  = 6;
 
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
@@ -71,7 +81,7 @@ module controleur (input              clk,
    //déplacement du joueur 1
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
-       //On place les joueus au milieu
+       //On place les joueurs au milieu
        begin
           player1_state <= 0;
           state <= 0;
@@ -178,7 +188,7 @@ module controleur (input              clk,
               end
 
             201: begin
-               // On se prépare à bouge. On vérifie d'abord si la case de destination est libre
+               // On se prépare à bouger. On vérifie d'abord si la case de destination est libre.
                ram_raddr <= {player1_goalY[13:9], player1_goalX[13:9]};
                state <= 202;
             end
@@ -190,20 +200,65 @@ module controleur (input              clk,
             end
 
             203: begin
-               // Vérifie que la case de dstination est bien vide.
-               // Si oui, on effectue le mouvement, si non on annule le mouvement
-               if (ram_rdata == 0)
+               // Vérifie que la case de destination est bien vide. Si oui, on effectue le mouvement.
+               // Si non on passe au test suivant (porte et qu'on va dans la bonne direction)
+               if (ram_rdata == WALL_EMPTY)
                 state <= 220;
                else
-                 begin
-                    // Annule le mouvement
-                    dx1 <= 0;
-                    dy1 <= 0;
-                    player1_state <= WAITING;
-                    player1_goalX <= {player1X, 4'b0000};
-                    player1_goalY <= {player1Y, 4'b0000};
-                    state <= 102;
-                 end
+                 state <= 204;
+            end
+
+            204 : begin
+               // Si on a un mur, on annule le mouvement
+               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2))
+                 state <= 218;
+               else
+                 state <= 205;
+
+            end
+            205 : begin
+               // Si on est sur une porte et qu'on ne va pas dans le bon sens, annule le mouvement
+               if (((ram_rdata == GATE_RIGHT) & (dx1 <= 0)) ||
+                   ((ram_rdata == GATE_LEFT)  & (dx1 >= 0)) ||
+                   ((ram_rdata == GATE_DOWN)  & (dy1 <= 0)) ||
+                   ((ram_rdata == GATE_UP)    & (dy1 >= 0)))
+                 state <= 218;
+               else
+                 state <=  206;
+            end
+
+            206 : begin
+               // Si on a passé une porte, on flippe la porte
+               if(ram_rdata == GATE_UP)
+                 ram_wdata <= GATE_DOWN;
+               if(ram_rdata == GATE_DOWN)
+                 ram_wdata <= GATE_UP;
+               if(ram_rdata == GATE_LEFT)
+                 ram_wdata <= GATE_RIGHT;
+               if(ram_rdata == GATE_RIGHT)
+                 ram_wdata <= GATE_LEFT;
+               // Active l'écriture en RAM
+               if ((ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) || (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
+                 ram_we <= 1;
+               // La case qu'on doit écrire est justement celle qu'on est en train de lire
+               ram_waddr <= ram_raddr;
+               state <= 207;
+            end // case: 205
+
+            207 : begin
+               // On a éventuellement flippé une porte, on peut maintenant continuer le mouvement
+               state <= 220;
+            end
+
+
+            218 : begin
+               // Annule le mouvement
+               dx1 <= 0;
+               dy1 <= 0;
+               player1_state <= WAITING;
+               player1_goalX <= {player1X, 4'b0000};
+               player1_goalY <= {player1Y, 4'b0000};
+               state <= 102;
             end
 
             220 : begin
