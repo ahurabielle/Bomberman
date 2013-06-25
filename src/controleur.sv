@@ -73,6 +73,7 @@ module controleur (input              clk,
    // Machine à etat
    integer                                    state;
    integer                                    return_addr;
+   logic [9:0]                                count;
 
    // État des joueurs
    logic [1:0]                                player1_state, player2_state;
@@ -87,10 +88,12 @@ module controleur (input              clk,
    logic [3:0]                                bomb_ram_raddr, bomb_ram_waddr;
    logic [18:0]                               bomb_ram_wdata;
    logic                                      bomb_ram_we;
-   logic [18:0]                               bomb__ram_rdata;
+   logic [18:0]                               bomb_ram_rdata;
    logic [18:0]                               bomb_ram[0:15];
-   logic [4:0]                                bombX, bombY;
+   logic [4:0]                                bombX, bombY, dummyX, dummyY;
+   // Détermine la durée avant explosion de la bombe
    logic [8:0]                                bomb_timer;
+   logic [3:0]                                bomb_num;
 
    //Machine à etats
    always @(posedge clk or negedge reset_n)
@@ -113,6 +116,7 @@ module controleur (input              clk,
           bomb_ram_waddr <= 0;
           bomb_ram_wdata <= 0;
           bomb_ram_we <= 0;
+          count <= 0;
        end
      else
        begin
@@ -126,8 +130,48 @@ module controleur (input              clk,
              **************************/
             // Pour l'instant : rien à faire, on passe directement au traitement du jeu
             0:
-              state <= 100;
+              begin
+                 ram_raddr <= 0;
+                 state <= state + 1;
+              end
 
+            1:
+              begin
+                 // Temps d'attente
+                 state <= state +1;
+              end
+            2:
+              // On regarde s'il y a une bombe à l'emplacement que l'on lit
+              // Si c'est le cas, on la remplace par du vide
+              // Sinon, on n'y touche pas.
+              // On vérifie l'adresse suivante jusqu'à la fin de la Ram.
+              begin
+                 if(ram_rdata == BOMB)
+                   begin
+                      ram_wdata <= WALL_EMPTY ;
+                      ram_waddr <= ram_raddr;
+                      ram_we <= 1;
+                   end
+                 ram_raddr <= ram_raddr + 1;
+                 state <= 1;
+                 if(ram_raddr == ((17 * 32) - 1))
+                   state <= state + 1;
+              end
+
+            3: // Ré-initialisation de la RAM bomb
+              begin
+                 bomb_ram_waddr <= 0;
+                 state <= state + 1;
+              end
+
+            4: // Ré-initialisation de la RAM bomb
+              begin
+                 bomb_ram_wdata <= 0;
+                 bomb_ram_we <= 1;
+                 bomb_ram_waddr <= bomb_ram_waddr + 1;
+                 if (bomb_ram_waddr == 15)
+                   state <= 100;
+              end
 
             /**************************
              * Traitement du jeu
@@ -179,7 +223,14 @@ module controleur (input              clk,
                  else
                    state <= state + 1;
 
-            105: begin
+            105:
+              // Gestion de timers
+              begin
+                 state <= 400;
+                 return_addr <= state + 1;
+              end
+
+            106: begin
                // On repart en attente du EOF
                state <= 100;
             end
@@ -295,8 +346,11 @@ module controleur (input              clk,
             end // case: 206
 
             207 : begin
-               // On a éventuellement flippé une porte, on peut maintenant continuer le mouvement
-               state <= 220;
+               // Si il y a une bombe, on annule le mouvement
+               if (ram_rdata == BOMB)
+                 state <= 218;
+               else
+                 state <= 220;
             end
 
 
@@ -437,6 +491,49 @@ module controleur (input              clk,
               end
 
             304 :
+              /// Empty state (code moved)
+              state <= state + 1;
+
+            305 :
+              // Cherche une bombe libre dans la Ram de bombe
+              begin
+                 bomb_ram_raddr <= 0;
+                 state <= state +1;
+              end
+
+            306 :
+              // Attente avant lecture
+              state <= state + 1;
+
+            307 : // Lit le contenu de la RAM
+              begin
+                 bomb_timer <= bomb_ram_rdata[18:10];
+                 state <= state + 1;
+              end
+
+            308 :
+              // Si on a une case libre, on stocke le timer et les coordonnées de la bombe
+              // Sinon, soit on observe la case suivante, soit on a tout parcouru.
+              // Dans ce dernier cas, on n'autorise pas le dépot de la bombe
+              // car il n'y a pas de bombe disponible
+              begin
+                 if(bomb_timer == 0)
+                   begin
+                      bomb_ram_waddr <= bomb_ram_raddr;
+                      bomb_ram_wdata <= {9'd360, bombY, bombX};
+                      bomb_ram_we <= 1;
+                      state <= state + 1;
+                   end
+                 else if(bomb_ram_raddr != 15)
+                   begin
+                      state <= 306 ;
+                      bomb_ram_raddr <= bomb_ram_raddr + 1;
+                   end
+                 else
+                   state <= return_addr;
+              end
+
+            309 :
               // Dépose la bombe : stocke sprite bombe dans la Ram sprite
               begin
                  ram_waddr <= {bombY, bombX};
@@ -445,10 +542,24 @@ module controleur (input              clk,
                  state <= state + 1;
               end
 
-            305 :
+            310 :
+              state <= return_addr;
+
+            /***********************
+             ******Timers***********
+             **********************/
+            400:
               state <= return_addr;
 
           endcase // case (state)
        end
+
+   // BOMB RAM
+   always @(posedge clk)
+     if(bomb_ram_we)
+       bomb_ram[bomb_ram_waddr] <= bomb_ram_wdata;
+
+   always @(posedge clk)
+     bomb_ram_rdata <= bomb_ram[bomb_ram_raddr];
 
 endmodule // controleur
