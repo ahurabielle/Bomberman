@@ -8,10 +8,12 @@ module controleur (input              clk,
                    input logic                j1_down,
                    input logic                j1_left,
                    input logic                j1_right,
+                   input logic                j1_drop,
                    input logic                j2_up,
                    input logic                j2_down,
                    input logic                j2_left,
                    input logic                j2_right,
+                   input logic                j2_drop,
                    // coordonnee des joueurs
                    output logic signed [10:0] player1X,
 		           output logic signed [10:0] player1Y,
@@ -50,6 +52,7 @@ module controleur (input              clk,
    localparam GATE_LEFT  = 4;
    localparam GATE_UP    = 5;
    localparam GATE_DOWN  = 6;
+   localparam BOMB       = 7;
 
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
@@ -69,6 +72,7 @@ module controleur (input              clk,
 
    // Machine à etat
    integer                                    state;
+   integer                                    return_addr;
 
    // État des joueurs
    logic [1:0]                                player1_state, player2_state;
@@ -78,7 +82,17 @@ module controleur (input              clk,
    logic signed [13:0]                        v1;
    logic signed [13:0]                        v2;
 
-   //déplacement du joueur 1
+   // RAM des bombes qui contient les états (timer, X, Y) des bombes déposées
+   // Elles peuvent être au nombre de 16 au total
+   logic [3:0]                                bomb_raddr, bomb_waddr;
+   logic [18:0]                               bomb_wdata;
+   logic                                      bomb_we;
+   logic [18:0]                               bomb_rdata;
+   logic [18:0]                               bomb_ram[0:15];
+   logic [4:0]                                bombX, bombY;
+   logic [8:0]                                bomb_timer;
+
+   //Machine à etats
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
        //On place les joueurs au milieu
@@ -95,11 +109,16 @@ module controleur (input              clk,
           ram_waddr <= 0;
           ram_wdata <= 0;
           ram_we <= 0;
+          bomb_raddr <= 0;
+          bomb_waddr <= 0;
+          bomb_wdata <= 0;
+          bomb_we <= 0;
        end
      else
        begin
           // Par défaut, on ne fait PAS d'écriture dans la RAM
           ram_we <= 0;
+          bomb_we <= 0;
 
           case(state)
             /**************************
@@ -108,7 +127,6 @@ module controleur (input              clk,
             // Pour l'instant : rien à faire, on passe directement au traitement du jeu
             0:
               state <= 100;
-
 
 
             /**************************
@@ -124,17 +142,48 @@ module controleur (input              clk,
             101:begin
                // Gère le déplacement du joueur 1
                state <= 200;
+               return_addr <= state + 1;
             end
 
             102: begin
                // Gère le déplacement du joueur 2
                state <= 250;
+               return_addr <= state + 1;
             end
 
-            103: begin
+            103:
+              // Gère le dépot des bombes du joueur 1
+                 if (j1_drop)
+                   //La position de la bombe sera la position ou le joueur
+                   //est placé majoritairement
+                   begin
+                      bombX <= (player1X[10:5] +16) / 32;
+                      bombY <= (player1Y[10:5] +16) / 32;
+                      state <= 300;
+                      return_addr <= state + 1;
+                   end
+                 else
+                   state <= state + 1;
+
+            104:
+              // Gère le dépot des bombes du joueur 2
+                 if (j2_drop)
+                   //La position de la bombe sera la position ou le joueur
+                   //est placé majoritairement
+                   begin
+                      bombX <= (player2X[10:5] +16) / 32;
+                      bombY <= (player2Y[10:5] +16) / 32;
+                      state <= 300;
+                      return_addr <= state + 1;
+                   end
+                 else
+                   state <= state + 1;
+
+            105: begin
                // On repart en attente du EOF
                state <= 100;
             end
+
 
             /**************************
              * Déplacement du joueur 1
@@ -145,7 +194,7 @@ module controleur (input              clk,
                  // un nouveau déplacement. Sinon, on continue le déplacement.
                  if (player1_state == WAITING)
                    begin
-                      state <= 201;
+                      state <= state + 1;
                       if(j1_up)
                         begin
                            player1_state <= MOVING;
@@ -180,7 +229,7 @@ module controleur (input              clk,
                         end
                       else
                         // On n'a appuyé sur aucune touche, le traitement du déplacement est fini !
-                        state <= 102;
+                        state <= return_addr;
                    end
                  else
                    // On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
@@ -190,13 +239,13 @@ module controleur (input              clk,
             201: begin
                // On se prépare à bouger. On vérifie d'abord si la case de destination est libre.
                ram_raddr <= {player1_goalY[13:9], player1_goalX[13:9]};
-               state <= 202;
+               state <= state + 1;
             end
 
             202: begin
                // État d'attente (dans l'état actuel on présente à la RAM l'adresse de la valeur à lire,
                // on n'aura la donnée qu'au prochain cycle)
-               state <= 203;
+               state <= state + 1;
             end
 
             203: begin
@@ -205,7 +254,7 @@ module controleur (input              clk,
                if (ram_rdata == WALL_EMPTY)
                 state <= 220;
                else
-                 state <= 204;
+                 state <= state + 1;
             end
 
             204 : begin
@@ -213,9 +262,9 @@ module controleur (input              clk,
                if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2))
                  state <= 218;
                else
-                 state <= 205;
-
+                 state <= state + 1;
             end
+
             205 : begin
                // Si on est sur une porte et qu'on ne va pas dans le bon sens, annule le mouvement
                if (((ram_rdata == GATE_RIGHT) & (dx1 <= 0)) ||
@@ -224,7 +273,7 @@ module controleur (input              clk,
                    ((ram_rdata == GATE_UP)    & (dy1 >= 0)))
                  state <= 218;
                else
-                 state <=  206;
+                 state <= state + 1;
             end
 
             206 : begin
@@ -242,7 +291,7 @@ module controleur (input              clk,
                  ram_we <= 1;
                // La case qu'on doit écrire est justement celle qu'on est en train de lire
                ram_waddr <= ram_raddr;
-               state <= 207;
+               state <= state + 1;
             end // case: 206
 
             207 : begin
@@ -258,7 +307,7 @@ module controleur (input              clk,
                player1_state <= WAITING;
                player1_goalX <= {player1X, 4'b0000};
                player1_goalY <= {player1Y, 4'b0000};
-               state <= 102;
+               state <= return_addr;
             end
 
             220 : begin
@@ -283,7 +332,7 @@ module controleur (input              clk,
                // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
 
                // Revient à la routine de gestion principale
-               state <= 102;
+               state <= return_addr;
             end // case: 201
 
             /**************************
@@ -293,7 +342,7 @@ module controleur (input              clk,
               begin
                  // Si on n'est pas déjà en train de se déplacer, on regarde les touches et on déclenche éventuellement
                  // un nouveau déplacement. Sinon, on continue le déplacement.
-                 state <= 251;
+                 state <= state + 1;
                  if (player2_state == WAITING)
                    begin
                       if(j2_up)
@@ -330,7 +379,7 @@ module controleur (input              clk,
                         end
                       else
                         // On n'a appuyé sur aucune touche, le traitement du déplacement est fini !
-                        state <= 103;
+                        state <= return_addr;
                    end // if (player2_state == WAITING)
               end // case: 250
 
@@ -354,8 +403,50 @@ module controleur (input              clk,
                  end // else: !if((((dx2 > 0) && ((player2X+dx) >= player2_goalX)) ||...
 
                // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
-               state <= 103;
+               state <= return_addr;
             end // case: 251
+
+            /***********************
+             ******Bombes***********
+             **********************/
+            300 :
+              begin
+                 state <= state + 1;
+              end // case: 300
+
+            301 :
+              //On va vérifier qu'on n'a pas encore posé la bombe à cet emplacement
+              begin
+                 ram_raddr <= {bombY, bombX};
+                 state <= state + 1;
+              end
+
+            302 :
+              // Etat d'attente de lecture de la ram
+              state <= state + 1;
+
+            303:
+              // On a accès à la ram
+              // On vérifie que le sprite est vide.
+              // Dans ce cas, on pose une bombe, sinon, on skip
+              begin
+                 if(ram_rdata == 0)
+                   state <= state + 1;
+                 else
+                   state <= return_addr;
+              end
+
+            304 :
+              // Dépose la bombe : stocke sprite bombe dans la Ram sprite
+              begin
+                 ram_waddr <= ram_raddr;
+                 ram_wdata <= BOMB;
+                 ram_we <= 1;
+                 state <= state + 1;
+              end
+
+            305 :
+              state <= return_addr;
 
           endcase // case (state)
        end
