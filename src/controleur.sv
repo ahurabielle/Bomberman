@@ -28,7 +28,10 @@ module controleur (input              clk,
                    output logic [9:0]         ram_raddr, ram_waddr,
                    output logic [3:0]         ram_wdata,
                    output logic               ram_we,
-                   input logic [3:0]          ram_rdata
+                   input logic [3:0]          ram_rdata,
+
+                   // Debug
+                   output logic [31:0]        debug
 		           );
 
    // Numéros des sprites joueurs
@@ -197,34 +200,34 @@ module controleur (input              clk,
 
             103:
               // Gère le dépot des bombes du joueur 1
-                 if (j1_drop)
-                   //La position de la bombe sera la position ou le joueur
-                   //est placé majoritairement
-                   begin
-                      bombX <= (player1X +16) / 32;
-                      bombY <= (player1Y +16) / 32;
-                      state <= 300;
-                      return_addr <= state + 1;
-                   end
-                 else
-                   state <= state + 1;
+              if (j1_drop)
+                //La position de la bombe sera la position ou le joueur
+                //est placé majoritairement
+                begin
+                   bombX <= (player1X + 16) / 32;
+                   bombY <= (player1Y + 16) / 32;
+                   state <= 300;
+                   return_addr <= state + 1;
+                end
+              else
+                state <= state + 1;
 
             104:
               // Gère le dépot des bombes du joueur 2
-                 if (j2_drop)
-                   //La position de la bombe sera la position ou le joueur
-                   //est placé majoritairement
-                   begin
-                      bombX <= (player2X[10:5] +16) / 32;
-                      bombY <= (player2Y[10:5] +16) / 32;
-                      state <= 300;
-                      return_addr <= state + 1;
-                   end
-                 else
-                   state <= state + 1;
+              if (j2_drop)
+                //La position de la bombe sera la position ou le joueur
+                //est placé majoritairement
+                begin
+                   bombX <= (player2X + 16) / 32;
+                   bombY <= (player2Y + 16) / 32;
+                   state <= 300;
+                   return_addr <= state + 1;
+                end
+              else
+                state <= state + 1;
 
             105:
-              // Gestion de timers
+              // Gestion des timers
               begin
                  state <= 400;
                  return_addr <= state + 1;
@@ -303,7 +306,7 @@ module controleur (input              clk,
                // Vérifie que la case de destination est bien vide. Si oui, on effectue le mouvement.
                // Si non on passe au test suivant (porte et qu'on va dans la bonne direction)
                if (ram_rdata == WALL_EMPTY)
-                state <= 220;
+                 state <= 220;
                else
                  state <= state + 1;
             end
@@ -484,10 +487,10 @@ module controleur (input              clk,
               // On vérifie que le sprite est vide.
               // Dans ce cas, on pose une bombe, sinon, on skip
               begin
-               if (ram_rdata == WALL_EMPTY)
+                 if (ram_rdata == WALL_EMPTY)
                    state <=  state + 1;
-                else
-                  state <= return_addr;
+                 else
+                   state <= return_addr;
               end
 
             304 :
@@ -549,7 +552,72 @@ module controleur (input              clk,
              ******Timers***********
              **********************/
             400:
-              state <= return_addr;
+              // A chaque fin de trame, on va décrémenter les timers
+              // On commence à l'addresse 0 dans la RAM des bombes
+              begin
+                 bomb_ram_raddr <= 0;
+                 state <= state + 1;
+              end
+
+            401:
+              // Attente de lecture
+              state <= state + 1;
+
+            402:
+              // On parcourt l'ensemble de la Ram.
+              // Pour chaque timer , on le décrémente s'il est plus grand que 1.
+              begin
+                 state <= state + 1;
+                 // Une seconde avant que la bombe disparaisse, on déclenche les flammes.
+                 if(bomb_ram_rdata[18:10] == 72)
+                   state <= 420;
+                 // Après les flammes, on fait disparaitre la bombe
+                 if(bomb_ram_rdata[18:10] == 1)
+                   state <= 410;
+                 else if(bomb_ram_rdata[18:10] != 0)
+                   begin
+                      bomb_ram_waddr <= bomb_ram_raddr;
+                      bomb_ram_we <= 1;
+                      bomb_ram_wdata[9:0] <= bomb_ram_rdata[9:0];
+                      bomb_ram_wdata[18:10] <= (bomb_ram_rdata[18:10] - 1);
+                   end
+              end // case: 402
+
+            403 : begin
+               // On passe à l'entrée suivante dans la RAM bombes
+               // Si on est à la fin, on revient au traitement normal du jeu
+               bomb_ram_raddr <= bomb_ram_raddr + 1;
+               if (bomb_ram_raddr==15)
+                 state <= return_addr;
+               else
+                 state <= 401;
+            end
+
+            410:
+              // Fin de l'explosion
+              begin
+                 // On remplace le sprite de la bombe par un sprite vide dans la Ram Maze
+                 ram_wdata <= WALL_EMPTY;
+                 ram_we <= 1;
+                 ram_waddr <= bomb_ram_rdata[9:0];
+
+                 // On remet le timer à 0 pour pouvoir stocker de nouvelles bombes dans la Ram bombes
+                 bomb_ram_wdata <= 0;
+                 bomb_ram_we <= 1;
+                 bomb_ram_waddr <= bomb_ram_raddr;
+
+                 state <= state + 1;
+              end // case: 403
+
+            411:
+              // On passe à la prochaine bombe dans la liste
+              state <= 403;
+
+            420 :
+              begin
+                 // Gestion des flammes..
+                 state <= 403;
+              end
 
           endcase // case (state)
        end
@@ -561,5 +629,6 @@ module controleur (input              clk,
 
    always @(posedge clk)
      bomb_ram_rdata <= bomb_ram[bomb_ram_raddr];
+
 
 endmodule // controleur

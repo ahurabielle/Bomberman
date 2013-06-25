@@ -427,7 +427,8 @@
                   .ram_wdata(maze_ram_wdata),
                   .ram_we(maze_ram_we),
                   .ram_raddr(maze_ram_raddr),
-                  .ram_rdata(maze_ram_rdata)
+                  .ram_rdata(maze_ram_rdata),
+                  .debug(debug)
 		          );
 
    // Instanciation du module maze
@@ -505,6 +506,6 @@
 	         );
 
    // Debug
-   assign debug = {data_out};
+   //assign debug = {data_out};
 
 endmodule
