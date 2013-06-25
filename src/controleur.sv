@@ -52,7 +52,7 @@ module controleur (input              clk,
    localparam GATE_LEFT  = 4;
    localparam GATE_UP    = 5;
    localparam GATE_DOWN  = 6;
-   localparam BOMB       = 7;
+   localparam BOMB       = 12;
 
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
@@ -84,10 +84,10 @@ module controleur (input              clk,
 
    // RAM des bombes qui contient les états (timer, X, Y) des bombes déposées
    // Elles peuvent être au nombre de 16 au total
-   logic [3:0]                                bomb_raddr, bomb_waddr;
-   logic [18:0]                               bomb_wdata;
-   logic                                      bomb_we;
-   logic [18:0]                               bomb_rdata;
+   logic [3:0]                                bomb_ram_raddr, bomb_ram_waddr;
+   logic [18:0]                               bomb_ram_wdata;
+   logic                                      bomb_ram_we;
+   logic [18:0]                               bomb__ram_rdata;
    logic [18:0]                               bomb_ram[0:15];
    logic [4:0]                                bombX, bombY;
    logic [8:0]                                bomb_timer;
@@ -109,16 +109,16 @@ module controleur (input              clk,
           ram_waddr <= 0;
           ram_wdata <= 0;
           ram_we <= 0;
-          bomb_raddr <= 0;
-          bomb_waddr <= 0;
-          bomb_wdata <= 0;
-          bomb_we <= 0;
+          bomb_ram_raddr <= 0;
+          bomb_ram_waddr <= 0;
+          bomb_ram_wdata <= 0;
+          bomb_ram_we <= 0;
        end
      else
        begin
           // Par défaut, on ne fait PAS d'écriture dans la RAM
           ram_we <= 0;
-          bomb_we <= 0;
+          bomb_ram_we <= 0;
 
           case(state)
             /**************************
@@ -157,8 +157,8 @@ module controleur (input              clk,
                    //La position de la bombe sera la position ou le joueur
                    //est placé majoritairement
                    begin
-                      bombX <= (player1X[10:5] +16) / 32;
-                      bombY <= (player1Y[10:5] +16) / 32;
+                      bombX <= (player1X +16) / 32;
+                      bombY <= (player1Y +16) / 32;
                       state <= 300;
                       return_addr <= state + 1;
                    end
@@ -430,16 +430,16 @@ module controleur (input              clk,
               // On vérifie que le sprite est vide.
               // Dans ce cas, on pose une bombe, sinon, on skip
               begin
-                 if(ram_rdata == 0)
-                   state <= state + 1;
-                 else
-                   state <= return_addr;
+               if (ram_rdata == WALL_EMPTY)
+                   state <=  state + 1;
+                else
+                  state <= return_addr;
               end
 
             304 :
               // Dépose la bombe : stocke sprite bombe dans la Ram sprite
               begin
-                 ram_waddr <= ram_raddr;
+                 ram_waddr <= {bombY, bombX};
                  ram_wdata <= BOMB;
                  ram_we <= 1;
                  state <= state + 1;

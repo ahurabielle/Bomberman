@@ -91,8 +91,8 @@ module keyboard( input  logic       clk,
           j2_drop <= 0;
        end // if (~reset_n)
 
-   // Si on a pas eut de message de fin au front de clock précédent et
-   //  qu'on est entrain denvoyer des données
+   // Si on a pas eu de message de fin au front de clock précédent et
+   //  qu'on est en train d'envoyer des données
      else
        begin
           // si on a recu un message de fin au front precedent venant de la touche data_out,
@@ -152,5 +152,3 @@ module keyboard( input  logic       clk,
        end // else: !if(~reset_n)
 
 endmodule // keyboard
-
-
