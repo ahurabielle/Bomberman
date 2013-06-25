@@ -36,13 +36,7 @@ module maze (input logic         clk,
 
    always @(*)
      if(active)
-       begin
-          // Si on est en dehors du labyrinthe, on affiche du vide
-          if ((spotX > (24*32+31)) || (spotX < 0) || (spotY > (16*32+31)) || (spotY < 0))
-            ram_raddr_internal <= 0;
-          else
-            ram_raddr_internal <= {num_carreY, num_carreX};
-       end
+       ram_raddr_internal <= {num_carreY, num_carreX};
      else
        ram_raddr_internal <= ram_raddr;
 
@@ -54,14 +48,17 @@ module maze (input logic         clk,
    always @(posedge clk)
      ram_rdata <= ram[ram_raddr_internal];
 
-   always @(*)
-     wall_num <= ram_rdata;
-
    // Partie écriture de la RAM : on n'écrit que si ram_we est haut.
    always @(posedge clk)
      if(ram_we)
        ram[ram_waddr]<= ram_wdata;
 
+   // Si on est en dehors du labyrinthe, on affiche du vide
+   always @(*)
+     if ((spotX > (24*32+31)) || (spotX < 0) || (spotY > (16*32+31)) || (spotY < 0))
+       wall_num <= 0;
+     else
+       wall_num <= ram_rdata;
 
    // Génération de la position du mur sur lequel se trouve le spot
    // On le fait de façon synchrone, pour que wallX/Y soient
