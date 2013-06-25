@@ -1,8 +1,8 @@
 module wall(input logic                clk,
             input logic signed [10:0] spotX,
             input logic signed [10:0] spotY,
-            input logic [9:0]         wall_centerX,
-            input logic [9:0]         wall_centerY,
+            input logic [9:0]         wallX,
+            input logic [9:0]         wallY,
             input logic [3:0]         sprite_num,
 		    output logic [7:0]        wall_color
             );
@@ -19,15 +19,15 @@ module wall(input logic                clk,
    logic [7:0]   color_pixel;
    logic [4:0]   offsetX, offsetY;
 
-   assign offsetX = spotX_r-wall_centerX;
-   assign offsetY = spotY-wall_centerY;
+   assign offsetX = spotX_r-wallX;
+   assign offsetY = spotY-wallY;
    assign rom_addr = {sprite_num, offsetY, offsetX};
 
    // On n'affiche le contenu de la ROM que si le spot est dans le
    // rectangle du sprite
    always @(posedge clk)
-        if ((spotX_r>=wall_centerX) && (spotX_r<(wall_centerX+32)) &&
-            (spotY>=wall_centerY) && (spotY<(wall_centerY+32)))
+        if ((spotX_r>=wallX) && (spotX_r<(wallX+32)) &&
+            (spotY>=wallY) && (spotY<(wallY+32)))
           wall_color <= rom[rom_addr];
         else
           wall_color <= 8'd137;

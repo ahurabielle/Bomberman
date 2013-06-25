@@ -243,7 +243,7 @@ module controleur (input              clk,
                // La case qu'on doit écrire est justement celle qu'on est en train de lire
                ram_waddr <= ram_raddr;
                state <= 207;
-            end // case: 205
+            end // case: 206
 
             207 : begin
                // On a éventuellement flippé une porte, on peut maintenant continuer le mouvement

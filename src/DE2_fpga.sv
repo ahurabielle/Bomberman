@@ -313,9 +313,9 @@
    // coin haut gauche du sprite du joueur2
    logic [9:0]            player2X, player2Y;
    // coin haut gauche du sprite des flammes
-   logic [9:0]            flame_centerX, flame_centerY;
+   logic [9:0]            flameX, flameY;
    // coin haut gauche du sprite des murs et objets
-   logic [9:0]            wall_centerX, wall_centerY;
+   logic [9:0]            wallX, wallY;
    logic [7:0]            data_out;
    logic                  j1_up;
    logic                  j1_down;
@@ -342,10 +342,10 @@
    always  @(*)
      vga_clk <= clock_50;
 
-   // XXX Pour le moment, on donne des valeurs de flame_centerX et flame_centerY
+   // XXX Pour le moment, on donne des valeurs de flameX et flameY
    // alors qu'Ã  terme ces positions seront donnÃ©es par le maze
-   assign  flame_centerX        =        100;
-   assign  flame_centerY        =        100;
+   assign  flameX        =        100;
+   assign  flameY        =        100;
    // pour le moment on donne des valeurs Ã  life
    assign  life1 = 35;
    assign  life2 = 75;
@@ -433,8 +433,8 @@
              .spotX(vga_spotX),
              .spotY(vga_spotY),
              .wall_num(wall_sprite),
-		     .wall_centerX(wall_centerX),
-		     .wall_centerY(wall_centerY),
+		     .wallX(wallX),
+		     .wallY(wallY),
              .ram_waddr(maze_ram_waddr),
              .ram_wdata(maze_ram_wdata),
              .ram_we(maze_ram_we),
@@ -472,8 +472,8 @@
    flame flame(.clk(vga_clk),
                .spotX(vga_spotX),
                .spotY(vga_spotY),
-		       .flame_centerX(flame_centerX),
-		       .flame_centerY(flame_centerY),
+		       .flameX(flameX),
+		       .flameY(flameY),
                .sprite_num(flame_sprite),
                .flame_color(flame_color)
 		       );
@@ -482,8 +482,8 @@
    wall wall(.clk(vga_clk),
              .spotX(vga_spotX),
              .spotY(vga_spotY),
-		     .wall_centerX(wall_centerX),
-		     .wall_centerY(wall_centerY),
+		     .wallX(wallX),
+		     .wallY(wallY),
              .sprite_num(wall_sprite),
              .wall_color(wall_color)
 		     );

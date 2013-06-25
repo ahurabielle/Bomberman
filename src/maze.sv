@@ -1,8 +1,8 @@
 module maze (input logic         clk,
              input logic signed [10:0] spotX,
              input logic signed [10:0] spotY,
-             output logic [9:0]        wall_centerX,
-             output logic [9:0]        wall_centerY,
+             output logic [9:0]        wallX,
+             output logic [9:0]        wallY,
              output logic [3:0]        wall_num,
 
              // Interface vers le contrôleur
@@ -64,12 +64,12 @@ module maze (input logic         clk,
 
 
    // Génération de la position du mur sur lequel se trouve le spot
-   // On le fait de façon synchrone, pour que wall_centerX/Y soient
+   // On le fait de façon synchrone, pour que wallX/Y soient
    // synchronisés avec wall_num
    always @(posedge clk)
      begin
-        wall_centerX <= num_carreX*32;
-        wall_centerY <= num_carreY*32;
+        wallX <= num_carreX*32;
+        wallY <= num_carreY*32;
      end
 
 endmodule // maze
