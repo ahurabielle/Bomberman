@@ -257,9 +257,9 @@
    inout wire [35:0]      gpio_0;       // gpio connection 0
    inout wire [35:0]      gpio_1;       // gpio connection 1
 
-   // Génération d'un reset
+   // GÃ©nÃ©ration d'un reset
    logic                  reset_n;
-   gene_reset gene_reset(.clk(clock_50), .reset_n(reset_n));
+   gene_reset gene_reset(.clk(clock_50), .in(key[0]), .reset_n(reset_n));
 
    // Turn on all displays except LCD
    assign  ledg[3:0]       =       key;
@@ -267,14 +267,15 @@
    assign  lcd_on          =       1'b0;
    assign  lcd_blon        =       1'b0;
 
+
    //Commande du numéro des sprites par les switchs
-   logic [2:0]            play1_num;
-   logic [2:0]            play2_num;
-   logic [2:0]            flame_num;
-   logic [3:0]            wall_num;
+   logic [2:0]            player1_sprite;
+   logic [2:0]            player2_sprite;
+   logic [2:0]            flame_sprite;
+   logic [3:0]            wall_sprite;
 
    //les sw 11 et 10 controlent les flammes
-   assign  flame_num       =       sw[11:10];
+   assign  flame_sprite       =       sw[11:10];
 
    // Turn unused ports to tri-state
    assign  dram_dq         =       16'hzzzz;
@@ -308,9 +309,9 @@
    logic [7:0]            flame_color;
    logic [7:0]            wall_color;
    // coin haut gauche du sprite du joueur1
-   logic [9:0]            player1_centerX, player1_centerY;
+   logic [9:0]            player1X, player1Y;
    // coin haut gauche du sprite du joueur2
-   logic [9:0]            player2_centerX, player2_centerY;
+   logic [9:0]            player2X, player2Y;
    // coin haut gauche du sprite des flammes
    logic [9:0]            flame_centerX, flame_centerY;
    // coin haut gauche du sprite des murs et objets
@@ -326,16 +327,28 @@
    logic                  j2_left;
    logic                  j2_right;
    logic                  j2_drop;
+   // la vie
+   logic [6:0]            life1;
+   logic [6:0]            life2;
+   logic [23:0]           life_rgb;
+
+   // Interface avec la RAM qui stocke le labyrinthe
+   logic [9:0]      maze_ram_raddr, maze_ram_waddr;
+   logic [3:0]      maze_ram_wdata;
+   logic            maze_ram_we;
+   logic [3:0]      maze_ram_rdata;
 
    // Horloge VGA
    always  @(*)
      vga_clk <= clock_50;
 
    // XXX Pour le moment, on donne des valeurs de flame_centerX et flame_centerY
-   // alors qu'à terme ces positions seront données par le maze
+   // alors qu'Ã  terme ces positions seront donnÃ©es par le maze
    assign  flame_centerX        =        100;
    assign  flame_centerY        =        100;
-
+   // pour le moment on donne des valeurs Ã  life
+   assign  life1 = 35;
+   assign  life2 = 75;
    // Instanciation des decodeurs 7 segments pour le debug
    logic [31:0]           debug;
    seven_seg s0 (debug[3:0],   hex0);
@@ -346,6 +359,15 @@
    seven_seg s5 (debug[23:20], hex5);
    seven_seg s6 (debug[27:24], hex6);
    seven_seg s7 (debug[31:28], hex7);
+
+   // Instantiation de life
+   life vie(.clk(vga_clk),
+            .spotX(vga_spotX),
+            .spotY(vga_spotY),
+            .life1(life1),
+            .life2(life2),
+            .life_rgb(life_rgb)
+            );
 
    // Instanciation du module de synchro
    synchro sync1(.clk(vga_clk) ,
@@ -393,21 +415,32 @@
                   .j2_down(j2_down),
                   .j2_right(j2_right),
                   .j2_left(j2_left),
-                  .player1_num(play1_num),
-                  .player2_num(play2_num),
-		          .player1_centerX(player1_centerX),
-		          .player1_centerY(player1_centerY),
-                  .player2_centerX(player2_centerX),
-                  .player2_centerY(player2_centerY)
+                  .player1_sprite(player1_sprite),
+                  .player2_sprite(player2_sprite),
+		          .player1X(player1X),
+		          .player1Y(player1Y),
+                  .player2X(player2X),
+                  .player2Y(player2Y),
+                  .ram_waddr(maze_ram_waddr),
+                  .ram_wdata(maze_ram_wdata),
+                  .ram_we(maze_ram_we),
+                  .ram_raddr(maze_ram_raddr),
+                  .ram_rdata(maze_ram_rdata)
 		          );
 
    // Instanciation du module maze
    maze maze(.clk(vga_clk),
              .spotX(vga_spotX),
              .spotY(vga_spotY),
-             .wall_num(wall_num),
+             .wall_num(wall_sprite),
 		     .wall_centerX(wall_centerX),
-		     .wall_centerY(wall_centerY)
+		     .wall_centerY(wall_centerY),
+             .ram_waddr(maze_ram_waddr),
+             .ram_wdata(maze_ram_wdata),
+             .ram_we(maze_ram_we),
+             .ram_raddr(maze_ram_raddr),
+             .ram_rdata(maze_ram_rdata),
+             .active(vga_blank)
              );
    // Instantiation du module background
    background bck(.clk(vga_clk),
@@ -416,24 +449,24 @@
 		          );
 
    //Instantiation du module joueur1
-   player1 ply1(.clk(vga_clk),
-                .spotX(vga_spotX),
-                .spotY(vga_spotY),
-		        .player1_centerX(player1_centerX),
-		        .player1_centerY(player1_centerY),
-                .sprite_num(play1_num),
-                .player1_color(player1_color)
-		        );
+   player #(.player_num(1)) p1(.clk(vga_clk),
+                               .spotX(vga_spotX),
+                               .spotY(vga_spotY),
+		                       .playerX(player1X),
+		                       .playerY(player1Y),
+                               .sprite_num(player1_sprite),
+                               .player_color(player1_color)
+		                       );
 
    //Instantiation du module joueur2
-   player2 play2(.clk(vga_clk),
-                 .spotX(vga_spotX),
-                 .spotY(vga_spotY),
-		         .player2_centerX(player2_centerX),
-		         .player2_centerY(player2_centerY),
-                 .sprite_num(play2_num),
-                 .player2_color(player2_color)
-		         );
+   player #(.player_num(2)) p2(.clk(vga_clk),
+                               .spotX(vga_spotX),
+                               .spotY(vga_spotY),
+		                       .playerX(player2X),
+		                       .playerY(player2Y),
+                               .sprite_num(player2_sprite),
+                               .player_color(player2_color)
+		                       );
 
    //Instantiation du module flame
    flame flame(.clk(vga_clk),
@@ -441,7 +474,7 @@
                .spotY(vga_spotY),
 		       .flame_centerX(flame_centerX),
 		       .flame_centerY(flame_centerY),
-               .sprite_num(flame_num),
+               .sprite_num(flame_sprite),
                .flame_color(flame_color)
 		       );
 
@@ -451,7 +484,7 @@
              .spotY(vga_spotY),
 		     .wall_centerX(wall_centerX),
 		     .wall_centerY(wall_centerY),
-             .sprite_num(wall_num),
+             .sprite_num(wall_sprite),
              .wall_color(wall_color)
 		     );
 
@@ -465,7 +498,8 @@
              .player1_color(player1_color),
              .vga_r(vga_r),
              .vga_g(vga_g),
-             .vga_b(vga_b)
+             .vga_b(vga_b),
+             .life_rgb(life_rgb)
 	         );
 
    // Debug

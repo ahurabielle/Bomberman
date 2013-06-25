@@ -1,5 +1,5 @@
 
-LST = flammes.lst player1.lst player2.lst sprites.lst wall.lst
+LST = flames.lst player1.lst player2.lst sprites.lst wall.lst
 
 all: $(LST)
 
