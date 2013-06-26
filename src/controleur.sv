@@ -286,6 +286,8 @@ module controleur (input              clk,
                         begin
                            state <= return_addr;
                            player1_sprite <= 0;
+                           player2_sprite <= 0;
+                        end
 
                    end
                  else
