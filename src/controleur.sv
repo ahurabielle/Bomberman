@@ -892,21 +892,31 @@ module controleur (input              clk,
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
-              else if (count == (RADIUS - 1))
-                begin
-                   flame_ram_wdata <= FLAME_LEFT;
-                   flame_ram_we <= 1;
-                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
-                   state <= state + 1;
-                end
               else
                 begin
-                   flame_ram_wdata <= FLAME_H;
-                   flame_ram_we <= 1;
-                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
-                   count <= count + 1;
-                   state <= 422;
-                end // else: !if(count == (radius - 1))
+                    //On détruit le mur s'il est destructible
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_LEFT;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_H;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
+                        count <= count + 1;
+                        state <= 422;
+                     end // else: !if(count == (radius - 1))
+                end // else: !if((ram_rdata == WALL_1) ||...
 
             425:
                // On initialise le compteur count à 1
@@ -939,24 +949,33 @@ module controleur (input              clk,
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
               else
-                if (count == (RADIUS - 1))
-                  begin
-                     flame_ram_wdata <= FLAME_RIGHT;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
-                     state <= state + 1;
-                  end
-                else
-                  begin
-                     flame_ram_wdata <= FLAME_H;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
-                     count <= count + 1;
-                     state <= 426;
-                  end // else: !if(count == (radius - 1))
+                begin
+                   //On détruit le mur s'il est destructible
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_RIGHT;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_H;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
+                        count <= count + 1;
+                        state <= 426;
+                     end // else: !if(count == (radius - 1))
+                end // else: !if((ram_rdata == WALL_1) ||...
 
-              429:
-               // On initialise le compteur count à 1
+            429:
+              // On initialise le compteur count à 1
               begin
                  count <= 1;
                  state <= state + 1;
@@ -986,24 +1005,33 @@ module controleur (input              clk,
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
               else
-                if (count == (RADIUS - 1))
-                  begin
-                     flame_ram_wdata <= FLAME_UP;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32) ;
-                     state <= state + 1;
-                  end
-                else
-                  begin
-                     flame_ram_wdata <= FLAME_V;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32) ;
-                     state <= 430;
-                     count <= count + 1;
-                  end
+                begin
+                   //On détruit le mur s'il est destructible
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_UP;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32) ;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_V;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32) ;
+                        state <= 430;
+                        count <= count + 1;
+                     end
+                end // else: !if((ram_rdata == WALL_1) ||...
 
             433:
-               // On initialise le compteur count à 1
+              // On initialise le compteur count à 1
               begin
                  count <= 1;
                  state <= state + 1;
@@ -1033,21 +1061,30 @@ module controleur (input              clk,
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
               else
-                if (count == (RADIUS - 1))
-                  begin
-                     flame_ram_wdata <= FLAME_DOWN;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32) ;
-                     state <= state + 1;
-                  end
-                else
-                  begin
-                     flame_ram_wdata <= FLAME_V;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32) ;
-                     state <= 434;
-                     count <= count + 1;
-                  end // else: !if(count == (radius - 1))
+                begin
+                   //On détruit le mur s'il est destructible
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_DOWN;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32) ;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_V;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32) ;
+                        state <= 434;
+                        count <= count + 1;
+                     end // else: !if(count == (radius - 1))
+                end // else: !if((ram_rdata == WALL_1) ||...
 
             437:
               state <= 403;
