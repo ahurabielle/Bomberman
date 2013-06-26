@@ -727,7 +727,7 @@ module controleur (input              clk,
               begin
                  state <= state + 1;
                  // Une seconde avant que la bombe disparaisse, on déclenche les flammes.
-                 if(bomb_ram_rdata[18:10] == 72)
+                 if(bomb_ram_rdata[18:10] <= 72)
                    state <= 420;
                  // Après les flammes, on fait disparaitre la bombe
                  if(bomb_ram_rdata[18:10] == 1)
@@ -886,7 +886,7 @@ module controleur (input              clk,
             424:
               // On regarde dans la Ram maze
               // S'il y a un mur, on abandonne la propagation des flammes et on passe à
-              // l'étude de la prochaine diection de feu.
+              // l'étude de la prochaine direction de feu.
               // Sinon, on affiche une flamme
               if((ram_rdata == WALL_1) ||
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
