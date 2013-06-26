@@ -340,9 +340,8 @@
 
    // Interface avec la RAM qui stocke les flammes
    logic [9:0]      flame_ram_raddr, flame_ram_waddr;
-   logic [2:0]      flame_ram_wdata;
+   logic [2:0]      flame_ram_wdata, flame_ram_rdata;
    logic            flame_ram_we;
-   logic [2:0]      flame_ram_rdata;
 
    // Horloge VGA
    always  @(*)

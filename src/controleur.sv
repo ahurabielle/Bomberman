@@ -271,7 +271,14 @@ module controleur (input              clk,
                  return_addr <= state + 1;
               end
 
-            106: begin
+            106:
+              begin
+                 state <= 600;
+                 return_addr <= state +1;
+                 end
+
+
+            107: begin
                // On repart en attente du EOF
                state <= 100;
             end
@@ -887,11 +894,19 @@ module controleur (input              clk,
               // On regarde dans la Ram maze
               // S'il y a un mur, on abandonne la propagation des flammes et on passe à
               // l'étude de la prochaine direction de feu.
+              // S'il y a une bombe, on affiche un intersection et on passe à l'étude de la prochaine direction de feu.
               // Sinon, on affiche une flamme
               if((ram_rdata == WALL_1) ||
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
+              else if (ram_rdata == BOMB)
+                begin
+                   flame_ram_wdata <= FLAME_INTERSECT;
+                   flame_ram_we <= 1;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
+                   state <= state + 1;
+                end
               else
                 begin
                     //On détruit le mur s'il est destructible
@@ -948,6 +963,13 @@ module controleur (input              clk,
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
+              else if (ram_rdata == BOMB)
+                begin
+                   flame_ram_wdata <= FLAME_INTERSECT;
+                   flame_ram_we <= 1;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
+                   state <= state + 1;
+                end
               else
                 begin
                    //On détruit le mur s'il est destructible
@@ -1004,6 +1026,13 @@ module controleur (input              clk,
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
+              else if (ram_rdata == BOMB)
+                begin
+                   flame_ram_wdata <= FLAME_INTERSECT;
+                   flame_ram_we <= 1;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32);
+                   state <= state + 1;
+                end
               else
                 begin
                    //On détruit le mur s'il est destructible
@@ -1060,6 +1089,13 @@ module controleur (input              clk,
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
+              else if (ram_rdata == BOMB)
+                begin
+                   flame_ram_wdata <= FLAME_INTERSECT;
+                   flame_ram_we <= 1;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32);
+                   state <= state + 1;
+                end
               else
                 begin
                    //On détruit le mur s'il est destructible
@@ -1089,8 +1125,81 @@ module controleur (input              clk,
             437:
               state <= 403;
 
+            600:
+              // On parcourt à la fois la ram maze et la ram flame
+              // afin de regarder si une flamme est superposée à une bombe.
+              // Si c'est le cas, on provoque l'explosion de la bombe en question
+              begin
+                 flame_ram_raddr <= 0;
+                 ram_raddr <= 0;
+                 state <= state + 1;
+              end
+
+            601:
+              // Attente de lecture
+              begin
+                 state <= state + 1;
+              end
+
+            602:
+              // Comparaison des valeurs des 2 Ram
+              begin
+                 // Si une flamme est superposée à une bombe, cette dernière explose.
+                 if((flame_ram_rdata != FLAME_EMPTY) && (ram_rdata == BOMB))
+                   // Il faut chercher la bombe dont les coordonnées sont pointés
+                   state <= 605;
+                 else
+                   state <= state + 1;
+              end
+
+            603:
+              if(ram_raddr !=1023)
+                begin
+                   flame_ram_raddr <= ram_raddr + 1;
+                   ram_raddr <= ram_raddr + 1;
+                   state <= 601;
+                end
+              else
+                state <= return_addr;
+
+            605:
+              // On parcourt la ram des bombes pour trouver celle qui doit exploser
+              begin
+                 bomb_ram_raddr <= 0;
+                 state <= state + 1;
+              end
+
+            606:
+              // Attente de lecture
+              state <= state + 1;
+
+            607:
+              // On regarde les coordonnées de la bombe.
+              // Si c'est les bons, on a trouvé la bombe adéquate.
+              // On vérifie alors son timer. S'il est supérieur à 72
+              // on le met à 72. Sinon, on n'y touche pas.
+              begin
+                 if(bomb_ram_rdata[9:0] == ram_raddr)
+                   if(bomb_ram_rdata[18:10] > 72)
+                     begin
+                        bomb_ram_wdata <= {9'd72, ram_raddr} ;
+                        bomb_ram_we <= 1;
+                        bomb_ram_waddr <= bomb_ram_raddr;
+                        state <= 603;
+                     end
+                   else
+                     state <= 603;
+                 else
+                   begin
+                      bomb_ram_raddr <= bomb_ram_raddr + 1;
+                      state <= 606;
+                   end
+              end
+
+
           endcase // case (state)
        end
+
 
    // BOMB RAM
    always @(posedge clk)
