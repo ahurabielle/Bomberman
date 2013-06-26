@@ -14,7 +14,10 @@ module keyboard( input  logic       clk,
                  output logic       j2_down,
                  output logic       j2_left,
                  output logic       j2_right,
-                 output logic       j2_drop
+                 output logic       j2_drop,
+
+                 // Sortie temporaire controlant la mort du personnage
+                 output logic       game_over
                  );
    // buffer
    logic [11:0]                     buffer;
@@ -89,6 +92,7 @@ module keyboard( input  logic       clk,
           j2_left <= 0;
           j2_right <= 0;
           j2_drop <= 0;
+          game_over <= 0;
        end // if (~reset_n)
 
    // Si on a pas eu de message de fin au front de clock précédent et
@@ -149,6 +153,13 @@ module keyboard( input  logic       clk,
             j2_drop <= 0;
           if((~(data_out_r == fin)) && (data_out == 8'hba) && ( data_valid))
             j2_drop <= 1;
+
+
+          if((data_out_r == fin) && (data_out == 8'h5a ))
+            game_over <= 0;
+          if((~(data_out_r == fin)) && (data_out == 8'h5a) && ( data_valid))
+            game_over <= 1;
+
        end // else: !if(~reset_n)
 
 endmodule // keyboard

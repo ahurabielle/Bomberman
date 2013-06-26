@@ -14,11 +14,16 @@ module controleur (input              clk,
                    input logic                j2_left,
                    input logic                j2_right,
                    input logic                j2_drop,
+
                    // coordonnee des joueurs
                    output logic signed [10:0] player1X,
 		           output logic signed [10:0] player1Y,
                    output logic signed [10:0] player2X,
                    output logic signed [10:0] player2Y,
+
+                   // Couleur du fond
+                   input logic                gameover,
+                   output logic [7:0]         bck_r, bck_g, bck_b,
 
                    // numéros des sprites joueur
                    output logic [2:0]         player1_sprite,
@@ -120,6 +125,9 @@ module controleur (input              clk,
           bomb_ram_wdata <= 0;
           bomb_ram_we <= 0;
           count <= 0;
+          bck_r <= 0;
+          bck_g <= 0;
+          bck_b <= 250;
        end
      else
        begin
@@ -233,7 +241,20 @@ module controleur (input              clk,
                  return_addr <= state + 1;
               end
 
-            106: begin
+            106 :
+              // Gestion de la mort d'un des personnages
+              begin
+                 if(gameover)
+                   begin
+                      state <= 500;
+                      return_addr <= state + 1;
+                   end
+                 else
+                   state <= state +1;
+              end
+
+
+            107: begin
                // On repart en attente du EOF
                state <= 100;
             end
@@ -821,6 +842,16 @@ module controleur (input              clk,
                  // Gestion des flammes..
                  state <= 403;
               end
+
+            500:
+              // On change la couleur du fond
+              begin
+                 bck_r <= 230;
+                 bck_b <= 0;
+                 state <= return_addr;
+              end
+
+
 
           endcase // case (state)
        end

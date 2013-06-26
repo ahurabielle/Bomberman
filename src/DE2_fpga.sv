@@ -303,6 +303,7 @@
    logic signed [10:0]    vga_spotY;
    // fond rouge, bleu, vert
    logic [23:0]           bck_rgb;
+   logic [7:0]            bck_r, bck_g, bck_b;
 
    logic [7:0]            player1_color;
    logic [7:0]            player2_color;
@@ -327,6 +328,7 @@
    logic                  j2_left;
    logic                  j2_right;
    logic                  j2_drop;
+   logic                  game_over;
    // la vie
    logic [6:0]            life1;
    logic [6:0]            life2;
@@ -398,6 +400,7 @@
                  .j2_right(j2_right),
                  .j2_left(j2_left),
                  .j2_drop(j2_drop),
+                 .game_over(game_over),
                  .data_out(data_out)
                  );
 
@@ -423,12 +426,15 @@
 		          .player1Y(player1Y),
                   .player2X(player2X),
                   .player2Y(player2Y),
+                  .gameover(game_over),
+                  .bck_r(bck_r),
+                  .bck_g(bck_g),
+                  .bck_b(bck_b),
                   .ram_waddr(maze_ram_waddr),
                   .ram_wdata(maze_ram_wdata),
                   .ram_we(maze_ram_we),
                   .ram_raddr(maze_ram_raddr),
-                  .ram_rdata(maze_ram_rdata),
-                  .debug(debug)
+                  .ram_rdata(maze_ram_rdata)
 		          );
 
    // Instanciation du module maze
@@ -448,6 +454,9 @@
    // Instantiation du module background
    background bck(.clk(vga_clk),
 		          .spotX(vga_spotX),
+                  .bck_r(bck_r),
+                  .bck_g(bck_g),
+                  .bck_b(bck_b),
 		          .bck_rgb(bck_rgb)
 		          );
 
@@ -506,6 +515,6 @@
 	         );
 
    // Debug
-   //assign debug = {data_out};
+   assign debug = {data_out};
 
 endmodule
