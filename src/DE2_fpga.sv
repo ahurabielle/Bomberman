@@ -329,6 +329,7 @@
    logic                  j2_right;
    logic                  j2_drop;
    logic                  game_over;
+   logic                  new_game;
    // la vie
    logic [6:0]            life1;
    logic [6:0]            life2;
@@ -401,6 +402,7 @@
                  .j2_left(j2_left),
                  .j2_drop(j2_drop),
                  .game_over(game_over),
+                 .new_game(new_game),
                  .data_out(data_out)
                  );
 
@@ -427,6 +429,7 @@
                   .player2X(player2X),
                   .player2Y(player2Y),
                   .gameover(game_over),
+                  .new_game(new_game),
                   .bck_r(bck_r),
                   .bck_g(bck_g),
                   .bck_b(bck_b),

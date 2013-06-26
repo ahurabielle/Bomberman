@@ -23,6 +23,7 @@ module controleur (input              clk,
 
                    // Couleur du fond
                    input logic                gameover,
+                   input logic                new_game,
                    output logic [7:0]         bck_r, bck_g, bck_b,
 
                    // numéros des sprites joueur
@@ -103,6 +104,10 @@ module controleur (input              clk,
    logic [8:0]                                bomb_timer;
    logic [3:0]                                bomb_num;
 
+   // Compteur gérant la modification du fond après la mort d'un personnage
+   logic [7:0]                                color_compt;
+
+
    //Machine à etats
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
@@ -127,8 +132,9 @@ module controleur (input              clk,
           count <= 0;
           bck_r <= 0;
           bck_g <= 0;
-          bck_b <= 250;
-       end
+          bck_b <= 230;
+          color_compt <= 0;
+    end
      else
        begin
           // Par défaut, on ne fait PAS d'écriture dans la RAM
@@ -251,10 +257,21 @@ module controleur (input              clk,
                    end
                  else
                    state <= state +1;
-              end
+              end // case: 106
 
+            107 :
+              // Lancement d'une nouvelle partie
+              begin
+                 if(new_game)
+                   begin
+                      state <= 520;
+                      return_addr <= state + 1;
+                   end
+                 else
+                   state <= state +1;
+              end // case: 107
 
-            107: begin
+            108: begin
                // On repart en attente du EOF
                state <= 100;
             end
@@ -843,13 +860,52 @@ module controleur (input              clk,
                  state <= 403;
               end
 
+            501:
+              state <= state + 1;
+
             500:
-              // On change la couleur du fond
+            // On change la couleur du fond
               begin
-                 bck_r <= 230;
-                 bck_b <= 0;
+                 if (bck_r < 230)
+                   begin
+                      bck_r <= bck_r +1;
+                      bck_b <= bck_b -1;
+                      state <= 500;
+                   end
                  state <= return_addr;
+              end // case: 500
+
+            520:
+              //On place les joueurs au milieu
+              begin
+                 player1_state <= 0;
+                 state <= 0;
+                 player1X <= 128;
+                 player1Y <= 128;
+                 player2X <= 448;
+                 player2Y <= 448;
+                 v1 <= 32;
+                 v2 <= 30;
+                 ram_raddr <= 0;
+                 ram_waddr <= 0;
+                 ram_wdata <= 0;
+                 ram_we <= 0;
+                 bomb_ram_raddr <= 0;
+                 bomb_ram_waddr <= 0;
+                 bomb_ram_wdata <= 0;
+                 bomb_ram_we <= 0;
+                 count <= 0;
+                 bck_r <= 0;
+                 bck_g <= 0;
+                 bck_b <= 230;
+                 color_compt <= 0;
+                 // Par défaut, on ne fait PAS d'écriture dans la RAM
+                 ram_we <= 0;
+                 bomb_ram_we <= 0;
+                 state <= 0;
               end
+
+
 
 
 
