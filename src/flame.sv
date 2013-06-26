@@ -66,12 +66,12 @@ module flame(input logic                clk,
    // On n'affiche le contenu de la ROM que si le spot est dans le
    // rectangle du sprite
    always @(*)
-                 begin
-                    flame_color <= 8'd137;
-                    if ((spotX >= flameX) && (spotX < (flameX + 32)) &&
-                        (spotY >= flameY) && (spotY < (flameY + 32)))
-	                  flame_color <= color_pixel;
-                 end // always @ begin
+     begin
+        flame_color <= 8'd137;
+        if ((spotX >= flameX) && (spotX < (flameX + 32)) &&
+            (spotY >= flameY) && (spotY < (flameY + 32)))
+	      flame_color <= color_pixel;
+     end // always @ begin
 
    // Génération de la position de la flamme sur laquelle se trouve le spot
    // On le fait de façon synchrone, pour que flameX/Y soient

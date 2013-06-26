@@ -73,8 +73,11 @@ module controleur (input              clk,
    localparam FLAME_RIGHT = 6;
    localparam FLAME_DOWN = 7;
 
-   //Determine le rayon
+   //Determine le rayon d'action de la bombe
    localparam RADIUS = 3;
+
+   //Adresse de la bombe "mémoire"
+   logic [3:0]                                bomb_memory_addr;
 
    //Définition du rayon d'action des flammes
    logic [2:0]                                count_r;
@@ -98,6 +101,7 @@ module controleur (input              clk,
    // Machine à etat
    integer                                    state;
    integer                                    return_addr;
+   integer                                    return_addr2;
    logic [9:0]                                count;
 
    // État des joueurs
@@ -148,6 +152,7 @@ module controleur (input              clk,
           // Par défaut, on ne fait PAS d'écriture dans la RAM
           ram_we <= 0;
           bomb_ram_we <= 0;
+          flame_ram_we <= 0;
 
           case(state)
             /**************************
@@ -748,7 +753,9 @@ module controleur (input              clk,
                  bomb_ram_we <= 1;
                  bomb_ram_waddr <= bomb_ram_raddr;
 
-                 state <= state + 1;
+                 // On retire les explosions
+                 return_addr2 <= 411;
+                 state <= 450;
               end // case: 403
 
             411:
@@ -796,25 +803,39 @@ module controleur (input              clk,
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
               else if (ram_rdata == BOMB)
+                // Si on touche une bombe, on va la faire exploser aussi
+                // (si ce n'est pas déjà le cas).
+                // Le bout de la flamme sera donc géré par elle !
                 begin
-
-                end
-
-              else if (count_r == (RADIUS - 1))
-                begin
-                   flame_ram_wdata <= FLAME_LEFT;
-                   flame_ram_we <= 1;
-                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count_r;
-                   state <= state + 1;
+                   state <= 440;
+                   bomb_memory_addr <= bomb_ram_raddr;
+                   return_addr2 <= 425 ;
                 end
               else
                 begin
-                   flame_ram_wdata <= FLAME_H;
-                   flame_ram_we <= 1;
-                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count_r;
-                   state <= 422;
-                   count_r <= count_r + 1;
-                end // else: !if(count_r == (radius - 1))
+                   //On détruit le mur s'il est destructible
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count_r == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_LEFT;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - count_r;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_H;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - count_r;
+                        state <= 422;
+                        count_r <= count_r + 1;
+                     end // else: !if(count_r == (radius - 1))
+                end // else: !if(ram_rdata == BOMB)
 
             425:
                // On initialise le compteur count_r à 1
@@ -846,24 +867,41 @@ module controleur (input              clk,
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
+              else if (ram_rdata == BOMB)
+                // Si on touche une bombe, on va la faire exploser aussi
+                // (si ce n'est pas déjà le cas).
+                // Le bout de la flamme sera donc géré par elle !
+                begin
+                   state <= 440;
+                   bomb_memory_addr <= bomb_ram_raddr;
+                   return_addr2 <= 429;
+                end
               else
-                if (count_r == (RADIUS - 1))
-                  begin
-                     flame_ram_wdata <= FLAME_RIGHT;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + count_r;
-                     state <= state + 1;
-                  end
-                else
-                  begin
-                     flame_ram_wdata <= FLAME_H;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + count_r;
-                     state <= 426;
-                     count_r <= count_r + 1;
-                  end // else: !if(count_r == (radius - 1))
+                begin
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count_r == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_RIGHT;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + count_r;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_H;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + count_r;
+                        state <= 426;
+                        count_r <= count_r + 1;
+                     end // else: !if(count_r == (radius - 1))
+                end
 
-              429:
+            429:
                // On initialise le compteur count_r à 1
               begin
                  count_r <= 1;
@@ -893,25 +931,42 @@ module controleur (input              clk,
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
+              else if (ram_rdata == BOMB)
+                // Si on touche une bombe, on va la faire exploser aussi
+                // (si ce n'est pas déjà le cas).
+                // Le bout de la flamme sera donc géré par elle !
+                begin
+                   state <= 440;
+                   bomb_memory_addr <= bomb_ram_raddr;
+                   return_addr2 <= 433;
+                end
               else
-                if (count_r == (RADIUS - 1))
-                  begin
-                     flame_ram_wdata <= FLAME_UP;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] - (count_r * 32) ;
-                     state <= state + 1;
-                  end
-                else
-                  begin
-                     flame_ram_wdata <= FLAME_V;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] - (count_r * 32) ;
-                     state <= 430;
-                     count_r <= count_r + 1;
-                  end
+                begin
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count_r == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_UP;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - (count_r * 32) ;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_V;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] - (count_r * 32) ;
+                        state <= 430;
+                        count_r <= count_r + 1;
+                     end
+                end // else: !if(ram_rdata == BOMB)
 
-              433:
-               // On initialise le compteur count_r à 1
+            433:
+              // On initialise le compteur count_r à 1
               begin
                  count_r <= 1;
                  state <= state + 1;
@@ -940,25 +995,157 @@ module controleur (input              clk,
                  (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
                  (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
                 state <= state + 1;
+              else if (ram_rdata == BOMB)
+                // Si on touche une bombe, on va la faire exploser aussi
+                // (si ce n'est pas déjà le cas).
+                // Le bout de la flamme sera donc géré par elle !
+                begin
+                   state <= 440;
+                   bomb_memory_addr <= bomb_ram_raddr;
+                   return_addr2 <= 437;
+                end
               else
-                if (count_r == (RADIUS - 1))
-                  begin
-                     flame_ram_wdata <= FLAME_DOWN;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + (count_r * 32) ;
-                     state <= state + 1;
-                  end
-                else
-                  begin
-                     flame_ram_wdata <= FLAME_V;
-                     flame_ram_we <= 1;
-                     flame_ram_waddr <= bomb_ram_rdata[9:0] + (count_r * 32) ;
-                     state <= 430;
-                     count_r <= count + 1;
-                  end // else: !if(count_r == (radius - 1))
+                begin
+                   if (ram_rdata == WALL_2)
+                     begin
+                        ram_wdata <= WALL_EMPTY;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr ;
+                     end
+                   if (count_r == (RADIUS - 1))
+                     begin
+                        flame_ram_wdata <= FLAME_DOWN;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + (count_r * 32) ;
+                        state <= state + 1;
+                     end
+                   else
+                     begin
+                        flame_ram_wdata <= FLAME_V;
+                        flame_ram_we <= 1;
+                        flame_ram_waddr <= bomb_ram_rdata[9:0] + (count_r * 32) ;
+                        state <= 434;
+                        count_r <= count + 1;
+                     end // else: !if(count_r == (radius - 1))
+                end
 
             437:
               state <= 403;
+
+            440:
+              // Recherche de la bombe dans la Ram Bombe
+              // Grâce à sa position
+              // Afin de mettre son timer à 72 pour qu'elle explose aussi
+              begin
+                 bomb_ram_raddr <= 0;
+                 state <= state + 1;
+              end
+
+            441:
+              // Attente de lecture
+              state <= state + 1;
+
+            442:
+              // On regarde les coordonnées de la bombe.
+              // Si c'est les bons, on a trouvé la bombe adéquate.
+              // On vérifie alors son timer. S'il est supérieur à 72
+              // on le met à 72. Sinon, on n'y touche pas.
+              begin
+                 if(bomb_ram_rdata[9:0] == ram_raddr)
+                   if(bomb_ram_rdata[18:10] > 72)
+                     begin
+                        bomb_ram_wdata <= {9'd72, ram_raddr} ;
+                        bomb_ram_we <= 1;
+                        bomb_ram_waddr <= bomb_ram_raddr;
+                        bomb_ram_raddr <= bomb_memory_addr;
+                        state <= return_addr2;
+                     end
+                   else
+                     state <= return_addr2;
+                 else
+                   begin
+                      bomb_ram_raddr <= bomb_ram_raddr + 1;
+                      state <= 441 ;
+                   end
+              end
+
+            450:
+              // On remplace tous les sprites flammes autour de la bombe
+              // par du vide.
+              // On commence par retirer le centre
+              begin
+                 flame_ram_wdata <= FLAME_EMPTY;
+                 flame_ram_waddr <= bomb_ram_rdata[9:0];
+                 flame_ram_we <= 1;
+                 state <= state + 1;
+                 count_r <= 1;
+              end
+
+            451:
+              //On va retirer les flammes sur la gauche
+                 if(count_r < RADIUS)
+                   begin
+                      flame_ram_wdata <= FLAME_EMPTY;
+                      flame_ram_waddr <= bomb_ram_rdata[9:0] - count_r;
+                      flame_ram_we <= 1;
+                      count_r <= count_r + 1;
+                      state <= state;
+                   end
+                 else
+                   begin
+                      count_r <= 1;
+                      state <= state + 1;
+                   end // else: !if(count_r < RADIUS)
+
+            452:
+              //On va retirer les flammes sur la droite
+                 if(count_r < RADIUS)
+                   begin
+                      flame_ram_wdata <= FLAME_EMPTY;
+                      flame_ram_waddr <= bomb_ram_rdata[9:0] + count_r;
+                      flame_ram_we <= 1;
+                      count_r <= count_r + 1;
+                      state <= state;
+                   end
+                 else
+                   begin
+                      count_r <= 1;
+                      state <= state + 1;
+                   end // else: !if(count_r < RADIUS)
+
+
+            453:
+              //On va retirer les flammes vers le haut
+                 if(count_r < RADIUS)
+                   begin
+                      flame_ram_wdata <= FLAME_EMPTY;
+                      flame_ram_waddr <= bomb_ram_rdata[9:0] - (count_r * 32);
+                      flame_ram_we <= 1;
+                      count_r <= count_r + 1;
+                      state <= state;
+                   end
+                 else
+                   begin
+                      count_r <= 1;
+                      state <= state + 1;
+                   end // else: !if(count_r < RADIUS)
+
+            454:
+              //On va retirer les flammes vers le bas
+                 if(count_r < RADIUS)
+                   begin
+                      flame_ram_wdata <= FLAME_EMPTY;
+                      flame_ram_waddr <= bomb_ram_rdata[9:0] + (count_r * 32);
+                      flame_ram_we <= 1;
+                      count_r <= count_r + 1;
+                      state <= state;
+                   end
+                 else
+                   begin
+                      count_r <= 1;
+                      state <= return_addr2;
+                   end // else: !if(count_r < RADIUS)
+
 
           endcase // case (state)
        end
