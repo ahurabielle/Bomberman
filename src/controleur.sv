@@ -48,15 +48,28 @@ module controleur (input              clk,
    localparam VSPRITE= 17*32;
 
    // Numéros de sprites des portes
-   localparam WALL_EMPTY = 0;
-   localparam WALL_1     = 1;
-   localparam WALL_2     = 2;
-   localparam GATE_RIGHT = 3;
-   localparam GATE_LEFT  = 4;
-   localparam GATE_UP    = 5;
-   localparam GATE_DOWN  = 6;
-   localparam BOMB       = 12;
+   localparam WALL_EMPTY   = 0;
+   localparam WALL_1       = 1;
+   localparam WALL_2       = 2;
+   localparam GATE_RIGHT   = 3;
+   localparam GATE_LEFT    = 4;
+   localparam GATE_UP      = 5;
+   localparam GATE_DOWN    = 6;
+   localparam BOMB         = 12;
+   localparam MULTIPLE_BOMB = 7;
+   localparam HUGE_FLAME   = 8;
+   localparam SPEED_UP     = 9;
+   localparam GHOST        = 10;
+   localparam PUSH_BOMB    = 11;
 
+   // Variables des effets ces objets
+   logic                                      ghost;
+   logic                                      multiple_bomb;
+   logic                                      huge_flame;
+   logic                                      speed_up;
+   logic                                      push_bomb;
+   logic [32:0]                               alea1;
+   logic [9:0]                                alea;
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
 
@@ -76,6 +89,7 @@ module controleur (input              clk,
    // Machine à etat
    integer                                    state;
    integer                                    return_addr;
+   integer                                    temp_return_addr;
    logic [9:0]                                count;
 
    // État des joueurs
@@ -119,7 +133,12 @@ module controleur (input              clk,
           bomb_ram_waddr <= 0;
           bomb_ram_wdata <= 0;
           bomb_ram_we <= 0;
-          count <= 0;
+          count  <= 0;
+          ghost  <= 0;
+          multiple_bomb  <= 0;
+          huge_flame <= 0;
+          speed_up <= 0;
+          push_bomb <= 0;
        end
      else
        begin
@@ -176,6 +195,8 @@ module controleur (input              clk,
                    state <= 100;
               end
 
+            7:
+
             /**************************
              * Traitement du jeu
              **************************/
@@ -183,22 +204,25 @@ module controleur (input              clk,
               begin
                  // On commence par attendre que EOF soit haut
                  if (EOF)
-                   state <= 101;
+                   state <= state + 1;
               end
 
-            101:begin
+            101 :
+              // On place 2 objets dans le maze de manière aléatoire
+
+            102:begin
                // Gère le déplacement du joueur 1
                state <= 200;
                return_addr <= state + 1;
             end
 
-            102: begin
+            103: begin
                // Gère le déplacement du joueur 2
                state <= 250;
                return_addr <= state + 1;
             end
 
-            103:
+            104:
               // Gère le dépot des bombes du joueur 1
               if (j1_drop)
                 //La position de la bombe sera la position ou le joueur
@@ -212,7 +236,7 @@ module controleur (input              clk,
               else
                 state <= state + 1;
 
-            104:
+            105:
               // Gère le dépot des bombes du joueur 2
               if (j2_drop)
                 //La position de la bombe sera la position ou le joueur
@@ -226,14 +250,14 @@ module controleur (input              clk,
               else
                 state <= state + 1;
 
-            105:
+            106:
               // Gestion des timers
               begin
                  state <= 400;
                  return_addr <= state + 1;
               end
 
-            106: begin
+            107: begin
                // On repart en attente du EOF
                state <= 100;
             end
@@ -292,7 +316,10 @@ module controleur (input              clk,
                    end
                  else
                    // On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
-                   state <= 220;
+                   begin
+                      state <= 220;
+                      temp_return_addr <= 220;
+                   end
               end // case: 200
 
             201: begin
@@ -318,8 +345,11 @@ module controleur (input              clk,
 
             204 : begin
                // Si on a un mur, on annule le mouvement
+               // Si on a un objet on va dans la partie qui traite les objets ( 500)
                if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2))
                  state <= 218;
+               if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
+                 state <= 500;
                else
                  state <= state + 1;
             end
@@ -508,7 +538,10 @@ module controleur (input              clk,
 
                    end // if (player2_state == WAITING)
                  else //  On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
-                   state <= 280;
+                   begin
+                      state <= 280;
+                      temp_return_addr <= 280;
+                   end
               end // case: 250
             251: begin
                // On se prépare à bouger. On vérifie d'abord si la case de destination est libre.
@@ -541,10 +574,10 @@ module controleur (input              clk,
 
             255 : begin
                // Si on est sur une porte et qu'on ne va pas dans le bon sens, annule le mouvement
-               if (((ram_rdata == GATE_RIGHT) & (dx1 <= 0)) ||
-                   ((ram_rdata == GATE_LEFT)  & (dx1 >= 0)) ||
-                   ((ram_rdata == GATE_DOWN)  & (dy1 <= 0)) ||
-                   ((ram_rdata == GATE_UP)    & (dy1 >= 0)))
+               if (((ram_rdata == GATE_RIGHT) & (dx2 <= 0)) ||
+                   ((ram_rdata == GATE_LEFT)  & (dx2 >= 0)) ||
+                   ((ram_rdata == GATE_DOWN)  & (dy2 <= 0)) ||
+                   ((ram_rdata == GATE_UP)    & (dy2 >= 0)))
                  state <= 268;
                else
                  state <= state + 1;
@@ -579,8 +612,8 @@ module controleur (input              clk,
 
             268 : begin
                // Annule le mouvement
-               dx1 <= 0;
-               dy1 <= 0;
+               dx2 <= 0;
+               dy2 <= 0;
                player2_state <= WAITING;
                player2_goalX <= {player2X, 4'b0000};
                player2_goalY <= {player2Y, 4'b0000};
@@ -822,8 +855,96 @@ module controleur (input              clk,
                  state <= 403;
               end
 
-          endcase // case (state)
-       end
+            500 :
+              // On s'occupe de la gestion des objets après on retourne au traitement du mouvement ( 220 pour le joueur 1)
+              // Si on a un objet on affecte les effets et on l'enlève de l'écran
+              // une fois qu'on l'a enlevé de l'écran il faut en faire re-pop un autre à une place libre de manière aléatoire
+              begin
+                 if(ram_rdata == MULTIPLE_BOMB)
+                    multiple_bomb <= 1;
+                 if(ram_rdata == HUGE_FLAME)
+                   huge_flame <= 1;
+                 if(ram_rdata == SPEED_UP)
+                   begin
+                      if (temp_return_addr == 220)
+                        v1 <= v1+10;
+                      if (temp_return_addr == 280)
+                        v2 <= v2+10;
+                 if(ram_rdata == GHOST)
+                   ghost <= 1;
+                 if(ram_rdata == PUSH_BOMB)
+                   push_bomb <= 1;
+                 ram_wdata <= WALL_EMPTY;
+                 ram_we <= 1;
+                 ram_waddr <= ram_raddr;
+                 state <= state +1;
+              end // case: 500
+
+
+            501 :
+              // on va utiliser le nombre aléatoire pour trouver une case libre
+              if((alea[4:0] < 25) && (alea[9:5]<17))
+               begin
+                  ram_raddr <= alea;
+                  state <= state +2;
+               end
+              else
+                state <= state + 1;
+            502 :
+              // état d'attente pour recevoir un autre nombre aléatoir
+              state <= state - 1;
+            503 :
+              // état d'attente pour lecture sur la ram
+              state <= state + 1;
+            504 : // en fonction d'une variable aléatoire j'affecte a l'endroit libre aléatoire un objet que j'affiche
+              // si la case n'est pas libre je retourne en 501 pour voir  si la case aléatoire actuell est correcte
+              // Une fois que l'objet est affecté je reourne d'ou je viens ie en 220
+              if(ram_rdata == WALL_EMPTY)
+                begin
+                   if( alea1[31:21] <150)
+                     begin
+                        ram_wdata <= MULTIPLE_BOMB;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr;
+                        state <= temp_return_adddr;
+                     end
+                   else if( alea1[31:21] <300)
+                     begin
+                        ram_wdata <= HUGE_FLAME;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr;
+                        state <= temp_return_adddr;
+                     end
+                   else if( alea1[31:21] < 700)
+                     begin
+                        ram_wdata <= PUSH_BOMB;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr;
+                        state <= temp_return_adddr;
+                     end
+                   else if( alea1[31:21] <1000)
+                     begin
+                        ram_wdata <= SPEED_UP;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr;
+                        state <= temp_return_adddr;
+                     end
+                   else
+                     begin
+                        ram_wdata <= GHOST;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr;
+                        state <= temp_return_adddr;
+                     end // else: !if( alea1[31:21] <1000)
+                end // if (ram_rdata == WALL_EMPTY)
+
+              else
+                state <= 501;
+
+
+                endcase // case (state)
+       end // else: !if(~reset_n)
+
 
    // BOMB RAM
    always @(posedge clk)
@@ -833,5 +954,13 @@ module controleur (input              clk,
    always @(posedge clk)
      bomb_ram_rdata <= bomb_ram[bomb_ram_raddr];
 
+   // Instantiation du généraeur aléatoire
+
+   lfsr lfsr(.clk(clk),
+             .reset_n(reset_n),
+             .data(alea1)
+             );
+   always @(*)
+     alea <= alea1[7:0];
 
 endmodule // controleur
