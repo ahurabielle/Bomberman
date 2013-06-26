@@ -296,7 +296,7 @@ module controleur (input              clk,
                 end
 
             8: begin
-               // État d'attent pour lecture RAM
+               // État d'attente pour lecture RAM
                state <= state + 1;
             end
 
@@ -341,13 +341,72 @@ module controleur (input              clk,
                // Si on a placé sufisamment d'objets, on démarre le jeu.
                if (compt_objet == NB_OBJETS)
                  begin
-                    state <= 100;
+                    state <= state + 1;
                     game_state <= GAME_PLAY;
                  end
                else
                  state <= 7;
             end // case: 10
 
+            // On place aléatoirement les joueurs
+            11:
+              // On tire une position au hasard. Si on est en dehors du labyrinthe, on
+              // en retire une autre.
+              if((alea[4:0] < 25) && (alea[9:5]<17))
+                begin
+                   ram_raddr <= alea;
+                   state <= state +1;
+                end
+
+            12: begin
+               // État d'attente pour lecture RAM
+               state <= state + 1;
+            end
+
+            13 : begin
+               // Si la case tirée au hasard contient du vide, on y place le joueur1
+               // Sinon on en tire une autre
+               state <= state + 1;
+               if(ram_rdata == WALL_EMPTY)
+                 begin
+                    player1X <= ram_raddr[4:0]*32;
+                    player1Y <= ram_raddr[9:5]*32;
+                    state <= state + 1;
+                 end
+               else
+                 state <= 11;
+            end // case: 13
+
+            14:
+              // On tire une position au hasard. Si on est en dehors du labyrinthe, on
+              // en retire une autre.
+              if((alea[4:0] < 25) && (alea[9:5]<17) && (alea[4:0] != player1X[9:5]) && (alea[9:5] != player1Y[9:5]))
+                begin
+                   ram_raddr <= alea;
+                   state <= state +1;
+                end
+
+            15: begin
+               // État d'attente pour lecture RAM
+               state <= state + 1;
+            end
+
+            16 : begin
+               // Si la case tirée au hasard contient du vide, on y place le joueur2
+               // Sinon on en tire une autre
+               state <= state + 1;
+               if(ram_rdata == WALL_EMPTY)
+                 begin
+                    player2X <= ram_raddr[4:0]*32;
+                    player2Y <= ram_raddr[9:5]*32;
+                    state <= state + 1;
+                 end
+               else
+                 state <= 14;
+            end // case: 13
+
+            17:
+              state <= 100;
 
 
             /**************************
@@ -374,10 +433,8 @@ module controleur (input              clk,
                         end
                  end
             end
-            // XXX
-            // TODO : placer correctement les joueurs (lire leur emplacement initial dans la RAM maze)
-            //        et aller charger le nouveau labyrinthe.
 
+            // XXX TODO : charger le nouveau labyrinthe
             101: begin
                // Gère le déplacement du joueur 1
                state <= 200;
