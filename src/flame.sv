@@ -11,8 +11,8 @@ module flame(input logic                clk,
              input logic               active
              );
 
-   // ROM qui contient les pixels des 7 sprites (64x64 pixels)
-   logic [7:0]                         rom[0:5*1024-1];
+   // ROM qui contient les pixels des 8 (7 + 1 vide) sprites (64x64 pixels)
+   logic [7:0]                         rom[0:8*1024-1];
    logic [12:0]                        rom_addr;
    logic [7:0]                         color_pixel;
 
@@ -34,13 +34,6 @@ module flame(input logic                clk,
    assign {num_carreY, offsetY} = spotY;
    assign rom_addr = {sprite_num, offsetY, offsetX};
 
-
-   // flame_xxx a un coup de retard par rapport à spotX. Il faut donc retarder
-   // aussi spotX d'un coup d'horloge.
-   logic signed [10:0]                 spotX_r;
-   always @(posedge clk)
-     spotX_r <= spotX;
-
    always @(*)
      if(active)
        flame_ram_raddr_internal <= {num_carreY, num_carreX};
@@ -58,7 +51,7 @@ module flame(input logic                clk,
 
    // Si on est en dehors du labyrinthe de flamme, on affiche du vide
    always @(*)
-     if ((spotX_r > (24*32+31)) || (spotX_r < 0) || (spotY > (16*32+31)) || (spotY < 0))
+     if ((spotX > (24*32+31)) || (spotX < 0) || (spotY > (16*32+31)) || (spotY < 0))
        sprite_num <= 0;
      else
        sprite_num <= flame_ram_rdata;

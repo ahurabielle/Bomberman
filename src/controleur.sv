@@ -73,8 +73,11 @@ module controleur (input              clk,
    localparam FLAME_RIGHT = 6;
    localparam FLAME_DOWN = 7;
 
+   //Determine le rayon
+   localparam RADIUS = 3;
+
    //Définition du rayon d'action des flammes
-   logic [2:0]                                radius;
+   logic [2:0]                                count_r;
 
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
@@ -760,14 +763,202 @@ module controleur (input              clk,
                  flame_ram_we <= 1;
                  flame_ram_waddr <= bomb_ram_rdata[9:0];
                  state <= state +1;
-
-
               end
 
             421:
+              // On initialise le compteur count_r à 1
               begin
-                 state <= 403;
+                 count_r <= 1;
+                 state <= state + 1;
               end
+
+            422 :
+              // Lecture de la Ram maze pour savoir ce qu'on a à gauche de la bombe
+              // dans son rayon d'action
+              begin
+                 if(count_r < RADIUS)
+                   begin
+                      ram_raddr <= bomb_ram_rdata[9:0] - count_r;
+                   end
+                 state <= state + 1;
+              end
+
+            423:
+              //attente de la lecture
+              state <= state + 1;
+
+            424:
+              // On regarde dans la Ram maze
+              // S'il y a un mur, on passe à la suite
+              // Sinon, on affiche une flamme
+              if((ram_rdata == WALL_1) ||
+                 (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
+                 (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
+                state <= state + 1;
+              else if (ram_rdata == BOMB)
+                begin
+
+                end
+
+              else if (count_r == (RADIUS - 1))
+                begin
+                   flame_ram_wdata <= FLAME_LEFT;
+                   flame_ram_we <= 1;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count_r;
+                   state <= state + 1;
+                end
+              else
+                begin
+                   flame_ram_wdata <= FLAME_H;
+                   flame_ram_we <= 1;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count_r;
+                   state <= 422;
+                   count_r <= count_r + 1;
+                end // else: !if(count_r == (radius - 1))
+
+            425:
+               // On initialise le compteur count_r à 1
+              begin
+                 count_r <= 1;
+                 state <= state + 1;
+              end
+
+            426:
+              // Lecture de la Ram maze pour savoir ce qu'on a à droite de la bombe
+              // dans son rayon d'action
+              begin
+                 if(count_r < RADIUS)
+                   begin
+                      ram_raddr <= bomb_ram_rdata[9:0] + count_r;
+                   end
+                 state <= state + 1;
+              end
+
+            427:
+              //attente de la lecture
+              state <= state + 1;
+
+            428:
+              // On regarde dans la Ram maze
+              // S'il y a un mur, on passe à la suite
+              // Sinon, on affiche une flamme
+              if((ram_rdata == WALL_1) ||
+                 (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
+                 (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
+                state <= state + 1;
+              else
+                if (count_r == (RADIUS - 1))
+                  begin
+                     flame_ram_wdata <= FLAME_RIGHT;
+                     flame_ram_we <= 1;
+                     flame_ram_waddr <= bomb_ram_rdata[9:0] + count_r;
+                     state <= state + 1;
+                  end
+                else
+                  begin
+                     flame_ram_wdata <= FLAME_H;
+                     flame_ram_we <= 1;
+                     flame_ram_waddr <= bomb_ram_rdata[9:0] + count_r;
+                     state <= 426;
+                     count_r <= count_r + 1;
+                  end // else: !if(count_r == (radius - 1))
+
+              429:
+               // On initialise le compteur count_r à 1
+              begin
+                 count_r <= 1;
+                 state <= state + 1;
+              end
+
+            430:
+              // Lecture de la Ram maze pour savoir ce qu'on a au-dessus de la bombe
+              // dans son rayon d'action
+              begin
+                 if(count_r < RADIUS)
+                   begin
+                      ram_raddr <= bomb_ram_rdata[9:0] - (count_r * 32) ;
+                   end
+                 state <= state + 1;
+              end
+
+            431:
+              //attente de la lecture
+              state <= state + 1;
+
+            432:
+              // On regarde dans la Ram maze
+              // S'il y a un mur, on passe à la suite
+              // Sinon, on affiche une flamme
+              if((ram_rdata == WALL_1) ||
+                 (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
+                 (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
+                state <= state + 1;
+              else
+                if (count_r == (RADIUS - 1))
+                  begin
+                     flame_ram_wdata <= FLAME_UP;
+                     flame_ram_we <= 1;
+                     flame_ram_waddr <= bomb_ram_rdata[9:0] - (count_r * 32) ;
+                     state <= state + 1;
+                  end
+                else
+                  begin
+                     flame_ram_wdata <= FLAME_V;
+                     flame_ram_we <= 1;
+                     flame_ram_waddr <= bomb_ram_rdata[9:0] - (count_r * 32) ;
+                     state <= 430;
+                     count_r <= count_r + 1;
+                  end
+
+              433:
+               // On initialise le compteur count_r à 1
+              begin
+                 count_r <= 1;
+                 state <= state + 1;
+              end
+
+            434:
+              // Lecture de la Ram maze pour savoir ce qu'on a au-dessous de la bombe
+              // dans son rayon d'action
+              begin
+                 if(count_r < RADIUS)
+                   begin
+                      ram_raddr <= bomb_ram_rdata[9:0] + (count_r * 32) ;
+                   end
+                 state <= state + 1;
+              end
+
+            435:
+              //attente de la lecture
+              state <= state + 1;
+
+            436:
+              // On regarde dans la Ram maze
+              // S'il y a un mur, on passe à la suite
+              // Sinon, on affiche une flamme
+              if((ram_rdata == WALL_1) ||
+                 (ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) ||
+                 (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
+                state <= state + 1;
+              else
+                if (count_r == (RADIUS - 1))
+                  begin
+                     flame_ram_wdata <= FLAME_DOWN;
+                     flame_ram_we <= 1;
+                     flame_ram_waddr <= bomb_ram_rdata[9:0] + (count_r * 32) ;
+                     state <= state + 1;
+                  end
+                else
+                  begin
+                     flame_ram_wdata <= FLAME_V;
+                     flame_ram_we <= 1;
+                     flame_ram_waddr <= bomb_ram_rdata[9:0] + (count_r * 32) ;
+                     state <= 430;
+                     count_r <= count + 1;
+                  end // else: !if(count_r == (radius - 1))
+
+            437:
+              state <= 403;
 
           endcase // case (state)
        end
