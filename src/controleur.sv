@@ -73,8 +73,8 @@ module controleur (input              clk,
    localparam PUSH_BOMB    = 11;
    localparam BOMB         = 12;
 
-   // Nombre d'objets affichés au total sur l'écran (XXX : check si par personne ?)
-   localparam NB_OBJETS    = 2;
+   // Nombre d'objets affichés au total sur l'écran
+   localparam NB_OBJETS    = 3;
    logic [2:0]                                compt_objet;
 
    // Variables des effets ces objets
@@ -124,13 +124,15 @@ module controleur (input              clk,
 
    // État du jeu
    logic                                      game_state;
-   localparam PLAY      = 0;
+   localparam GAME_PLAY = 0;
    localparam GAME_OVER = 1;
+   localparam GAME_INIT = 2;
 
    // État des joueurs
    logic [1:0]                                player1_state, player2_state;
    localparam WAITING = 0;
    localparam MOVING  = 1;
+
    // Vitesse des joueurs 1 et 2
    logic signed [13:0]                        v1;
    logic signed [13:0]                        v2;
@@ -188,8 +190,8 @@ module controleur (input              clk,
           bck_g <= 0;
           bck_b <= 230;
           color_compt <= 0;
-          game_state <= PLAY;
-    end
+          game_state <= GAME_INIT;
+       end
      else
        begin
           // Par défaut, on ne fait PAS d'écriture dans la RAM
@@ -202,9 +204,11 @@ module controleur (input              clk,
             /**************************
              * Phases d'initialistation
              **************************/
-            // Pour l'instant : rien à faire, on passe directement au traitement du jeu
+            // On commence par effacer de la RAM maze tout ce qui n'est pas un mur.
+            // Au passage, on se met en mode GAME_INIT.
             0:
               begin
+                 game_state <= GAME_INIT;
                  ram_raddr <= 0;
                  state <= state + 1;
               end
@@ -215,12 +219,11 @@ module controleur (input              clk,
                  state <= state +1;
               end
             2:
-              // On regarde s'il y a une bombe à l'emplacement que l'on lit
-              // Si c'est le cas, on la remplace par du vide
-              // Sinon, on n'y touche pas.
-              // On vérifie l'adresse suivante jusqu'à la fin de la Ram.
+              // On regarde s'il y a autre chose qu'un mur à l'emplacement que l'on lit.
+              // Si c'est le cas, on le remplace par du vide.
+              // Enfin on passe à l'adresse suivante, jusqu'à la fin de la RAM.
               begin
-                 if(ram_rdata == BOMB)
+                 if(ram_rdata > GATE_DOWN)
                    begin
                       ram_wdata <= WALL_EMPTY ;
                       ram_waddr <= ram_raddr;
@@ -263,65 +266,67 @@ module controleur (input              clk,
               end
 
             7:
-              // On instantie les objets au début du jeu
-              // Tant qu'on a pas "NB_OBJETS" objets on en rajoute
-              // on va utiliser le nombre aléatoire pour trouver une case libre
+              // On instancie des objets, jusqu'à qu'on en ait placé NB_OBJETS.
+              // On se place sur une case tirée aléatoirement (alea[9:0]).
+              // Si cette case est en dehors du terrain de jeu, on en tire une autre.
               if((alea[4:0] < 25) && (alea[9:5]<17))
                 begin
                    ram_raddr <= alea;
-                   state <= state +2;
+                   state <= state +1;
                 end
-              else
-                state <= state + 1;
 
-            8 :
-              // État d'attente pour recevoir un autre nombre aléatoire
-              state <= state - 1;
+            8: begin
+               // État d'attent pour lecture RAM
+               state <= state + 1;
+            end
 
-            9 :
-              // État d'attente pour lecture sur la ram
-              state <= state + 1;
+            9 : begin
+               // Si la case tirée au hasard contient du vide, on y place un objet (tiré
+               // aléatoirement lui aussi). Sinon, on tire une autre case au hasard.
+               state <= state + 1;
+               if(ram_rdata == WALL_EMPTY)
+                 begin
+                    if( alea1[31:21] < 150)
+                      begin
+                         ram_wdata <= MULTIPLE_BOMB;
+                         ram_we <= 1;
+                         ram_waddr <= ram_raddr;
+                      end
+                    else if( alea1[31:21] < 300)
+                      begin
+                         ram_wdata <= HUGE_FLAME;
+                         ram_we <= 1;
+                         ram_waddr <= ram_raddr;
+                      end
+                    else if( alea1[31:21] < 700)
+                      begin
+                         ram_wdata <= SPEED_UP;
+                         ram_we <= 1;
+                         ram_waddr <= ram_raddr;
+                      end
+                    else
+                      begin
+                         ram_wdata <= GHOST;
+                         ram_we <= 1;
+                         ram_waddr <= ram_raddr;
+                      end
+                    compt_objet <= compt_objet +1;
+                 end
+               else
+                 state <= 7;
+            end // case: 9
 
-            10 : // En fonction d'une variable aléatoire j'affecte à l'endroit libre aléatoire un objet que j'affiche.
-              // Si la case n'est pas libre je retourne en 7 pour voir si la case aléatoire actuelle est correcte
-              // Une fois que l'objet est affecté je retourne d'où je viens ie en 220.
+            10:
               begin
-                 if(ram_rdata == WALL_EMPTY)
-                   begin
-                      if( alea1[31:21] < 150)
-                        begin
-                           ram_wdata <= MULTIPLE_BOMB;
-                           ram_we <= 1;
-                           ram_waddr <= ram_raddr;
-                           compt_objet <= compt_objet +1;
-                        end
-                      else if( alea1[31:21] < 300)
-                        begin
-                           ram_wdata <= HUGE_FLAME;
-                           ram_we <= 1;
-                           ram_waddr <= ram_raddr;
-                           compt_objet <= compt_objet +1;
-                        end
-                      else if( alea1[31:21] < 700)
-                        begin
-                           ram_wdata <= SPEED_UP;
-                           ram_we <= 1;
-                           ram_waddr <= ram_raddr;
-                           compt_objet <= compt_objet +1;
-                        end
-                      else
-                        begin
-                           ram_wdata <= GHOST;
-                           ram_we <= 1;
-                           ram_waddr <= ram_raddr;
-                           compt_objet <= compt_objet +1;
-                        end // else: !if( alea1[31:21] <1000)
-                   end // if (ram_rdata == WALL_EMPTY)
-                 else
-                   state <= 7;
-                 if (compt_objet == NB_OBJETS)
-                   state <= 100;
-              end // case: 10
+               // Si on a placé sufisamment d'objets, on démarre le jeu.
+               if (compt_objet == NB_OBJETS)
+                 begin
+                    state <= 100;
+                    game_state <= GAME_PLAY;
+                 end
+               else
+                 state <= 7;
+            end // case: 10
 
 
 
@@ -387,13 +392,13 @@ module controleur (input              clk,
               begin
                  state <= 600;
                  return_addr <= state +1;
-                 end
+              end
 
             107: begin
-              // On décrémente les objets s'ils sont différents de zero
+               // On décrémente les objets s'ils sont différents de zero
                state <= 550;
                return_addr <= state +1;
-               end
+            end
 
             108:
               // Gestion de la mort d'un des personnages
@@ -547,13 +552,13 @@ module controleur (input              clk,
 
             207 :
               begin
-               // Si il y a une bombe, on annule le mouvement
-               if (ram_rdata == BOMB)
-                 state <= 218;
-               else
-                 state <= state +1;
+                 // Si il y a une bombe, on annule le mouvement
+                 if (ram_rdata == BOMB)
+                   state <= 218;
+                 else
+                   state <= state +1;
 
-            end
+              end
 
             208 : // Si on a un objet on le traite
               begin
@@ -1020,78 +1025,78 @@ module controleur (input              clk,
             end
 
             410:
-               // On remplace tous les sprites flammes autour de la bombe
-               // par du vide.
-               // On commence par retirer le centre
-               begin
-                  flame_ram_wdata <= FLAME_EMPTY;
-                  flame_ram_waddr <= bomb_ram_rdata[9:0];
-                  flame_ram_we <= 1;
-                  state <= state + 1;
-                  count <= 1;
-               end
+              // On remplace tous les sprites flammes autour de la bombe
+              // par du vide.
+              // On commence par retirer le centre
+              begin
+                 flame_ram_wdata <= FLAME_EMPTY;
+                 flame_ram_waddr <= bomb_ram_rdata[9:0];
+                 flame_ram_we <= 1;
+                 state <= state + 1;
+                 count <= 1;
+              end
 
-             411:
-               //On va retirer les flammes sur la gauche
-                  if(count < RADIUS)
-                    begin
-                       flame_ram_wdata <= FLAME_EMPTY;
-                       flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
-                       flame_ram_we <= 1;
-                       count <= count + 1;
-                    end
-                  else
-                    begin
-                       count <= 1;
-                       state <= state + 1;
-                    end // else: !if(count < RADIUS)
-
-
-             412:
-               //On va retirer les flammes sur la droite
-                  if(count < RADIUS)
-                    begin
-                       flame_ram_wdata <= FLAME_EMPTY;
-                       flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
-                       flame_ram_we <= 1;
-                       count <= count + 1;
-                    end
-                  else
-                    begin
-                       count <= 1;
-                       state <= state + 1;
-                    end // else: !if(count < RADIUS)
+            411:
+              //On va retirer les flammes sur la gauche
+              if(count < RADIUS)
+                begin
+                   flame_ram_wdata <= FLAME_EMPTY;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
+                   flame_ram_we <= 1;
+                   count <= count + 1;
+                end
+              else
+                begin
+                   count <= 1;
+                   state <= state + 1;
+                end // else: !if(count < RADIUS)
 
 
-             413:
-               //On va retirer les flammes vers le haut
-                  if(count < RADIUS)
-                    begin
-                       flame_ram_wdata <= FLAME_EMPTY;
-                       flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32);
-                       flame_ram_we <= 1;
-                       count <= count + 1;
-                    end
-                  else
-                    begin
-                       count <= 1;
-                       state <= state + 1;
-                    end // else: !if(count < RADIUS)
+            412:
+              //On va retirer les flammes sur la droite
+              if(count < RADIUS)
+                begin
+                   flame_ram_wdata <= FLAME_EMPTY;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
+                   flame_ram_we <= 1;
+                   count <= count + 1;
+                end
+              else
+                begin
+                   count <= 1;
+                   state <= state + 1;
+                end // else: !if(count < RADIUS)
 
-             414:
-               //On va retirer les flammes vers le bas
-                  if(count < RADIUS)
-                    begin
-                       flame_ram_wdata <= FLAME_EMPTY;
-                       flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32);
-                       flame_ram_we <= 1;
-                       count <= count + 1;
-                    end
-                  else
-                    begin
-                       count <= 1;
-                       state <= state + 1;
-                    end // else: !if(count < RADIUS)
+
+            413:
+              //On va retirer les flammes vers le haut
+              if(count < RADIUS)
+                begin
+                   flame_ram_wdata <= FLAME_EMPTY;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32);
+                   flame_ram_we <= 1;
+                   count <= count + 1;
+                end
+              else
+                begin
+                   count <= 1;
+                   state <= state + 1;
+                end // else: !if(count < RADIUS)
+
+            414:
+              //On va retirer les flammes vers le bas
+              if(count < RADIUS)
+                begin
+                   flame_ram_wdata <= FLAME_EMPTY;
+                   flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32);
+                   flame_ram_we <= 1;
+                   count <= count + 1;
+                end
+              else
+                begin
+                   count <= 1;
+                   state <= state + 1;
+                end // else: !if(count < RADIUS)
 
 
             415:
@@ -1170,7 +1175,7 @@ module controleur (input              clk,
                 end
               else
                 begin
-                    //On détruit le mur s'il est destructible
+                   //On détruit le mur s'il est destructible
                    if (ram_rdata == WALL_2)
                      begin
                         ram_wdata <= WALL_EMPTY;
@@ -1195,7 +1200,7 @@ module controleur (input              clk,
                 end // else: !if((ram_rdata == WALL_1) ||...
 
             425:
-               // On initialise le compteur count à 1
+              // On initialise le compteur count à 1
               begin
                  count <= 1;
                  state <= state + 1;
@@ -1437,10 +1442,10 @@ module controleur (input              clk,
               // alea[9:0] contient l'adresse d'une case aléatoire. Si on est en dehors
               // du labyrinthe, on retire une autre case. Sinon, on passe à la suite
               if((alea[4:0] < 25) && (alea[9:5]<17))
-               begin
-                  ram_raddr <= alea;
-                  state <= state +2;
-               end
+                begin
+                   ram_raddr <= alea;
+                   state <= state +2;
+                end
 
             503 :
               // État d'attente pour lecture sur la ram
