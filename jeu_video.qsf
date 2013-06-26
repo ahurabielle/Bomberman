@@ -592,6 +592,7 @@ set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL OFF
 set_global_assignment -name PHYSICAL_SYNTHESIS_ASYNCHRONOUS_SIGNAL_PIPELINING ON
 set_global_assignment -name STRICT_RAM_RECOGNITION ON
+set_global_assignment -name SYSTEMVERILOG_FILE src/lfsr.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/life.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/player.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/maze.sv

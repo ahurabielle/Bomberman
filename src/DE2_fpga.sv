@@ -303,6 +303,7 @@
    logic signed [10:0]    vga_spotY;
    // fond rouge, bleu, vert
    logic [23:0]           bck_rgb;
+   logic [7:0]            bck_r, bck_g, bck_b;
 
    logic [7:0]            player1_color;
    logic [7:0]            player2_color;
@@ -327,6 +328,8 @@
    logic                  j2_left;
    logic                  j2_right;
    logic                  j2_drop;
+   logic                  game_over;
+   logic                  new_game;
    // la vie
    logic [6:0]            life1;
    logic [6:0]            life2;
@@ -403,6 +406,8 @@
                  .j2_right(j2_right),
                  .j2_left(j2_left),
                  .j2_drop(j2_drop),
+                 .game_over(game_over),
+                 .new_game(new_game),
                  .data_out(data_out)
                  );
 
@@ -428,6 +433,10 @@
 		          .player1Y(player1Y),
                   .player2X(player2X),
                   .player2Y(player2Y),
+                  .new_game(new_game),
+                  .bck_r(bck_r),
+                  .bck_g(bck_g),
+                  .bck_b(bck_b),
                   .ram_waddr(maze_ram_waddr),
                   .ram_wdata(maze_ram_wdata),
                   .ram_we(maze_ram_we),
@@ -458,6 +467,9 @@
    // Instantiation du module background
    background bck(.clk(vga_clk),
 		          .spotX(vga_spotX),
+                  .bck_r(bck_r),
+                  .bck_g(bck_g),
+                  .bck_b(bck_b),
 		          .bck_rgb(bck_rgb)
 		          );
 
@@ -517,8 +529,5 @@
              .vga_b(vga_b),
              .life_rgb(life_rgb)
 	         );
-
-   // Debug
-   //assign debug = {data_out};
 
 endmodule
