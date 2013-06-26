@@ -367,30 +367,77 @@ module controleur (input              clk,
                state <= return_addr;
             end
 
-            220 : begin
-               // On est en état MOVING.
-               // Si on est sur le point d'arriver à destination ou de dépasser le cible,
-               // on se positionne directement dessus
-               if ((((dx1 > 0) && (({player1X, fplayer1X} + dx1) >= player1_goalX)) || ((dx1 < 0) && (({player1X, fplayer1X} + dx1) <= player1_goalX)) || (dx1==0))
-                   && (((dy1 > 0) && (({player1Y, fplayer1Y} + dy1) >= player1_goalY)) || ((dy1 < 0) && (({player1Y, fplayer1Y} + dy1) <= player1_goalY)) || (dy1 ==0)))
-                 begin
-                    {player1X, fplayer1X} <= player1_goalX;
-                    {player1Y, fplayer1Y} <= player1_goalY;
-                    player1_state <= WAITING;
-                 end // if ((((dx1 > 0) && ((player1X+dx1) >= player1_goalX)) ||...
+            220 :
+              begin
+                 // On est en état MOVING.
+                 // Si on est sur le point d'arriver à destination ou de dépasser le cible,
+                 // on se positionne directement dessus
+                 if ((((dx1 > 0) && (({player1X, fplayer1X} + dx1) >= player1_goalX)) || ((dx1 < 0) && (({player1X, fplayer1X} + dx1) <= player1_goalX)) || (dx1==0))
+                     && (((dy1 > 0) && (({player1Y, fplayer1Y} + dy1) >= player1_goalY)) || ((dy1 < 0) && (({player1Y, fplayer1Y} + dy1) <= player1_goalY)) || (dy1 ==0)))
+                   begin
+                      {player1X, fplayer1X} <= player1_goalX;
+                      {player1Y, fplayer1Y} <= player1_goalY;
+                      player1_state <= WAITING;
+                   end // if ((((dx1 > 0) && ((player1X+dx1) >= player1_goalX)) ||...
 
-               else
-                 begin
-                    // On n'est pas encore arrivé (et pas sur le point d'y arriver), on bouge tranquilou bilou
-                    {player1X, fplayer1X} <= {player1X, fplayer1X} + dx1;
-                    {player1Y, fplayer1Y} <= {player1Y, fplayer1Y} + dy1;
-                 end // else: !if((((dx1 > 0) && ((player1X+dx1) >= player1_goalX)) ||...
+                 else
+                   begin
+                      // On n'est pas encore arrivé (et pas sur le point d'y arriver), on bouge tranquilou bilou
+                      {player1X, fplayer1X} <= {player1X, fplayer1X} + dx1;
+                      {player1Y, fplayer1Y} <= {player1Y, fplayer1Y} + dy1;
+                   end // else: !if((((dx1 > 0) && ((player1X+dx1) >= player1_goalX)) ||...
 
-               // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
+                 // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
 
-               // Revient à la routine de gestion principale
-               state <= return_addr;
-            end // case: 201
+                 // Revient à la routine de gestion principale
+                 state <= state + 1;
+              end // case: 220
+
+            221 :
+              // Si on va a droite on va prendre le sprite en direction de la droite
+              // et de meme pour les autres directions
+              begin
+                 if (dx1 > 0)
+                   state <= state + 1;
+                 else if (dx1 < 0)
+                   state <= state + 2;
+                 else if (dy1 != 0)
+                   state <= state + 3;
+              end // case: 221
+
+
+            222 :
+              // On va a droite on alterne les deux sprites, en fonction de notre avancement
+              begin
+                 // On regarde dans quelle proportion on a avancé par rapport a notre case d'arrivé
+                 // On affiche alors dans la RAM tel ou tel autre sprite
+                 if((player1X - player1_goalX[14:4] < 16) )
+                   player1_sprite <= 4;
+                 else
+                   player1_sprite <= 3;
+                 state <= return_addr;
+              end // case: 222
+            223:
+              // On va a gauche
+              begin
+                 if((player1_goalX[14:4]-player1X < 16 ) )
+                   player1_sprite <= 6;
+                 else
+                   player1_sprite <= 5;
+                 state <= return_addr;
+              end // case: 223
+
+            224:
+              // On se déplace verticalement
+              begin
+                 if((player1Y - player1_goalY[14:4] < 16) )
+                   player1_sprite <= 2;
+                 else
+                   player1_sprite <= 1;
+                 state <= return_addr;
+              end // case: 224
+
+
 
             /**************************
              * Déplacement du joueur 2
