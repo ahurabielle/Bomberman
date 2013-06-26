@@ -65,11 +65,14 @@ module controleur (input              clk,
    logic [2:0]                                compt_objet;
 
    // Variables des effets ces objets
-   logic                                      ghost;
-   logic                                      multiple_bomb;
-   logic                                      huge_flame;
-   logic                                      speed_up;
-   logic                                      push_bomb;
+   logic [7:0]                                ghost1;
+   logic [7:0]                                ghost2;
+   logic                                      multiple_bomb1;
+   logic                                      multiple_bomb2;
+   logic [3:0]                                huge_flame1;
+   logic [3:0]                                huge_flame2;
+   logic                                      push_bomb1;
+   logic                                      push_bomb2;
    logic [32:0]                               alea1;
    logic [9:0]                                alea;
 
@@ -137,11 +140,14 @@ module controleur (input              clk,
           bomb_ram_wdata <= 0;
           bomb_ram_we <= 0;
           count  <= 0;
-          ghost  <= 0;
-          multiple_bomb  <= 0;
-          huge_flame <= 0;
-          speed_up <= 0;
-          push_bomb <= 0;
+          ghost1  <= 0;
+          ghost2  <= 0;
+          multiple_bomb1  <= 0;
+          multiple_bomb2  <= 0;
+          huge_flame1 <= 0;
+          huge_flame2 <= 0;
+          push_bomb1 <= 0;
+          push_bomb2 <= 0;
           compt_objet <= 0;
        end
      else
@@ -324,9 +330,14 @@ module controleur (input              clk,
               end
 
             106: begin
-               // On repart en attente du EOF
-               state <= 100;
+              // On décrémente les ghost 1/2 s'ils sont différents de zero
+               state <= 550;
+               return_addr <= state +1;
             end
+
+            107 :
+              // On repart attendre le EOF
+              state <= 100;
 
 
             /**************************
@@ -412,10 +423,8 @@ module controleur (input              clk,
             204 : begin
                // Si on a un mur, on annule le mouvement
                // Si on a un objet on va dans la partie qui traite les objets ( 500)
-               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2))
+               if (((ram_rdata == WALL_1) || (ram_rdata == WALL_2))&&(ghost1 == 0) )
                  state <= 218;
-               if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
-                 state <= 500;
                else
                  state <= state + 1;
             end
@@ -449,14 +458,26 @@ module controleur (input              clk,
                state <= state + 1;
             end // case: 206
 
-            207 : begin
+            207 :
+              begin
                // Si il y a une bombe, on annule le mouvement
                if (ram_rdata == BOMB)
                  state <= 218;
                else
-                 state <= 220;
+                 state <= state +1;
+
             end
 
+            208 :// Si on a un objet on le traite sinon on arrete le mouvement
+              begin
+                 if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
+                   begin
+                      state <= 500;
+                      temp_return_addr <=1;
+                   end
+
+                 else state <= 220;
+              end
 
             218 : begin
                // Annule le mouvement
@@ -632,7 +653,7 @@ module controleur (input              clk,
 
             254 : begin
                // Si on a un mur, on annule le mouvement
-               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2))
+               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2) && (ghost2 == 0))
                  state <= 268;
                else
                  state <= state + 1;
@@ -672,9 +693,20 @@ module controleur (input              clk,
                if (ram_rdata == BOMB)
                  state <= 268;
                else
-                 state <= 280;
+                 state <= state +1;
             end
 
+
+            258 :// Si on a un objet on le traite sinon on arrete le mouvement
+              begin
+                 if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
+                   begin
+                      state <= 500;
+                      temp_return_addr <=2;
+                   end
+
+                 else state <= 280;
+              end
 
             268 : begin
                // Annule le mouvement
@@ -927,20 +959,40 @@ module controleur (input              clk,
               // une fois qu'on l'a enlevé de l'écran il faut en faire re-pop un autre à une place libre de manière aléatoire
               begin
                  if(ram_rdata == MULTIPLE_BOMB)
-                    multiple_bomb <= 1;
+                   begin
+                      if (temp_return_addr == 1)
+                        multiple_bomb1 <= multiple_bomb1 + 10;
+                      if (temp_return_addr == 2)
+                        multiple_bomb2 <= multiple_bomb2 + 10;
+                   end
                  if(ram_rdata == HUGE_FLAME)
-                   huge_flame <= 1;
+                   begin
+                      if (temp_return_addr == 1)
+                        huge_flame1 <= huge_flame1 + 10;
+                      if (temp_return_addr == 2)
+                        huge_flame2 <= huge_flame2 + 10;
+                   end
                  if(ram_rdata == SPEED_UP)
                    begin
-                      if (temp_return_addr == 220)
+                      if (temp_return_addr == 1)
                         v1 <= v1+10;
-                      if (temp_return_addr == 280)
+                      if (temp_return_addr == 2)
                         v2 <= v2+10;
-                      end
+                   end
                  if(ram_rdata == GHOST)
-                   ghost <= 1;
+                   begin
+                      if (temp_return_addr == 1)
+                        ghost1 <= 72*3;
+                      if (temp_return_addr == 2)
+                        ghost2 <= 72*3;
+                   end
                  if(ram_rdata == PUSH_BOMB)
-                   push_bomb <= 1;
+                     begin
+                      if (temp_return_addr == 1)
+                        v1 <= v1+10;
+                      if (temp_return_addr == 2)
+                        v2 <= v2+10;
+                   end
                  ram_wdata <= WALL_EMPTY;
                  ram_we <= 1;
                  ram_waddr <= ram_raddr;
@@ -969,28 +1021,28 @@ module controleur (input              clk,
               // Une fois que l'objet est affecté je reourne d'ou je viens ie en 220
               if(ram_rdata == WALL_EMPTY)
                 begin
-                   if( alea1[31:21] <150)
+                   if( alea1[31:22] <150)
                      begin
                         ram_wdata <= MULTIPLE_BOMB;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 200;
                      end
-                   else if( alea1[31:21] <300)
+                   else if( alea1[31:22] <300)
                      begin
                         ram_wdata <= HUGE_FLAME;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 200;
                      end
-                   else if( alea1[31:21] < 700)
+                   else if( alea1[31:22] < 700)
                      begin
                         ram_wdata <= PUSH_BOMB;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 200;
                      end
-                   else if( alea1[31:21] <1000)
+                   else if( alea1[31:22] <1000)
                      begin
                         ram_wdata <= SPEED_UP;
                         ram_we <= 1;
@@ -1008,6 +1060,14 @@ module controleur (input              clk,
 
               else
                 state <= 501;
+            550 : // on décrémente les ghost
+              begin
+                 if (ghost1 != 0)
+                   ghost1 <= ghost1 -1;
+                 if (ghost2 != 0)
+                   ghost2 <= ghost2 -1;
+                 state <= return_addr;
+                 end
 
 
                 endcase // case (state)
