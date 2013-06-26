@@ -41,6 +41,9 @@ module controleur (input              clk,
                    output logic               flame_ram_we,
                    input logic [2:0]          flame_ram_rdata,
 
+                   // Numéro du labyrinthe
+                   output logic [2:0]         maze_num,
+
                    // Debug
                    output logic [31:0]        debug
 		           );
@@ -132,6 +135,7 @@ module controleur (input              clk,
    logic [1:0]                                player1_state, player2_state;
    localparam WAITING = 0;
    localparam MOVING  = 1;
+   localparam DEAD    = 2;
 
    // Vitesse des joueurs 1 et 2
    logic signed [13:0]                        v1;
@@ -158,7 +162,7 @@ module controleur (input              clk,
      if(~reset_n)
        //On place les joueurs au milieu
        begin
-          player1_state <= 0;
+          player1_state <= WAITING;
           state         <= 0;
           player1X      <= 128;
           player1Y      <= 128;
@@ -191,6 +195,7 @@ module controleur (input              clk,
           bck_b <= 230;
           color_compt <= 0;
           game_state <= GAME_INIT;
+          maze_num <= 0;
        end
      else
        begin
@@ -202,14 +207,29 @@ module controleur (input              clk,
 
           case(state)
             /**************************
-             * Phases d'initialistation
+             * Phases d'initialisation
              **************************/
             // On commence par effacer de la RAM maze tout ce qui n'est pas un mur.
-            // Au passage, on se met en mode GAME_INIT.
+            // Au passage, on se met en mode GAME_INIT et on initialise les variables internes
             0:
               begin
                  game_state <= GAME_INIT;
                  ram_raddr <= 0;
+                 compt_objet <= 0;
+                 player1_state <= WAITING;
+                 player2_state <= WAITING;
+                 count  <= 0;
+                 ghost1  <= 0;
+                 ghost2  <= 0;
+                 multiple_bomb1  <= 0;
+                 multiple_bomb2  <= 0;
+                 huge_flame1 <= 0;
+                 huge_flame2 <= 0;
+                 count <= 0;
+                 bck_r <= 0;
+                 bck_g <= 0;
+                 bck_b <= 230;
+                 color_compt <= 0;
                  state <= state + 1;
               end
 
@@ -333,14 +353,32 @@ module controleur (input              clk,
             /**************************
              * Traitement du jeu
              **************************/
-            100:
-              begin
-                 // On commence par attendre que EOF soit haut
-                 if (EOF)
-                   state <= state + 1;
-              end
+            100: begin
+               // On commence par attendre que EOF soit haut.
+               if (EOF)
+                 begin
+                    state <= state + 1;
+                    // Si on est en mode GAME_OVER et qu'on a appuyé sur la touche de RAZ, alors on recommence
+                    // la partie (au passage on change de labyrinthe).
+                    // Sinon, on va dans l'état de gestion du GAME_OVER et on revient ici
+                    if(game_state == GAME_OVER)
+                      if(new_game)
+                        begin
+                           state <= 0;
+                           maze_num <= maze_num + 1;
+                        end
+                      else
+                        begin
+                           state <= 700;
+                           return_addr <= 100;
+                        end
+                 end
+            end
+            // XXX
+            // TODO : placer correctement les joueurs (lire leur emplacement initial dans la RAM maze)
+            //        et aller charger le nouveau labyrinthe.
 
-            101:begin
+            101: begin
                // Gère le déplacement du joueur 1
                state <= 200;
                return_addr <= state + 1;
@@ -353,18 +391,20 @@ module controleur (input              clk,
             end
 
             103:
-              // Gère le dépot des bombes du joueur 1
-              if (j1_drop)
-                //La position de la bombe sera la position ou le joueur
-                //est placé majoritairement
-                begin
-                   bombX <= (player1X + 16) / 32;
-                   bombY <= (player1Y + 16) / 32;
-                   state <= 300;
-                   return_addr <= state + 1;
-                end
-              else
-                state <= state + 1;
+              begin
+                 // Gère le dépot des bombes du joueur 1
+                 if (j1_drop)
+                   //La position de la bombe sera la position ou le joueur
+                   //est placé majoritairement
+                   begin
+                      bombX <= (player1X + 16) / 32;
+                      bombY <= (player1Y + 16) / 32;
+                      state <= 300;
+                      return_addr <= state + 1;
+                   end
+                 else
+                   state <= state + 1;
+              end
 
             104:
               // Gère le dépot des bombes du joueur 2
@@ -402,33 +442,12 @@ module controleur (input              clk,
 
             108:
               // Gestion de la mort d'un des personnages
-              // XXX TODO : gérer la mort des personnages
               begin
-                 if(game_state == GAME_OVER)
-                   begin
-                      state <= 700;
-                      return_addr <= state + 1;
-                   end
-                 else
-                   state <= state +1;
-              end // case: 106
+                 state <= 700;
+                 return_addr <= state + 1;
+              end
 
-            109:
-              // Lancement d'une nouvelle partie
-              begin
-                 if(new_game & (game_state == GAME_OVER))
-                   begin
-                      // XXX
-                      // TODO : attendre un appui sur une touche puis
-                      //        placer correctement les joueurs (lire leur emplacement initial dans la RAM maze)
-                      //        et aller charger le nouveau labyrinthe.
-                      return_addr <= state + 1;
-                   end
-                 else
-                   state <= state +1;
-              end // case: 107
-
-            110: begin
+            109: begin
                // On repart en attente du EOF
                state <= 100;
             end
@@ -1591,14 +1610,60 @@ module controleur (input              clk,
               end
 
 
-            /*************************
+            /******************************************************************
              * Game over
-             *************************/
+             * On regarde s'il y a une flamme sous chacun des joueurs. Si oui,
+             * on passe en mode game over.
+             ******************************************************************/
             700:
-              // On change la couleur du fond
-              // XXX : TODO geler les joueurs
+              // Lit la RAM flammes à l'endroit du joueur1;
               begin
-                 if (bck_r < 230)
+                 flame_ram_raddr <= {player1Y[9:5], player1X[9:5]};
+                 state <= state + 1;
+              end
+
+            701 : begin
+               // Cycle d'attente lecture RAM
+               state <= state + 1;
+            end
+
+            702 : begin
+               // Si on a une flamme, alors on marque le joueur1 comme mort
+               if (flame_ram_rdata != FLAME_EMPTY)
+                 begin
+                    game_state <= GAME_OVER;
+                    player1_state <= DEAD;
+                 end
+
+               state <= state + 1;
+            end
+
+            703:
+              // Lit la RAM flammes à l'endroit du joueur2;
+              begin
+                 flame_ram_raddr <= {player2Y[9:5], player2X[9:5]};
+                 state <= state + 1;
+              end
+
+            704 : begin
+               // Cycle d'attente lecture RAM
+               state <= state + 1;
+            end
+
+            705 : begin
+               // Si on a une flamme, alors on marque le joueur2 comme mort
+               if (flame_ram_rdata != FLAME_EMPTY)
+                 begin
+                    game_state <= GAME_OVER;
+                    player2_state <= DEAD;
+                 end
+               state <= state + 1;
+            end
+
+            706:
+              // On change la couleur du fond si on est en GAME_OVER
+              begin
+                 if ((bck_r < 230) && (game_state == GAME_OVER))
                    begin
                       bck_r <= bck_r +1;
                       bck_b <= bck_b -1;
