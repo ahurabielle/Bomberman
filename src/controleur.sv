@@ -139,12 +139,16 @@ module controleur (input              clk,
           bomb_ram_wdata <= 0;
           bomb_ram_we <= 0;
           count <= 0;
+          flame_ram_we <= 0;
+          flame_ram_waddr <= 0;
        end
      else
        begin
           // Par défaut, on ne fait PAS d'écriture dans la RAM
           ram_we <= 0;
           bomb_ram_we <= 0;
+          flame_ram_we <= 0;
+          flame_ram_waddr <= 0;
 
           case(state)
             /**************************
@@ -748,6 +752,81 @@ module controleur (input              clk,
             end
 
             410:
+               // On remplace tous les sprites flammes autour de la bombe
+               // par du vide.
+               // On commence par retirer le centre
+               begin
+                  flame_ram_wdata <= FLAME_EMPTY;
+                  flame_ram_waddr <= bomb_ram_rdata[9:0];
+                  flame_ram_we <= 1;
+                  state <= state + 1;
+                  count <= 1;
+               end
+
+             411:
+               //On va retirer les flammes sur la gauche
+                  if(count < RADIUS)
+                    begin
+                       flame_ram_wdata <= FLAME_EMPTY;
+                       flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
+                       flame_ram_we <= 1;
+                       count <= count + 1;
+                    end
+                  else
+                    begin
+                       count <= 1;
+                       state <= state + 1;
+                    end // else: !if(count < RADIUS)
+
+
+             412:
+               //On va retirer les flammes sur la droite
+                  if(count < RADIUS)
+                    begin
+                       flame_ram_wdata <= FLAME_EMPTY;
+                       flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
+                       flame_ram_we <= 1;
+                       count <= count + 1;
+                    end
+                  else
+                    begin
+                       count <= 1;
+                       state <= state + 1;
+                    end // else: !if(count < RADIUS)
+
+
+             413:
+               //On va retirer les flammes vers le haut
+                  if(count < RADIUS)
+                    begin
+                       flame_ram_wdata <= FLAME_EMPTY;
+                       flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32);
+                       flame_ram_we <= 1;
+                       count <= count + 1;
+                    end
+                  else
+                    begin
+                       count <= 1;
+                       state <= state + 1;
+                    end // else: !if(count < RADIUS)
+
+             414:
+               //On va retirer les flammes vers le bas
+                  if(count < RADIUS)
+                    begin
+                       flame_ram_wdata <= FLAME_EMPTY;
+                       flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32);
+                       flame_ram_we <= 1;
+                       count <= count + 1;
+                    end
+                  else
+                    begin
+                       count <= 1;
+                       state <= state + 1;
+                    end // else: !if(count < RADIUS)
+
+
+            415:
               // Fin de l'explosion
               begin
                  // On remplace le sprite de la bombe par un sprite vide dans la Ram Maze
@@ -763,7 +842,8 @@ module controleur (input              clk,
                  state <= state + 1;
               end // case: 403
 
-            411:
+
+            416:
               // On passe à la prochaine bombe dans la liste
               state <= 403;
 
@@ -983,5 +1063,8 @@ module controleur (input              clk,
    always @(posedge clk)
      bomb_ram_rdata <= bomb_ram[bomb_ram_raddr];
 
+
+   // debug
+   assign  debug = {bomb_ram_rdata, 2'b0, flame_ram_waddr};
 
 endmodule // controleur
