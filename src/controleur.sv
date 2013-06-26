@@ -56,11 +56,13 @@ module controleur (input              clk,
    localparam GATE_UP      = 5;
    localparam GATE_DOWN    = 6;
    localparam BOMB         = 12;
-   localparam MULTIPLE_BOMB = 7;
+   localparam MULTIPLE_BOMB= 7;
    localparam HUGE_FLAME   = 8;
    localparam SPEED_UP     = 9;
    localparam GHOST        = 10;
    localparam PUSH_BOMB    = 11;
+   localparam OBJET        = 5;
+   logic [2:0]                                compt_objet;
 
    // Variables des effets ces objets
    logic                                      ghost;
@@ -70,6 +72,7 @@ module controleur (input              clk,
    logic                                      push_bomb;
    logic [32:0]                               alea1;
    logic [9:0]                                alea;
+
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
 
@@ -118,17 +121,17 @@ module controleur (input              clk,
        //On place les joueurs au milieu
        begin
           player1_state <= 0;
-          state <= 0;
-          player1X <= 128;
-          player1Y <= 128;
-          player2X <= 448;
-          player2Y <= 448;
+          state         <= 0;
+          player1X      <= 128;
+          player1Y      <= 128;
+          player2X      <= 448;
+          player2Y      <= 448;
           v1 <= 32;
           v2 <= 30;
-          ram_raddr <= 0;
-          ram_waddr <= 0;
-          ram_wdata <= 0;
-          ram_we <= 0;
+          ram_raddr     <= 0;
+          ram_waddr     <= 0;
+          ram_wdata     <= 0;
+          ram_we        <= 0;
           bomb_ram_raddr <= 0;
           bomb_ram_waddr <= 0;
           bomb_ram_wdata <= 0;
@@ -139,6 +142,7 @@ module controleur (input              clk,
           huge_flame <= 0;
           speed_up <= 0;
           push_bomb <= 0;
+          compt_objet <= 0;
        end
      else
        begin
@@ -192,10 +196,75 @@ module controleur (input              clk,
                  bomb_ram_we <= 1;
                  bomb_ram_waddr <= bomb_ram_waddr + 1;
                  if (bomb_ram_waddr == 15)
-                   state <= 100;
+                   state <= 7;
               end
 
             7:
+              // On instantie les objets au début du jeu
+              // Tant qu'on a pas "OBJET" objets on en rajoute
+              // on va utiliser le nombre aléatoire pour trouver une case libre
+              if((alea[4:0] < 25) && (alea[9:5]<17))
+                begin
+                   ram_raddr <= alea;
+                   state <= state +2;
+                end
+              else
+                state <= state + 1;
+            8 :
+              // état d'attente pour recevoir un autre nombre aléatoir
+              state <= state - 1;
+            9 :
+              // état d'attente pour lecture sur la ram
+              state <= state + 1;
+            10 : // en fonction d'une variable aléatoire j'affecte a l'endroit libre aléatoire un objet que j'affiche
+              // si la case n'est pas libre je retourne en 7 pour voir  si la case aléatoire actuell est correcte
+              // Une fois que l'objet est affecté je reourne d'ou je viens ie en 220
+              begin
+                 if(ram_rdata == WALL_EMPTY)
+                   begin
+                      if( alea1[31:21] <150)
+                        begin
+                           ram_wdata <= MULTIPLE_BOMB;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                           compt_objet <= compt_objet +1;
+                        end
+                      else if( alea1[31:21] <300)
+                        begin
+                           ram_wdata <= HUGE_FLAME;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                           compt_objet <= compt_objet +1;
+                        end
+                      else if( alea1[31:21] < 700)
+                        begin
+                           ram_wdata <= PUSH_BOMB;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                           compt_objet <= compt_objet +1;
+                        end
+                      else if( alea1[31:21] <1000)
+                        begin
+                           ram_wdata <= SPEED_UP;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                           compt_objet <= compt_objet +1;
+                        end
+                      else
+                        begin
+                           ram_wdata <= GHOST;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                           compt_objet <= compt_objet +1;
+                        end // else: !if( alea1[31:21] <1000)
+                   end // if (ram_rdata == WALL_EMPTY)
+                 else
+                   state <= 7;
+                 if (compt_objet == OBJET)
+                   state <= 100;
+              end // case: 10
+
+
 
             /**************************
              * Traitement du jeu
@@ -207,22 +276,19 @@ module controleur (input              clk,
                    state <= state + 1;
               end
 
-            101 :
-              // On place 2 objets dans le maze de manière aléatoire
-
-            102:begin
+            101:begin
                // Gère le déplacement du joueur 1
                state <= 200;
                return_addr <= state + 1;
             end
 
-            103: begin
+            102: begin
                // Gère le déplacement du joueur 2
                state <= 250;
                return_addr <= state + 1;
             end
 
-            104:
+            103:
               // Gère le dépot des bombes du joueur 1
               if (j1_drop)
                 //La position de la bombe sera la position ou le joueur
@@ -236,7 +302,7 @@ module controleur (input              clk,
               else
                 state <= state + 1;
 
-            105:
+            104:
               // Gère le dépot des bombes du joueur 2
               if (j2_drop)
                 //La position de la bombe sera la position ou le joueur
@@ -250,14 +316,14 @@ module controleur (input              clk,
               else
                 state <= state + 1;
 
-            106:
+            105:
               // Gestion des timers
               begin
                  state <= 400;
                  return_addr <= state + 1;
               end
 
-            107: begin
+            106: begin
                // On repart en attente du EOF
                state <= 100;
             end
@@ -870,6 +936,7 @@ module controleur (input              clk,
                         v1 <= v1+10;
                       if (temp_return_addr == 280)
                         v2 <= v2+10;
+                      end
                  if(ram_rdata == GHOST)
                    ghost <= 1;
                  if(ram_rdata == PUSH_BOMB)
@@ -882,6 +949,7 @@ module controleur (input              clk,
 
 
             501 :
+
               // on va utiliser le nombre aléatoire pour trouver une case libre
               if((alea[4:0] < 25) && (alea[9:5]<17))
                begin
@@ -906,35 +974,35 @@ module controleur (input              clk,
                         ram_wdata <= MULTIPLE_BOMB;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
-                        state <= temp_return_adddr;
+                        state <= 200;
                      end
                    else if( alea1[31:21] <300)
                      begin
                         ram_wdata <= HUGE_FLAME;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
-                        state <= temp_return_adddr;
+                        state <= 200;
                      end
                    else if( alea1[31:21] < 700)
                      begin
                         ram_wdata <= PUSH_BOMB;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
-                        state <= temp_return_adddr;
+                        state <= 200;
                      end
                    else if( alea1[31:21] <1000)
                      begin
                         ram_wdata <= SPEED_UP;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
-                        state <= temp_return_adddr;
+                        state <= 200;
                      end
                    else
                      begin
                         ram_wdata <= GHOST;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
-                        state <= temp_return_adddr;
+                        state <= 200;
                      end // else: !if( alea1[31:21] <1000)
                 end // if (ram_rdata == WALL_EMPTY)
 
