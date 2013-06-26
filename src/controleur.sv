@@ -14,11 +14,17 @@ module controleur (input              clk,
                    input logic                j2_left,
                    input logic                j2_right,
                    input logic                j2_drop,
+
                    // coordonnee des joueurs
                    output logic signed [10:0] player1X,
 		           output logic signed [10:0] player1Y,
                    output logic signed [10:0] player2X,
                    output logic signed [10:0] player2Y,
+
+                   // Couleur du fond
+                   input logic                gameover,
+                   input logic                new_game,
+                   output logic [7:0]         bck_r, bck_g, bck_b,
 
                    // numéros des sprites joueur
                    output logic [2:0]         player1_sprite,
@@ -61,7 +67,7 @@ module controleur (input              clk,
    localparam SPEED_UP     = 9;
    localparam GHOST        = 10;
    localparam PUSH_BOMB    = 11;
-   localparam OBJET        = 5;
+   localparam OBJET        = 2;
    logic [2:0]                                compt_objet;
 
    // Variables des effets ces objets
@@ -118,6 +124,10 @@ module controleur (input              clk,
    logic [8:0]                                bomb_timer;
    logic [3:0]                                bomb_num;
 
+   // Compteur gérant la modification du fond après la mort d'un personnage
+   logic [7:0]                                color_compt;
+
+
    //Machine à etats
    always @(posedge clk or negedge reset_n)
      if(~reset_n)
@@ -139,6 +149,7 @@ module controleur (input              clk,
           bomb_ram_waddr <= 0;
           bomb_ram_wdata <= 0;
           bomb_ram_we <= 0;
+
           count  <= 0;
           ghost1  <= 0;
           ghost2  <= 0;
@@ -149,7 +160,13 @@ module controleur (input              clk,
           push_bomb1 <= 0;
           push_bomb2 <= 0;
           compt_objet <= 0;
-       end
+          count <= 0;
+          bck_r <= 0;
+          bck_g <= 0;
+          bck_b <= 230;
+          color_compt <= 0;
+    end
+
      else
        begin
           // Par défaut, on ne fait PAS d'écriture dans la RAM
@@ -329,16 +346,39 @@ module controleur (input              clk,
                  return_addr <= state + 1;
               end
 
-            106: begin
-              // On décrémente les ghost 1/2 s'ils sont différents de zero
-               state <= 550;
-               return_addr <= state +1;
-            end
+            106 :
+              // Gestion de la mort d'un des personnages
+              begin
+                 if(gameover)
+                   begin
+                      state <= 600;
+                      return_addr <= state + 1;
+                   end
+                 else
+                   state <= state +1;
+              end // case: 106
 
             107 :
-              // On repart attendre le EOF
-              state <= 100;
+              // Lancement d'une nouvelle partie
+              begin
+                 if(new_game)
+                   begin
+                      state <= 620;
+                      return_addr <= state + 1;
+                   end
+                 else
+                   state <= state +1;
+              end // case: 107
 
+            108: begin
+              // On décrémente les objets s'ils sont différents de zero
+               state <= 550;
+               return_addr <= state +1;
+               end
+            109: begin
+               // On repart en attente du EOF
+               state <= 100;
+            end
 
             /**************************
              * Déplacement du joueur 1
@@ -689,9 +729,11 @@ module controleur (input              clk,
             end // case: 206
 
             257 : begin
-               // Si il y a une bombe, on annule le mouvement
-               if (ram_rdata == BOMB)
+               // Si il y a une bombe, on annule le mouvement sauf si on a un PUSH BOMB
+               if ((ram_rdata == BOMB)&&(push_bomb2==0))
                  state <= 268;
+                if ((ram_rdata == BOMB)&&(push_bomb2!=0))
+                  state <= 590;
                else
                  state <= state +1;
             end
@@ -953,6 +995,7 @@ module controleur (input              clk,
                  state <= 403;
               end
 
+
             500 :
               // On s'occupe de la gestion des objets après on retourne au traitement du mouvement ( 220 pour le joueur 1)
               // Si on a un objet on affecte les effets et on l'enlève de l'écran
@@ -989,9 +1032,9 @@ module controleur (input              clk,
                  if(ram_rdata == PUSH_BOMB)
                      begin
                       if (temp_return_addr == 1)
-                        v1 <= v1+10;
+                        push_bomb1 <= 7*75;
                       if (temp_return_addr == 2)
-                        v2 <= v2+10;
+                        push_bomb2 <= 7*75;
                    end
                  ram_wdata <= WALL_EMPTY;
                  ram_we <= 1;
@@ -1018,7 +1061,7 @@ module controleur (input              clk,
               state <= state + 1;
             504 : // en fonction d'une variable aléatoire j'affecte a l'endroit libre aléatoire un objet que j'affiche
               // si la case n'est pas libre je retourne en 501 pour voir  si la case aléatoire actuell est correcte
-              // Une fois que l'objet est affecté je reourne d'ou je viens ie en 220
+              // Une fois que l'objet est affecté je reourne d'ou je viens ie en 200
               if(ram_rdata == WALL_EMPTY)
                 begin
                    if( alea1[31:22] <150)
@@ -1042,7 +1085,7 @@ module controleur (input              clk,
                         ram_waddr <= ram_raddr;
                         state <= 200;
                      end
-                   else if( alea1[31:22] <1000)
+                   else if( alea1[31:22] <100)
                      begin
                         ram_wdata <= SPEED_UP;
                         ram_we <= 1;
@@ -1054,7 +1097,7 @@ module controleur (input              clk,
                         ram_wdata <= GHOST;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
-                        state <= 200;
+                        state <= 250;
                      end // else: !if( alea1[31:21] <1000)
                 end // if (ram_rdata == WALL_EMPTY)
 
@@ -1066,12 +1109,69 @@ module controleur (input              clk,
                    ghost1 <= ghost1 -1;
                  if (ghost2 != 0)
                    ghost2 <= ghost2 -1;
+                 if (push_bomb1 != 0)
+                   push_bomb1 <= push_bomb1 -1;
+                 if (push_bomb2 != 0)
+                   push_bomb2 <= push_bomb2 -1;
                  state <= return_addr;
-                 end
+              end // case: 550
+
+         //  590 :
+              // gestion du push bomb
+              // si on a une push bomb on va bouger la bomb qu'on a lu et la mettre n'importe ou
+              // donc il faut aller la chercher dans la ram des bombes, modifier ses 10 dernier bits en leur affectant si c'est valide les 10 derniers bits de alea1
+              // sinon rechercher une autre place et il faut aussi modifier le sprite
 
 
-                endcase // case (state)
-       end // else: !if(~reset_n)
+
+            600:
+            // On change la couleur du fond
+              begin
+                 if (bck_r < 230)
+                   begin
+                      bck_r <= bck_r +1;
+                      bck_b <= bck_b -1;
+                      state <= 500;
+                   end
+                 state <= return_addr;
+              end // case: 500
+
+            620:
+              //On place les joueurs au milieu
+              begin
+                 player1_state <= 0;
+                 state <= 0;
+                 player1X <= 128;
+                 player1Y <= 128;
+                 player2X <= 448;
+                 player2Y <= 448;
+                 v1 <= 32;
+                 v2 <= 30;
+                 ram_raddr <= 0;
+                 ram_waddr <= 0;
+                 ram_wdata <= 0;
+                 ram_we <= 0;
+                 bomb_ram_raddr <= 0;
+                 bomb_ram_waddr <= 0;
+                 bomb_ram_wdata <= 0;
+                 bomb_ram_we <= 0;
+                 count <= 0;
+                 bck_r <= 0;
+                 bck_g <= 0;
+                 bck_b <= 230;
+                 color_compt <= 0;
+                 // Par défaut, on ne fait PAS d'écriture dans la RAM
+                 ram_we <= 0;
+                 bomb_ram_we <= 0;
+                 state <= 0;
+              end
+
+
+
+
+
+          endcase // case (state)
+       end
 
 
    // BOMB RAM
