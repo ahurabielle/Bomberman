@@ -283,7 +283,10 @@ module controleur (input              clk,
                         end
                       else
                         // On n'a appuyé sur aucune touche, le traitement du déplacement est fini !
-                        state <= return_addr;
+                        begin
+                           state <= return_addr;
+                           player1_sprite <= 0;
+
                    end
                  else
                    // On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
@@ -401,8 +404,10 @@ module controleur (input              clk,
                    state <= state + 1;
                  else if (dx1 < 0)
                    state <= state + 2;
-                 else if (dy1 != 0)
+                 else if (dy1 > 0)
                    state <= state + 3;
+                 else if(dy1 < 0)
+                   state <= state + 4;
               end // case: 221
 
 
@@ -411,7 +416,8 @@ module controleur (input              clk,
               begin
                  // On regarde dans quelle proportion on a avancé par rapport a notre case d'arrivé
                  // On affiche alors dans la RAM tel ou tel autre sprite
-                 if((player1X - player1_goalX[14:4] < 16) )
+                 // On affiche 2 sprites pour chaque case
+                 if(player1_goalX[14:4]-player1X < 16)
                    player1_sprite <= 4;
                  else
                    player1_sprite <= 3;
@@ -420,7 +426,7 @@ module controleur (input              clk,
             223:
               // On va a gauche
               begin
-                 if((player1_goalX[14:4]-player1X < 16 ) )
+                 if(player1X - player1_goalX[14:4]< 16  )
                    player1_sprite <= 6;
                  else
                    player1_sprite <= 5;
@@ -428,9 +434,18 @@ module controleur (input              clk,
               end // case: 223
 
             224:
-              // On se déplace verticalement
+              // On se déplace vers le bas
               begin
-                 if((player1Y - player1_goalY[14:4] < 16) )
+                 if( player1_goalY[14:4] - player1Y  < 16)
+                   player1_sprite <= 2;
+                 else
+                   player1_sprite <= 1;
+                 state <= return_addr;
+              end // case: 224
+            225 :
+              // On se déplace vers le haut
+              begin
+                 if(player1Y - player1_goalY[14:4]  < 16)
                    player1_sprite <= 2;
                  else
                    player1_sprite <= 1;
@@ -507,8 +522,64 @@ module controleur (input              clk,
                  end // else: !if((((dx2 > 0) && ((player2X+dx) >= player2_goalX)) ||...
 
                // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
-               state <= return_addr;
+               state <= state +1;
             end // case: 251
+              252 :
+              // Si on va a droite on va prendre le sprite en direction de la droite
+              // et de meme pour les autres directions
+              begin
+                 if (dx2 > 0)
+                   state <= state + 1;
+                 else if (dx2 < 0)
+                   state <= state + 2;
+                 else if (dy2 > 0)
+                   state <= state + 3;
+                 else if(dy2 < 0)
+                   state <= state + 4;
+              end // case: 221
+
+
+            253 :
+              // On va a droite on alterne les deux sprites, en fonction de notre avancement
+              begin
+                 // On regarde dans quelle proportion on a avancé par rapport a notre case d'arrivé
+                 // On affiche alors dans la RAM tel ou tel autre sprite
+                 // On affiche 2 sprites pour chaque case
+                 if(player2_goalX[14:4]-player2X < 16)
+                   player2_sprite <= 4;
+                 else
+                   player2_sprite <= 3;
+                 state <= return_addr;
+              end // case: 222
+            254:
+              // On va a gauche
+              begin
+                 if(player2X - player2_goalX[14:4]< 16  )
+                   player2_sprite <= 6;
+                 else
+                   player2_sprite <= 5;
+                 state <= return_addr;
+              end // case: 223
+
+            255:
+              // On se déplace vers le bas
+              begin
+                 if( player2_goalY[14:4] - player2Y  < 16)
+                   player2_sprite <= 2;
+                 else
+                   player2_sprite <= 1;
+                 state <= return_addr;
+              end // case: 224
+            256 :
+              // On se déplace vers le haut
+              begin
+                 if(player2Y - player2_goalY[14:4]  < 16)
+                   player2_sprite <= 2;
+                 else
+                   player2_sprite <= 1;
+                 state <= return_addr;
+              end // case: 224
+
 
             /***********************
              ******Bombes***********
