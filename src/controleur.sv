@@ -110,7 +110,7 @@ module controleur (input              clk,
           player2X <= 448;
           player2Y <= 448;
           v1 <= 32;
-          v2 <= 3;
+          v2 <= 30;
           ram_raddr <= 0;
           ram_waddr <= 0;
           ram_wdata <= 0;
@@ -286,14 +286,14 @@ module controleur (input              clk,
                         begin
                            state <= return_addr;
                            player1_sprite <= 0;
-                           player2_sprite <= 0;
+
                         end
 
                    end
                  else
                    // On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
                    state <= 220;
-              end
+              end // case: 200
 
             201: begin
                // On se prépare à bouger. On vérifie d'abord si la case de destination est libre.
@@ -463,9 +463,10 @@ module controleur (input              clk,
               begin
                  // Si on n'est pas déjà en train de se déplacer, on regarde les touches et on déclenche éventuellement
                  // un nouveau déplacement. Sinon, on continue le déplacement.
-                 state <= state + 1;
+
                  if (player2_state == WAITING)
                    begin
+                      state <= state + 1;
                       if(j2_up)
                         begin
                            player2_state <= MOVING;
@@ -500,11 +501,93 @@ module controleur (input              clk,
                         end
                       else
                         // On n'a appuyé sur aucune touche, le traitement du déplacement est fini !
-                        state <= return_addr;
-                   end // if (player2_state == WAITING)
-              end // case: 250
+                        begin
+                           state <= return_addr;
+                           player2_sprite <= 0;
+                        end // else: !if(j2_left)
 
-            251 : begin
+                   end // if (player2_state == WAITING)
+                 else //  On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
+                   state <= 280;
+              end // case: 250
+            251: begin
+               // On se prépare à bouger. On vérifie d'abord si la case de destination est libre.
+               ram_raddr <= {player2_goalY[13:9], player2_goalX[13:9]};
+               state <= state + 1;
+            end
+
+            252: begin
+               // État d'attente (dans l'état actuel on présente à la RAM l'adresse de la valeur à lire,
+               // on n'aura la donnée qu'au prochain cycle)
+               state <= state + 1;
+            end
+
+            253: begin
+               // Vérifie que la case de destination est bien vide. Si oui, on effectue le mouvement.
+               // Si non on passe au test suivant (porte et qu'on va dans la bonne direction)
+               if (ram_rdata == WALL_EMPTY)
+                 state <= 280;
+               else
+                 state <= state + 1;
+            end
+
+            254 : begin
+               // Si on a un mur, on annule le mouvement
+               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2))
+                 state <= 268;
+               else
+                 state <= state + 1;
+            end
+
+            255 : begin
+               // Si on est sur une porte et qu'on ne va pas dans le bon sens, annule le mouvement
+               if (((ram_rdata == GATE_RIGHT) & (dx1 <= 0)) ||
+                   ((ram_rdata == GATE_LEFT)  & (dx1 >= 0)) ||
+                   ((ram_rdata == GATE_DOWN)  & (dy1 <= 0)) ||
+                   ((ram_rdata == GATE_UP)    & (dy1 >= 0)))
+                 state <= 268;
+               else
+                 state <= state + 1;
+            end
+
+            256 : begin
+               // Si on a passé une porte, on flippe la porte
+               if(ram_rdata == GATE_UP)
+                 ram_wdata <= GATE_DOWN;
+               if(ram_rdata == GATE_DOWN)
+                 ram_wdata <= GATE_UP;
+               if(ram_rdata == GATE_LEFT)
+                 ram_wdata <= GATE_RIGHT;
+               if(ram_rdata == GATE_RIGHT)
+                 ram_wdata <= GATE_LEFT;
+               // Active l'écriture en RAM
+               if ((ram_rdata == GATE_UP) || (ram_rdata == GATE_DOWN) || (ram_rdata == GATE_LEFT) || (ram_rdata == GATE_RIGHT))
+                 ram_we <= 1;
+               // La case qu'on doit écrire est justement celle qu'on est en train de lire
+               ram_waddr <= ram_raddr;
+               state <= state + 1;
+            end // case: 206
+
+            257 : begin
+               // Si il y a une bombe, on annule le mouvement
+               if (ram_rdata == BOMB)
+                 state <= 268;
+               else
+                 state <= 280;
+            end
+
+
+            268 : begin
+               // Annule le mouvement
+               dx1 <= 0;
+               dy1 <= 0;
+               player2_state <= WAITING;
+               player2_goalX <= {player2X, 4'b0000};
+               player2_goalY <= {player2Y, 4'b0000};
+               state <= return_addr;
+            end
+
+            280 : begin
                // On sait qu'on est en état MOVING.
                // Si on est sur le point d'arriver à destination ou de dépasser le cible,
                // on se positionne directement dessus
@@ -526,7 +609,7 @@ module controleur (input              clk,
                // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
                state <= state +1;
             end // case: 251
-              252 :
+              281 :
               // Si on va a droite on va prendre le sprite en direction de la droite
               // et de meme pour les autres directions
               begin
@@ -541,7 +624,7 @@ module controleur (input              clk,
               end // case: 221
 
 
-            253 :
+            282 :
               // On va a droite on alterne les deux sprites, en fonction de notre avancement
               begin
                  // On regarde dans quelle proportion on a avancé par rapport a notre case d'arrivé
@@ -553,7 +636,7 @@ module controleur (input              clk,
                    player2_sprite <= 3;
                  state <= return_addr;
               end // case: 222
-            254:
+            283:
               // On va a gauche
               begin
                  if(player2X - player2_goalX[14:4]< 16  )
@@ -563,7 +646,7 @@ module controleur (input              clk,
                  state <= return_addr;
               end // case: 223
 
-            255:
+            284:
               // On se déplace vers le bas
               begin
                  if( player2_goalY[14:4] - player2Y  < 16)
@@ -572,7 +655,7 @@ module controleur (input              clk,
                    player2_sprite <= 1;
                  state <= return_addr;
               end // case: 224
-            256 :
+            285 :
               // On se déplace vers le haut
               begin
                  if(player2Y - player2_goalY[14:4]  < 16)
