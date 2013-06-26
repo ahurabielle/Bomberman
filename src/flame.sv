@@ -11,8 +11,8 @@ module flame(input logic                clk,
              input logic               active
              );
 
-   // ROM qui contient les pixels des 8 (7 + 1 vide) sprites (64x64 pixels)
-   logic [7:0]                         rom[0:8*1024-1];
+   // ROM qui contient les pixels des 8 (7 + 1 vide) sprites (32x32 pixels)
+   logic [7:0]                         rom[0:8*32*32-1];
    logic [12:0]                        rom_addr;
    logic [7:0]                         color_pixel;
 
@@ -22,6 +22,10 @@ module flame(input logic                clk,
    logic [4:0]                         num_carreX, num_carreY;
    logic [4:0]                         offsetX, offsetY;
 
+   // Signaux retardés (pour tenir compte du pipeline)
+   logic signed [10:0]                 spotX_r;
+   logic [4:0]                         offsetX_r;
+
    // Le numéro du sprite à afficher est maintenant stocké dans une Ram de la taille du labyrinthe
    logic [2:0]                         sprite_num;
 
@@ -29,10 +33,16 @@ module flame(input logic                clk,
    logic [2:0]                         flame_ram[0:32*32-1];
    logic [9:0]                         flame_ram_raddr_internal;
 
+   // Signaux retardés (pour tenir compte du pipeline)
+   always @(posedge clk)
+     begin
+        offsetX_r <= offsetX;
+        spotX_r <= spotX;
+     end
+
    // Affichage du sprite parcouru par le spot
    assign {num_carreX, offsetX} = spotX;
    assign {num_carreY, offsetY} = spotY;
-   assign rom_addr = {sprite_num, offsetY, offsetX};
 
    always @(*)
      if(active)
@@ -51,24 +61,25 @@ module flame(input logic                clk,
 
    // Si on est en dehors du labyrinthe de flamme, on affiche du vide
    always @(*)
-     if ((spotX > (24*32+31)) || (spotX < 0) || (spotY > (16*32+31)) || (spotY < 0))
+     if ((spotX_r > (24*32+31)) || (spotX_r < 0) || (spotY > (16*32+31)) || (spotY < 0))
        sprite_num <= 0;
      else
        sprite_num <= flame_ram_rdata;
-
-   always @(posedge clk)
-     color_pixel <= rom[rom_addr];
 
    // On charge les sprites dans la ROM
    initial
      $readmemh("../sprites/flames.lst", rom);
 
-   // On n'affiche le contenu de la ROM que si le spot est dans le
-   // rectangle du sprite
+   // Récupération de la couleur dans la RAM sprite
+   assign rom_addr = {sprite_num, offsetY, offsetX_r};
+   always @(posedge clk)
+     color_pixel <= rom[rom_addr];
+
+   // Si le spot est en dehors du rectangle du sprite, on affiche du vide
    always @(*)
      begin
         flame_color <= 8'd137;
-        if ((spotX >= flameX) && (spotX < (flameX + 32)) &&
+        if ((spotX_r >= flameX) && (spotX_r < (flameX + 32)) &&
             (spotY >= flameY) && (spotY < (flameY + 32)))
 	      flame_color <= color_pixel;
      end // always @ begin
