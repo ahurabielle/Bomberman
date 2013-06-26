@@ -24,11 +24,17 @@ module controleur (input              clk,
                    output logic [2:0]         player1_sprite,
                    output logic [2:0]         player2_sprite,
 
-                   // interface avec la RAM du labyrinthe
+                   // Interface avec la RAM du labyrinthe
                    output logic [9:0]         ram_raddr, ram_waddr,
                    output logic [3:0]         ram_wdata,
                    output logic               ram_we,
                    input logic [3:0]          ram_rdata,
+
+                   // Interface avec la RAM des flammes
+                   output logic [9:0]         flame_ram_raddr, flame_ram_waddr,
+                   output logic [2:0]         flame_ram_wdata,
+                   output logic               flame_ram_we,
+                   input logic [2:0]          flame_ram_rdata,
 
                    // Debug
                    output logic [31:0]        debug
@@ -57,6 +63,19 @@ module controleur (input              clk,
    localparam GATE_DOWN  = 6;
    localparam BOMB       = 12;
 
+   // Numéros de sprites des flammes
+   localparam FLAME_EMPTY = 0;
+   localparam FLAME_INTERSECT = 1;
+   localparam FLAME_H = 2;
+   localparam FLAME_V = 3;
+   localparam FLAME_LEFT = 4;
+   localparam FLAME_UP = 5;
+   localparam FLAME_RIGHT = 6;
+   localparam FLAME_DOWN = 7;
+
+   //Définition du rayon d'action des flammes
+   logic [2:0]                                radius;
+
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
 
@@ -65,7 +84,7 @@ module controleur (input              clk,
    // Déplacement en x, y pour le joueur2
    logic signed [14:0]                        dx2,dy2;
 
-   // coordonnee "décimale" des joueurs
+   // Coordonnee "décimale" des joueurs
    logic [3:0]                                fplayer1X, fplayer1Y;
    logic [3:0]                                fplayer2X, fplayer2Y;
 
@@ -129,7 +148,7 @@ module controleur (input              clk,
 
           case(state)
             /**************************
-             * Phases d'initialistations
+             * Phases d'initialistation
              **************************/
             // Pour l'instant : rien à faire, on passe directement au traitement du jeu
             0:
@@ -227,7 +246,7 @@ module controleur (input              clk,
                 state <= state + 1;
 
             105:
-              // Gestion des timers
+              // Gestion des timers et des flammes
               begin
                  state <= 400;
                  return_addr <= state + 1;
@@ -615,7 +634,18 @@ module controleur (input              clk,
 
             420 :
               begin
-                 // Gestion des flammes..
+                 // Gestion des flammes
+                 // On commence par mettre une intersection flamme à l'endroit où se trouve la bombe
+                 flame_ram_wdata <= FLAME_INTERSECT;
+                 flame_ram_we <= 1;
+                 flame_ram_waddr <= bomb_ram_rdata[9:0];
+                 state <= state +1;
+
+
+              end
+
+            421:
+              begin
                  state <= 403;
               end
 

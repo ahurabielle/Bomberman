@@ -338,6 +338,12 @@
    logic            maze_ram_we;
    logic [3:0]      maze_ram_rdata;
 
+   // Interface avec la RAM qui stocke les flammes
+   logic [9:0]      flame_ram_raddr, flame_ram_waddr;
+   logic [2:0]      flame_ram_wdata;
+   logic            flame_ram_we;
+   logic [2:0]      flame_ram_rdata;
+
    // Horloge VGA
    always  @(*)
      vga_clk <= clock_50;
@@ -428,6 +434,11 @@
                   .ram_we(maze_ram_we),
                   .ram_raddr(maze_ram_raddr),
                   .ram_rdata(maze_ram_rdata),
+                  .flame_ram_raddr(flame_ram_raddr),
+                  .flame_ram_waddr(flame_ram_waddr),
+                  .flame_ram_we(flame_ram_we),
+                  .flame_ram_wdata(flame_ram_wdata),
+                  .flame_ram_rdata(flame_ram_rdata),
                   .debug(debug)
 		          );
 
@@ -475,10 +486,13 @@
    flame flame(.clk(vga_clk),
                .spotX(vga_spotX),
                .spotY(vga_spotY),
-		       .flameX(flameX),
-		       .flameY(flameY),
-               .sprite_num(flame_sprite),
-               .flame_color(flame_color)
+               .flame_color(flame_color),
+               .flame_ram_raddr(flame_ram_raddr),
+               .flame_ram_waddr(flame_ram_waddr),
+               .flame_ram_we(flame_ram_we),
+               .flame_ram_wdata(flame_ram_wdata),
+               .flame_ram_rdata(flame_ram_rdata),
+               .active(vga_blank)
 		       );
 
    //Instantiation du module wall
