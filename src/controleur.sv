@@ -29,6 +29,9 @@ module controleur (input              clk,
                    output logic [2:0]         player1_sprite,
                    output logic [2:0]         player2_sprite,
 
+                   // Vies des joueurs
+                   output logic [6:0]         life1,
+                   output logic [6:0]         life2,
                    // Interface avec la RAM du labyrinthe
                    output logic [9:0]         ram_raddr, ram_waddr,
                    output logic [3:0]         ram_wdata,
@@ -79,6 +82,9 @@ module controleur (input              clk,
    // Nombre d'objets affichés au total sur l'écran
    localparam NB_OBJETS    = 3;
    logic [2:0]                                compt_objet;
+
+   // Dégats infligés aux joueurs
+   localparam BOMB_DMG     = 1;
 
    // Variables des effets ces objets
    logic [7:0]                                ghost1;
@@ -200,6 +206,8 @@ module controleur (input              clk,
           game_state <= GAME_INIT;
           maze_num <= 0;
           bomb_radius <= SMALL_FLAME_SIZE;
+          life1 <= 100;
+          life2 <= 100;
        end
      else
        begin
@@ -236,6 +244,8 @@ module controleur (input              clk,
                  color_compt <= 0;
                  state <= state + 1;
                  bomb_radius <= SMALL_FLAME_SIZE;
+                 life1 <= 100;
+                 life2 <= 100;
               end
 
             1:
@@ -1119,7 +1129,7 @@ module controleur (input              clk,
 
             411:
               //On va retirer les flammes sur la gauche
-              if(count < bomb_radius)
+              if(count < HUGE_FLAME_SIZE)
                 begin
                    flame_ram_wdata <= FLAME_EMPTY;
                    flame_ram_waddr <= bomb_ram_rdata[9:0] - count;
@@ -1135,7 +1145,7 @@ module controleur (input              clk,
 
             412:
               //On va retirer les flammes sur la droite
-              if(count < bomb_radius)
+              if(count < HUGE_FLAME_SIZE)
                 begin
                    flame_ram_wdata <= FLAME_EMPTY;
                    flame_ram_waddr <= bomb_ram_rdata[9:0] + count;
@@ -1151,7 +1161,7 @@ module controleur (input              clk,
 
             413:
               //On va retirer les flammes vers le haut
-              if(count < bomb_radius)
+              if(count < HUGE_FLAME_SIZE)
                 begin
                    flame_ram_wdata <= FLAME_EMPTY;
                    flame_ram_waddr <= bomb_ram_rdata[9:0] - (count * 32);
@@ -1166,7 +1176,7 @@ module controleur (input              clk,
 
             414:
               //On va retirer les flammes vers le bas
-              if(count < bomb_radius)
+              if(count < HUGE_FLAME_SIZE)
                 begin
                    flame_ram_wdata <= FLAME_EMPTY;
                    flame_ram_waddr <= bomb_ram_rdata[9:0] + (count * 32);
@@ -1545,7 +1555,7 @@ module controleur (input              clk,
                      end
                    else if(alea1[1:0]==1)
                      begin
-                        ram_wdata <= LIFE;
+                        ram_wdata <= PUSH_BOMB;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 200;
@@ -1694,12 +1704,19 @@ module controleur (input              clk,
                // Si on a une flamme, alors on marque le joueur1 comme mort
                if (flame_ram_rdata != FLAME_EMPTY)
                  begin
-                    game_state <= GAME_OVER;
-                    player1_state <= DEAD;
+                    if((life1 > 100) || (life1 == 0))
+                      begin
+                         game_state <= GAME_OVER;
+                         player1_state <= DEAD;
+                         life1 <= 0;
+                      end
+                    else
+                    life1 <= life1 - BOMB_DMG;
                  end
 
-               state <= state + 1;
+                       state <= state + 1;
             end
+
 
             703:
               // Lit la RAM flammes à l'endroit du joueur2;
@@ -1708,31 +1725,38 @@ module controleur (input              clk,
                  state <= state + 1;
               end
 
-            704 : begin
-               // Cycle d'attente lecture RAM
-               state <= state + 1;
-            end
+            704 :
+              begin
+                 // Cycle d'attente lecture RAM
+                 state <= state + 1;
+              end
 
             705 : begin
                // Si on a une flamme, alors on marque le joueur2 comme mort
                if (flame_ram_rdata != FLAME_EMPTY)
                  begin
-                    game_state <= GAME_OVER;
-                    player2_state <= DEAD;
+                    if((life2 > 100) || (life2 == 0))
+                         begin
+                            game_state <= GAME_OVER;
+                            player2_state <= DEAD;
+                         end
+                    else
+                      life2 <= life2 - BOMB_DMG;
                  end
+
                state <= state + 1;
             end
 
             706:
               // On change la couleur du fond si on est en GAME_OVER
-              begin
-                 if ((bck_r < 230) && (game_state == GAME_OVER))
-                   begin
-                      bck_r <= bck_r +1;
-                      bck_b <= bck_b -1;
-                   end
-                 state <= return_addr;
-              end
+                       begin
+                          if ((bck_r < 230) && (game_state == GAME_OVER))
+                            begin
+                               bck_r <= bck_r +1;
+                               bck_b <= bck_b -1;
+                            end
+                          state <= return_addr;
+                       end
 
 
 

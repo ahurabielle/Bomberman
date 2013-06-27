@@ -31,14 +31,16 @@ module mixer(input              clk,
    always @(*)
      begin
         rom_addr <= 8'd137;
-        // Si on a des flammes alors on les met par dessus tout
-	    if(~(flame_color == 8'd137))
-          rom_addr <= flame_color;
-        // le joueur 1 vient ensuite dans la hiérarchie
-	    else if(~(player1_color == 8'd137))
+
+        // le joueur 1 est prioritaire dans l'affichage
+	    if(~(player1_color == 8'd137))
           rom_addr <= player1_color;
-        else if(~(player2_color == 8'd137))
+        // puis vient le joueur 2
+         else if(~(player2_color == 8'd137))
           rom_addr <= player2_color;
+        // Si on a des flammes alors on les met au dessus du reste
+	    else if(~(flame_color == 8'd137))
+          rom_addr <= flame_color;
         else if(~(wall_color == 8'd137))
           rom_addr <= wall_color;
      end
