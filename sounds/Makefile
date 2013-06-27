@@ -1,4 +1,4 @@
-OBJS = cri.wav explosion.wav
+OBJS = tictac.raw explosion.raw
 DEST = sons.lst
 DAT = $(patsubst %.lst,%.dat,$(DEST))
 
