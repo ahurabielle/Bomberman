@@ -95,6 +95,7 @@ module controleur (input              clk,
    logic [10:0]                               huge_flame2;
    logic [32:0]                               alea1;
    logic [9:0]                                alea;
+   logic [10:0]                               speed_up_delay1, speed_up_delay2;
 
    // Numéros de sprites des flammes
    localparam FLAME_EMPTY = 0;
@@ -106,11 +107,14 @@ module controleur (input              clk,
    localparam FLAME_RIGHT = 6;
    localparam FLAME_DOWN = 7;
 
-   //Determine le rayon
+   // Détermine les paramètres de flammes
    logic [3:0] bomb_radius;
    localparam TIME_HUGE_FLAME  = 8;
    localparam SMALL_FLAME_SIZE = 3;
    localparam HUGE_FLAME_SIZE  = 7;
+
+   // Paramètres du speed_up : 10 secondes de durée
+   localparam SPEED_UP_DELAY = 10;
 
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
@@ -208,6 +212,8 @@ module controleur (input              clk,
           bomb_radius <= SMALL_FLAME_SIZE;
           life1 <= 100;
           life2 <= 100;
+          speed_up_delay1 <= 0;
+          speed_up_delay2 <= 0;
        end
      else
        begin
@@ -246,6 +252,10 @@ module controleur (input              clk,
                  bomb_radius <= SMALL_FLAME_SIZE;
                  life1 <= 100;
                  life2 <= 100;
+                 speed_up_delay1 <= 0;
+                 speed_up_delay2 <= 0;
+                 v1 <= 32;
+                 v2 <= 32;
               end
 
             1:
@@ -1507,9 +1517,15 @@ module controleur (input              clk,
                  if(ram_rdata == SPEED_UP)
                    begin
                       if ((temp_return_addr == 1) && (v1<128))
-                        v1 <= v1+32;
+                        begin
+                           v1 <= v1+32;
+                           speed_up_delay1 <= SPEED_UP_DELAY * 72;
+                        end
                       if ((temp_return_addr == 2) && (v2<128))
-                        v2 <= v2+32;
+                        begin
+                           v2 <= v2+32;
+                           speed_up_delay2 <= SPEED_UP_DELAY * 72;
+                        end
                    end
                  if(ram_rdata == GHOST)
                    begin
@@ -1597,6 +1613,17 @@ module controleur (input              clk,
                    bomb_radius <= HUGE_FLAME_SIZE;
                  else
                    bomb_radius <= SMALL_FLAME_SIZE;
+
+                 if(speed_up_delay1 != 0)
+                   speed_up_delay1 <= speed_up_delay1 - 1;
+                 if(speed_up_delay2 != 0)
+                   speed_up_delay2 <= speed_up_delay1 - 2;
+
+                 if(speed_up_delay1 == 0)
+                   v1 <= 32;
+
+                 if(speed_up_delay2 == 0)
+                   v2 <= 32;
 
                  state <= return_addr;
               end // case: 550
