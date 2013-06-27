@@ -354,9 +354,7 @@
    // alors qu'Ã  terme ces positions seront donnÃ©es par le maze
    assign  flameX        =        100;
    assign  flameY        =        100;
-   // pour le moment on donne des valeurs Ã  life
-   assign  life1 = 35;
-   assign  life2 = 75;
+
    // Instanciation des decodeurs 7 segments pour le debug
    logic [31:0]           debug;
    seven_seg s0 (debug[3:0],   hex0);
@@ -447,6 +445,8 @@
                   .flame_ram_we(flame_ram_we),
                   .flame_ram_wdata(flame_ram_wdata),
                   .flame_ram_rdata(flame_ram_rdata),
+                  .life1(life1),
+                  .life2(life2),
                   .debug(debug)
 		          );
 
