@@ -18,7 +18,7 @@
 *  *  * * oo***o***v*****
 *  *oo*o*o*oo     ooooo**
 * o oo***o**o**** *******
-*  *oooo       *      2**
+*  *oooo       *      0**
 *  *ooooo    * *o** *  **
 *o  *oooo **o* *  o *  **
 * o  ooooo*  * * ****  **
