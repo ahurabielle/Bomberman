@@ -333,30 +333,38 @@ module controleur (input              clk,
                state <= state + 1;
                if(ram_rdata == WALL_EMPTY)
                  begin
-                    if( alea1[1:0]==0)
-                      begin
-                         ram_wdata <= HUGE_FLAME;
-                         ram_we <= 1;
-                         ram_waddr <= ram_raddr;
-                      end
-                    else if( alea1[1:0]==1)
-                      begin
-                         ram_wdata <= SPEED_UP;
-                         ram_we <= 1;
-                         ram_waddr <= ram_raddr;
-                      end
-                    else if( alea1[1:0]==2)
-                      begin
-                         ram_wdata <= GHOST;
-                         ram_we <= 1;
-                         ram_waddr <= ram_raddr;
-                      end
-                    else
-                      begin
-                         ram_wdata <= MULTIPLE_BOMB;;
-                         ram_we <= 1;
-                         ram_waddr <= ram_raddr;
-                      end
+                    case(alea1[2:0])
+                      0, 1:
+                        begin
+                           ram_wdata <= HUGE_FLAME;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                        end
+                      2, 3:
+                        begin
+                           ram_wdata <= PUSH_BOMB;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                        end
+                      4, 5:
+                        begin
+                           ram_wdata <= SPEED_UP;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                        end
+                      6:
+                        begin
+                           ram_wdata <= GHOST;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                        end
+                      7:
+                        begin
+                           ram_wdata <= MULTIPLE_BOMB;
+                           ram_we <= 1;
+                           ram_waddr <= ram_raddr;
+                        end
+                    endcase
                     compt_objet <= compt_objet +1;
                  end
                else
@@ -1580,7 +1588,7 @@ module controleur (input              clk,
                           ram_we <= 1;
                           ram_waddr <= ram_raddr;
                        end
-                     6, 7:
+                     6:
                        begin
                           ram_wdata <= GHOST;
                           ram_we <= 1;
