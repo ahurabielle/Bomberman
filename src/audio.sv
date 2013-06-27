@@ -1,117 +1,128 @@
 `default_nettype none
- module audio (clk,
-               reset_n,
+  module audio (input  logic        clk_50,       // Horloge système 50Mhz
+                input logic         reset_n, // Reset (actif bas)
 
-               audio_lr,
-               audio_clk,
-               audio_data,
+                // I2C configuration port
+                output logic        i2c_sclk,
+                inout               i2c_sdat,
 
-               tictac, explosion,
-               debug
+                // Codec chip ports (codec in slave mode)
+                output logic        aud_adclrck, // ADC l/r clock
+                input logic         aud_adcdat, // ADC input data serial bitstream
+                output logic        aud_daclrck, // DAC l/r clock
+                output logic        aud_dacdat, // DAC output data serial bitstream
+                output logic        aud_bclk, // Bitstream clock (BCLK)
+                output logic        aud_mclk, // Chip clock (MCLK)
+
+                input logic         tictac,
+                input logic         explosion,
+                output logic [31:0] debug
                );
 
-   // Gestion du son
-   input               clk;
-   input               reset_n;
 
-   input               audio_lr;
-   input               audio_clk;
-   output              audio_data;
+   // Audio data IN and OUT
+   logic [15:0]  adc_data_l;
+   logic [15:0]  adc_data_r;
+   logic [15:0]  dac_data_l;
+   logic [15:0]  dac_data_r;
+   logic         data_ena;
 
-   input logic         tictac,   explosion;
-   logic               tictac_r, explosion_r;
+   // Instanciation du module de gestion du codec audio
+   codec codec(.clk_50(clk_50),
+               .reset_n(reset_n),
 
-   output [31:0]       debug;
+               // I2C configuration port
+               .i2c_sclk(i2c_sclk),
+               .i2c_sdat(i2c_sdat),
 
-   logic               audio_lr_r,audio_lr_rr,
-                       audio_clk_r, audio_clk_rr;
-   logic               lire;
-   logic [16:0]        reg_decal;
+               // Codec chip ports (codec in slave mode)
+               .aud_adclrck(aud_adclrck),
+               .aud_adcdat(aud_adcdat),
+               .aud_daclrck(aud_daclrck),
+               .aud_dacdat(aud_dacdat),
+               .aud_bclk(aud_bclk),
+               .aud_mclk(aud_mclk),
 
-   // ROMS audio
-   logic [16:0]        snd_address;
-   logic [16:0]        end_address;
-   logic signed [7:0]  snd_data;
+               // Audio data IN and OUT
+               .adc_data_l(adc_data_l),
+               .adc_data_r(adc_data_r),
+               .dac_data_l(dac_data_l),
+               .dac_data_r(dac_data_r),
+               .data_ena(data_ena)
+               );
 
-   // Début et fin des samples dans le fichier sounds.lst
-   parameter [16:0]    tictac_start = 0;
-   parameter [16:0]    tictac_end = 3846;
+   // Signaux internes
+   logic               active;
 
-   parameter [16:0]    explosion_start = 3847;
-   parameter [16:0]    explosion_end = explosion_start + 8117;
+   // Adresses de début et de fin des samples dans la ROM
+   localparam tictac_start = 0;
+   localparam tictac_end = 3846;
 
-   parameter taille_sons = explosion_end;
+   localparam explosion_start = tictac_end + 1;
+   localparam explosion_end = explosion_start + 8117;
 
-   reg [7:0]           snd_rom [0:taille_sons-1];
+   localparam taille_sons = explosion_end;
+
+   // ROM des sons
+   integer             snd_address;
+   integer             end_address;
+   logic [7:0]         snd_data;
+   logic [7:0]         snd_rom [0:taille_sons-1];
 
    initial
      begin
         $readmemh("../sounds/sounds.lst", snd_rom);
      end
 
-   // Resynchro de tout
-   always @(posedge clk)
-     begin
-        explosion_r <= explosion;
-        tictac_r <= tictac;
-        audio_lr_r <= audio_lr;
-        audio_clk_r <= audio_clk;
-        audio_lr_rr <= audio_lr_r;
-        audio_clk_rr <= audio_clk_r;
-     end
-
-
-   always_ff @(posedge clk)
+   always_ff @(posedge aud_mclk)
      snd_data <= snd_rom[snd_address];
 
-   always_ff @(posedge clk or negedge reset_n)
+   // Machine à état de lecture des sons
+   always_ff @(posedge aud_mclk or negedge reset_n)
      if (~reset_n)
        begin
           snd_address <= 0;
           end_address <= 0;
-          lire <= 0;
+          active <= 0;
        end
      else
        begin
-
-          if(~lire)
+          // Si on n'est pas en train de lire un sample
+          if(~active)
             begin
-               if (tictac_r)
+               // Si on demande à jouer un son, on charge ses adresses de début et fin
+               // et on lance la lecture (active=1)
+               if (tictac)
                  begin
                     snd_address <= tictac_start;
                     end_address <= tictac_end;
-                    lire <= 1;
+                    active <= 1;
                  end
-               else if (explosion_r)
+               if (explosion)
                  begin
                     snd_address <= explosion_start;
                     end_address <= explosion_end;
-                    lire <= 1;
+                    active <= 1;
                  end
             end
 
-          if (lire)
+          // Si on est en train de jouer un son
+          if (active)
             begin
-               if (audio_lr_rr != audio_lr_r)
-                 // On a eu une transition de trame, on charge le registre à décalage avec l'échantillon courant
+               // À chaque data_ena on doit fournir un nouvel échantillon audio
+               if(data_ena)
                  begin
-                    reg_decal <= {1'b0, snd_data, 8'b0};
-                    if (~audio_lr_r)
-                      begin
-                         if (snd_address == end_address)
-                           lire <= 0;
-                         else
-                           snd_address <= snd_address + 1;
-                      end
+                    dac_data_l <= {snd_data, 8'b0};
+                    dac_data_r <= {snd_data, 8'b0};
+                    // Si on est arrivé à la fin du son, on revient en mode inactif
+                    if (snd_address == end_address)
+                      active <= 0;
+                    else
+                      snd_address <= snd_address + 1;
                  end
-               else if (audio_clk_rr & ~audio_clk_r)
-                 begin
-                    reg_decal[16:1] <= reg_decal[15:0];
-                 end
-            end // if (lire)
+            end // if (active)
        end // else: !if(~reset_n)
 
-   assign debug = {snd_address[16:0], 4'b0, audio_lr, audio_clk, audio_data, lire};
-   assign audio_data = reg_decal[15];
+   assign debug = {snd_address};
 
 endmodule
