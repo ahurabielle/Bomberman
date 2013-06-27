@@ -59,6 +59,7 @@ module controleur (input              clk,
    localparam RIGHT2  = 4;
    localparam LEFT1   = 5;
    localparam LEFT2   = 6;
+   localparam DEATH   = 7;
 
    // Taille de l'écran en fonction du nombre de sprites (25 horizontaux et 17 verticaux)
    localparam HSPRITE= 25*32;
@@ -72,7 +73,7 @@ module controleur (input              clk,
    localparam GATE_LEFT    = 4;
    localparam GATE_UP      = 5;
    localparam GATE_DOWN    = 6;
-   localparam MULTIPLE_BOMB= 7;
+   localparam HEART= 7;
    localparam HUGE_FLAME   = 8;
    localparam SPEED_UP     = 9;
    localparam GHOST        = 10;
@@ -89,8 +90,8 @@ module controleur (input              clk,
    // Variables des effets ces objets
    logic [7:0]                                ghost1;
    logic [7:0]                                ghost2;
-   logic                                      multiple_bomb1;
-   logic                                      multiple_bomb2;
+   logic                                      heart1;
+   logic                                      heart2;
    logic [10:0]                               huge_flame1;
    logic [10:0]                               huge_flame2;
    logic [32:0]                               alea1;
@@ -191,8 +192,8 @@ module controleur (input              clk,
           count  <= 0;
           ghost1  <= 0;
           ghost2  <= 0;
-          multiple_bomb1  <= 0;
-          multiple_bomb2  <= 0;
+          heart1  <= 0;
+          heart2  <= 0;
           huge_flame1 <= 0;
           huge_flame2 <= 0;
           compt_objet <= 0;
@@ -233,8 +234,8 @@ module controleur (input              clk,
                  count  <= 0;
                  ghost1  <= 0;
                  ghost2  <= 0;
-                 multiple_bomb1  <= 0;
-                 multiple_bomb2  <= 0;
+                 heart1  <= 0;
+                 heart2  <= 0;
                  huge_flame1 <= 0;
                  huge_flame2 <= 0;
                  count <= 0;
@@ -341,7 +342,7 @@ module controleur (input              clk,
                       end
                     else
                       begin
-                         ram_wdata <= MULTIPLE_BOMB;;
+                         ram_wdata <= HEART;;
                          ram_we <= 1;
                          ram_waddr <= ram_raddr;
                       end
@@ -606,7 +607,7 @@ module controleur (input              clk,
                // Si on a un mur, on annule le mouvement
                // Si on a un objet on va dans la partie qui traite les objets (500)
                // XXX TODO : check la partie en 500
-               if (((ram_rdata == WALL_1) || (ram_rdata == WALL_2)) && (ghost1 == 0))
+               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2))
                  state <= 218;
                else
                  state <= state + 1;
@@ -644,7 +645,7 @@ module controleur (input              clk,
             207 :
               begin
                  // Si il y a une bombe, on annule le mouvement
-                 if (ram_rdata == BOMB)
+                 if ((ram_rdata == BOMB) && (ghost1 == 0))
                    state <= 218;
                  else
                    state <= state +1;
@@ -653,7 +654,7 @@ module controleur (input              clk,
 
             208 : // Si on a un objet on le traite
               begin
-                 if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
+                 if ((ram_rdata == HEART) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
                    begin
                       state <= 500;
                       temp_return_addr <=1;
@@ -837,7 +838,7 @@ module controleur (input              clk,
                // Si on a un mur, on annule le mouvement
                // Si on a un objet on va dans la partie qui traite les objets (500)
                // XXX TODO : check la partie en 500
-               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2) && (ghost2 == 0))
+               if ((ram_rdata == WALL_1) || (ram_rdata == WALL_2) )
                  state <= 268;
                else
                  state <= state + 1;
@@ -874,7 +875,7 @@ module controleur (input              clk,
 
             257 : begin
                // Si il y a une bombe, on annule le mouvement
-               if (ram_rdata == BOMB)
+               if ((ram_rdata == BOMB) && (ghost2 == 0))
                  state <= 268;
                else
                  state <= state +1;
@@ -883,7 +884,7 @@ module controleur (input              clk,
 
             258 :// Si on a un objet on le traite sinon on arrete le mouvement
               begin
-                 if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
+                 if ((ram_rdata == HEART) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
                    begin
                       state <= 500;
                       temp_return_addr <=2;
@@ -1490,12 +1491,12 @@ module controleur (input              clk,
               // du mouvement (temp_return_addr).
               // Si on a un objet on affecte les effets et on l'enlève de l'écran.
               begin
-                 if(ram_rdata == MULTIPLE_BOMB)
+                 if(ram_rdata == HEART)
                    begin
-                      if (temp_return_addr == 1)
-                        multiple_bomb1 <= multiple_bomb1 + 10;
-                      if (temp_return_addr == 2)
-                        multiple_bomb2 <= multiple_bomb2 + 10;
+                      if ((temp_return_addr == 1) && (life1 < 85))
+                        life1 <= life1 + 15;
+                      if ((temp_return_addr == 2) && (life2 <85 ))
+                        life2 <= life2 + 15;
                    end
                  if(ram_rdata == HUGE_FLAME)
                    begin
@@ -1546,34 +1547,42 @@ module controleur (input              clk,
               // Sinon, on retire une autre case au hasard.
               if(ram_rdata == WALL_EMPTY)
                 begin
-                   if(alea1[1:0]==0)
+                   if(alea1[2:0]< 2)
                      begin
                         ram_wdata <= HUGE_FLAME;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 200;
                      end
-                   else if(alea1[1:0]==1)
+                   else if(alea1[2:0] < 3)
                      begin
                         ram_wdata <= PUSH_BOMB;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 200;
                      end
-                   else if(alea1[1:0]==2)
+                   else if(alea1[2:0]<5)
                      begin
                         ram_wdata <= SPEED_UP;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 200;
                      end
-                   else
+                   else if(alea1[2:0] < 6)
                      begin
                         ram_wdata <= GHOST;
                         ram_we <= 1;
                         ram_waddr <= ram_raddr;
                         state <= 250;
-                     end // else: !if( alea1[31:21] <1000)
+                     end
+                   else
+                     begin
+                        ram_wdata <= HEART;
+                        ram_we <= 1;
+                        ram_waddr <= ram_raddr;
+                        state <= 250;
+                     end
+
                 end // if (ram_rdata == WALL_EMPTY)
               else
                 state <= 501;
@@ -1709,6 +1718,7 @@ module controleur (input              clk,
                          game_state <= GAME_OVER;
                          player1_state <= DEAD;
                          life1 <= 0;
+                         player1_sprite <= DEATH;
                       end
                     else
                     life1 <= life1 - BOMB_DMG;
@@ -1739,6 +1749,8 @@ module controleur (input              clk,
                          begin
                             game_state <= GAME_OVER;
                             player2_state <= DEAD;
+                            player2_sprite <= DEATH;
+                            life2 <= 0;
                          end
                     else
                       life2 <= life2 - BOMB_DMG;

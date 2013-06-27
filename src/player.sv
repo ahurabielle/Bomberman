@@ -9,8 +9,8 @@ module player(input logic                clk,
 
    parameter player_num = 1;
 
-   // ROM qui contient les pixels des 7 sprites (64x64 pixels)
-   logic [7:0]                           rom[0:7*1024-1];
+   // ROM qui contient les pixels des 8 sprites (64x64 pixels)
+   logic [7:0]                           rom[0:8*1024-1];
    logic [12:0]                          rom_addr;
    logic [7:0]                           color_pixel;
    logic [4:0]                           offsetX, offsetY;
