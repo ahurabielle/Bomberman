@@ -12,24 +12,22 @@ add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/num_carreX
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/offsetX
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/num_carreY
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/offsetY
-add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/rom_addr
-add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/wall_centerX
-add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/wall_centerY
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/maze/wall_num
 add wave -noupdate -divider Wall
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/spotY
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/spotX
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/spotX_r
-add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/wall_centerX
-add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/wall_centerY
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/offsetX
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/offsetY
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/rom
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/rom_addr
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/sprite_num
 add wave -noupdate -radix hexadecimal /top/DE2_fpga/wall/wall_color
+add wave -noupdate -divider Misc
+add wave -noupdate /top/DE2_fpga/flame/flame_ram
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {999602 ns} 0}
+WaveRestoreCursors {{Cursor 1} {4260420 ns} 0}
+quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
@@ -44,4 +42,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {1255320 ns} {1256959 ns}
+WaveRestoreZoom {0 ns} {10500 us}

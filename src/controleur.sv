@@ -93,7 +93,7 @@ module controleur (input              clk,
    logic                                      heart1;
    logic                                      heart2;
    logic [10:0]                               huge_flame1, huge_flame2;
-   logic [32:0]                               alea1;
+   logic [31:0]                               alea1;
    logic [9:0]                                alea;
    logic [10:0]                               speed_up_delay1, speed_up_delay2;
    logic [10:0]                               push_bomb_delay1, push_bomb_delay2;
@@ -228,7 +228,6 @@ module controleur (input              clk,
           ram_we <= 0;
           bomb_ram_we <= 0;
           flame_ram_we <= 0;
-          flame_ram_waddr <= 0;
 
           case(state)
             /**************************
@@ -293,6 +292,8 @@ module controleur (input              clk,
             3: // Ré-initialisation de la RAM bomb
               begin
                  bomb_ram_waddr <= 0;
+                 bomb_ram_wdata <= 0;
+                 bomb_ram_we <= 1;
                  state <= state + 1;
               end
 
@@ -308,12 +309,14 @@ module controleur (input              clk,
             5: // Ré-initialisation de la RAM flammes
               begin
                  flame_ram_waddr <= 0;
+                 flame_ram_wdata <= FLAME_EMPTY;
+                 flame_ram_we <= 1;
                  state <= state + 1;
               end
 
             6: // Ré-initialisation de la RAM flammes
               begin
-                 flame_ram_wdata <= 0;
+                 flame_ram_wdata <= FLAME_EMPTY;
                  flame_ram_we <= 1;
                  flame_ram_waddr <= flame_ram_waddr + 1;
                  if (flame_ram_waddr == (32*32-1))
@@ -1242,10 +1245,14 @@ module controleur (input              clk,
                  // Une seconde avant que la bombe disparaisse, on déclenche les flammes.
                  if(bomb_ram_rdata[18:10] <= 72)
                    state <= 420;
-                 // Après les flammes, on fait disparaitre la bombe
+                 if(bomb_ram_rdata[18:10] == 0)
+                   state <= state + 1;
+                 // Si on a affiché les flammes pendant 1 sec et que le timer est sur le
+                 // point de revenir à 0, on fait disparaitre la bombe et les flammes (état 410)
                  if(bomb_ram_rdata[18:10] == 1)
                    state <= 410;
-                 else if(bomb_ram_rdata[18:10] != 0)
+                 // Décrémente le timer (s'il n'est pas nul)
+                 if(bomb_ram_rdata[18:10] != 0)
                    begin
                       bomb_ram_waddr <= bomb_ram_raddr;
                       bomb_ram_we <= 1;
@@ -1365,7 +1372,7 @@ module controleur (input              clk,
              * Gestion des flammes
              * (on doit revenir en 403)
              ****************************************/
-            420 :
+            420:
               begin
                  // On commence par mettre une intersection flamme à l'endroit où se trouve la bombe
                  flame_ram_wdata <= FLAME_INTERSECT;

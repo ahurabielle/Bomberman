@@ -313,8 +313,6 @@
    logic [9:0]            player1X, player1Y;
    // coin haut gauche du sprite du joueur2
    logic [9:0]            player2X, player2Y;
-   // coin haut gauche du sprite des flammes
-   logic [9:0]            flameX, flameY;
    // coin haut gauche du sprite des murs et objets
    logic [9:0]            wallX, wallY;
    logic [7:0]            data_out;
@@ -340,6 +338,7 @@
    logic [3:0]      maze_ram_wdata;
    logic            maze_ram_we;
    logic [3:0]      maze_ram_rdata;
+   logic [2:0]      maze_num;
 
    // Interface avec la RAM qui stocke les flammes
    logic [9:0]      flame_ram_raddr, flame_ram_waddr;
@@ -349,11 +348,6 @@
    // Horloge VGA
    always  @(*)
      vga_clk <= clock_50;
-
-   // XXX Pour le moment, on donne des valeurs de flameX et flameY
-   // alors qu'Ã  terme ces positions seront donnÃ©es par le maze
-   assign  flameX        =        100;
-   assign  flameY        =        100;
 
    // Instanciation des decodeurs 7 segments pour le debug
    logic [31:0]           debug;
@@ -447,6 +441,7 @@
                   .flame_ram_rdata(flame_ram_rdata),
                   .life1(life1),
                   .life2(life2),
+                  .maze_num(maze_num),
                   .debug(debug)
 		          );
 
@@ -462,6 +457,7 @@
              .ram_we(maze_ram_we),
              .ram_raddr(maze_ram_raddr),
              .ram_rdata(maze_ram_rdata),
+             .maze_num(maze_num),
              .active(vga_blank)
              );
    // Instantiation du module background

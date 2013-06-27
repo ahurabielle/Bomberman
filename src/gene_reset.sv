@@ -5,6 +5,9 @@ module gene_reset(clk, in, reset_n);
 
    logic [15:0] count;
 
+   initial
+     count = 0;
+
    always @(posedge clk)
      if(~in)
        count <= 0;

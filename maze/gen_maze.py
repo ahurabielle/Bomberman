@@ -34,14 +34,17 @@ def gen_maze(filename, fd):
         # Lit les caractère de la ligne courante un par un, et génère le fichier de sortie
         for txt in line:
             if txt == "*" : fd.write("1\n")
-            if txt == "o" : fd.write("2\n")
-            if txt == "^" : fd.write("5\n")
-            if txt == " " : fd.write("0\n")
-            if txt == "v" : fd.write("6\n")
-            if txt == "<" : fd.write("4\n")
-            if txt == ">" : fd.write("3\n")
-            if txt == "1" : fd.write("7\n")
-            if txt == "2" : fd.write("8\n")
+            elif txt == "o" : fd.write("2\n")
+            elif txt == "^" : fd.write("5\n")
+            elif txt == " " : fd.write("0\n")
+            elif txt == "v" : fd.write("6\n")
+            elif txt == "<" : fd.write("4\n")
+            elif txt == ">" : fd.write("3\n")
+            elif txt == "1" : fd.write("7\n")
+            elif txt == "2" : fd.write("8\n")
+            else:
+                print "Caractère invalide \"%c\" en ligne %s"%(txt, line)
+                sys.exit(-1)
 
 
         # On comble par 7 octets à 0 (==sprite vide) pour aligner les lignes sur
