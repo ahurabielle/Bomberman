@@ -1782,7 +1782,7 @@ module controleur (input              clk,
                  if(push_bomb_delay1 != 0)
                    push_bomb_delay1 <= push_bomb_delay1 - 1;
                  if(push_bomb_delay2 != 0)
-                   push_bomb_delay2 <= push_bomb_delay1 - 2;
+                   push_bomb_delay2 <= push_bomb_delay2 - 1;
 
                  state <= return_addr;
               end // case: 550
