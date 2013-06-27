@@ -96,6 +96,7 @@ module controleur (input              clk,
    logic [10:0]                               huge_flame2;
    logic [32:0]                               alea1;
    logic [9:0]                                alea;
+   logic [10:0]                               speed_up_delay1, speed_up_delay2;
 
    // Numéros de sprites des flammes
    localparam FLAME_EMPTY = 0;
@@ -107,11 +108,14 @@ module controleur (input              clk,
    localparam FLAME_RIGHT = 6;
    localparam FLAME_DOWN = 7;
 
-   //Determine le rayon
+   // Détermine les paramètres de flammes
    logic [3:0] bomb_radius;
    localparam TIME_HUGE_FLAME  = 8;
    localparam SMALL_FLAME_SIZE = 3;
    localparam HUGE_FLAME_SIZE  = 7;
+
+   // Paramètres du speed_up : 10 secondes de durée
+   localparam SPEED_UP_DELAY = 10;
 
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
@@ -131,9 +135,9 @@ module controleur (input              clk,
 
    // Machine à etat
    integer                                    state;
-   integer                                    return_addr;
+   integer                                    return_addr, return_addr2;
    integer                                    count;
-   integer                                    temp_return_addr;
+   integer                                    player_num;
 
    // État du jeu
    logic                                      game_state;
@@ -209,6 +213,9 @@ module controleur (input              clk,
           bomb_radius <= SMALL_FLAME_SIZE;
           life1 <= 100;
           life2 <= 100;
+          speed_up_delay1 <= 0;
+          speed_up_delay2 <= 0;
+          player_num <= 0;
        end
      else
        begin
@@ -247,6 +254,11 @@ module controleur (input              clk,
                  bomb_radius <= SMALL_FLAME_SIZE;
                  life1 <= 100;
                  life2 <= 100;
+                 speed_up_delay1 <= 0;
+                 speed_up_delay2 <= 0;
+                 v1 <= 32;
+                 v2 <= 32;
+                 player_num <= 0;
               end
 
             1:
@@ -578,7 +590,6 @@ module controleur (input              clk,
                    // On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
                    begin
                       state <= 220;
-                      temp_return_addr <= 220;
                    end
               end // case: 200
 
@@ -652,18 +663,19 @@ module controleur (input              clk,
 
               end
 
-            208 : // Si on a un objet on le traite
+            208: // Si on a un objet on le traite
               begin
                  if ((ram_rdata == HEART) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
                    begin
                       state <= 500;
-                      temp_return_addr <=1;
+                      player_num <= 1;
+                      return_addr2 <= 220;
                    end
                  else
                    state <= 220;
               end
 
-            218 : begin
+            218: begin
                // Annule le mouvement
                dx1 <= 0;
                dy1 <= 0;
@@ -692,10 +704,6 @@ module controleur (input              clk,
                       {player1X, fplayer1X} <= {player1X, fplayer1X} + dx1;
                       {player1Y, fplayer1Y} <= {player1Y, fplayer1Y} + dy1;
                    end // else: !if((((dx1 > 0) && ((player1X+dx1) >= player1_goalX)) ||...
-
-                 // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
-
-                 // Revient à la routine de gestion principale
                  state <= state + 1;
               end // case: 220
 
@@ -726,6 +734,7 @@ module controleur (input              clk,
                    player1_sprite <= 3;
                  state <= return_addr;
               end // case: 222
+
             223:
               // On va a gauche
               begin
@@ -809,7 +818,6 @@ module controleur (input              clk,
                    //  On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
                    begin
                       state <= 280;
-                      temp_return_addr <= 280;
                    end
               end // case: 250
 
@@ -887,7 +895,8 @@ module controleur (input              clk,
                  if ((ram_rdata == HEART) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
                    begin
                       state <= 500;
-                      temp_return_addr <=2;
+                      player_num <= 2;
+                      return_addr2 <= 280;
                    end
 
                  else state <= 280;
@@ -1488,35 +1497,41 @@ module controleur (input              clk,
              ************************/
             500:
               // On s'occupe de l'attrapage d'un objet après on retourne au traitement
-              // du mouvement (temp_return_addr).
+              // du mouvement (player_num).
               // Si on a un objet on affecte les effets et on l'enlève de l'écran.
               begin
                  if(ram_rdata == HEART)
                    begin
-                      if ((temp_return_addr == 1) && (life1 < 85))
+                      if ((player_num == 1) && (life1 < 85))
                         life1 <= life1 + 15;
-                      if ((temp_return_addr == 2) && (life2 <85 ))
+                      if ((player_num == 2) && (life2 <85 ))
                         life2 <= life2 + 15;
                    end
                  if(ram_rdata == HUGE_FLAME)
                    begin
-                      if (temp_return_addr == 1)
+                      if (player_num == 1)
                         huge_flame1 <= TIME_HUGE_FLAME*72;
-                      if (temp_return_addr == 2)
+                      if (player_num == 2)
                         huge_flame2 <= TIME_HUGE_FLAME*72;
                    end
                  if(ram_rdata == SPEED_UP)
                    begin
-                      if ((temp_return_addr == 1) && (v1<128))
-                        v1 <= v1+32;
-                      if ((temp_return_addr == 2) && (v2<128))
-                        v2 <= v2+32;
+                      if ((player_num == 1) && (v1<128))
+                        begin
+                           v1 <= v1+32;
+                           speed_up_delay1 <= SPEED_UP_DELAY * 72;
+                        end
+                      if ((player_num == 2) && (v2<128))
+                        begin
+                           v2 <= v2+32;
+                           speed_up_delay2 <= SPEED_UP_DELAY * 72;
+                        end
                    end
                  if(ram_rdata == GHOST)
                    begin
-                      if (temp_return_addr == 1)
+                      if (player_num == 1)
                         ghost1 <= 72*3;
-                      if (temp_return_addr == 2)
+                      if (player_num == 2)
                         ghost2 <= 72*3;
                    end
                  ram_wdata <= WALL_EMPTY;
@@ -1547,41 +1562,41 @@ module controleur (input              clk,
               // Sinon, on retire une autre case au hasard.
               if(ram_rdata == WALL_EMPTY)
                 begin
-                   if(alea1[2:0]< 2)
-                     begin
-                        ram_wdata <= HUGE_FLAME;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 200;
-                     end
-                   else if(alea1[2:0] < 3)
-                     begin
-                        ram_wdata <= PUSH_BOMB;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 200;
-                     end
-                   else if(alea1[2:0]<5)
-                     begin
-                        ram_wdata <= SPEED_UP;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 200;
-                     end
-                   else if(alea1[2:0] < 6)
-                     begin
-                        ram_wdata <= GHOST;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 250;
-                     end
-                   else
-                     begin
-                        ram_wdata <= HEART;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 250;
-                     end
+
+                   case(alea1[2:0])
+                     0, 1:
+                       begin
+                          ram_wdata <= HUGE_FLAME;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     2, 3:
+                       begin
+                          ram_wdata <= PUSH_BOMB;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     4, 5:
+                       begin
+                          ram_wdata <= SPEED_UP;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     6, 7:
+                       begin
+                          ram_wdata <= GHOST;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     7:
+                       begin
+                          ram_wdata <= HEART;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                   endcase
+
+                   state <= return_addr2;
 
                 end // if (ram_rdata == WALL_EMPTY)
               else
@@ -1606,6 +1621,17 @@ module controleur (input              clk,
                    bomb_radius <= HUGE_FLAME_SIZE;
                  else
                    bomb_radius <= SMALL_FLAME_SIZE;
+
+                 if(speed_up_delay1 != 0)
+                   speed_up_delay1 <= speed_up_delay1 - 1;
+                 if(speed_up_delay2 != 0)
+                   speed_up_delay2 <= speed_up_delay1 - 2;
+
+                 if(speed_up_delay1 == 0)
+                   v1 <= 32;
+
+                 if(speed_up_delay2 == 0)
+                   v2 <= 32;
 
                  state <= return_addr;
               end // case: 550
