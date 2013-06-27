@@ -134,9 +134,9 @@ module controleur (input              clk,
 
    // Machine à etat
    integer                                    state;
-   integer                                    return_addr;
+   integer                                    return_addr, return_addr2;
    integer                                    count;
-   integer                                    temp_return_addr;
+   integer                                    player_num;
 
    // État du jeu
    logic                                      game_state;
@@ -214,6 +214,7 @@ module controleur (input              clk,
           life2 <= 100;
           speed_up_delay1 <= 0;
           speed_up_delay2 <= 0;
+          player_num <= 0;
        end
      else
        begin
@@ -256,6 +257,7 @@ module controleur (input              clk,
                  speed_up_delay2 <= 0;
                  v1 <= 32;
                  v2 <= 32;
+                 player_num <= 0;
               end
 
             1:
@@ -587,7 +589,6 @@ module controleur (input              clk,
                    // On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
                    begin
                       state <= 220;
-                      temp_return_addr <= 220;
                    end
               end // case: 200
 
@@ -661,18 +662,19 @@ module controleur (input              clk,
 
               end
 
-            208 : // Si on a un objet on le traite
+            208: // Si on a un objet on le traite
               begin
                  if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
                    begin
                       state <= 500;
-                      temp_return_addr <=1;
+                      player_num <= 1;
+                      return_addr2 <= 220;
                    end
                  else
                    state <= 220;
               end
 
-            218 : begin
+            218: begin
                // Annule le mouvement
                dx1 <= 0;
                dy1 <= 0;
@@ -701,10 +703,6 @@ module controleur (input              clk,
                       {player1X, fplayer1X} <= {player1X, fplayer1X} + dx1;
                       {player1Y, fplayer1Y} <= {player1Y, fplayer1Y} + dy1;
                    end // else: !if((((dx1 > 0) && ((player1X+dx1) >= player1_goalX)) ||...
-
-                 // XXX : TODO gérer les débordements (passage d'un côté à l'autre de l'écran)
-
-                 // Revient à la routine de gestion principale
                  state <= state + 1;
               end // case: 220
 
@@ -735,6 +733,7 @@ module controleur (input              clk,
                    player1_sprite <= 3;
                  state <= return_addr;
               end // case: 222
+
             223:
               // On va a gauche
               begin
@@ -818,7 +817,6 @@ module controleur (input              clk,
                    //  On est déjà entrain de bouger, on va à l'état qui actualise playerX et playerY
                    begin
                       state <= 280;
-                      temp_return_addr <= 280;
                    end
               end // case: 250
 
@@ -896,7 +894,8 @@ module controleur (input              clk,
                  if ((ram_rdata == MULTIPLE_BOMB) || (ram_rdata == HUGE_FLAME) || (ram_rdata == SPEED_UP) || (ram_rdata == GHOST) || (ram_rdata == PUSH_BOMB))
                    begin
                       state <= 500;
-                      temp_return_addr <=2;
+                      player_num <= 2;
+                      return_addr2 <= 280;
                    end
 
                  else state <= 280;
@@ -1497,31 +1496,31 @@ module controleur (input              clk,
              ************************/
             500:
               // On s'occupe de l'attrapage d'un objet après on retourne au traitement
-              // du mouvement (temp_return_addr).
+              // du mouvement (player_num).
               // Si on a un objet on affecte les effets et on l'enlève de l'écran.
               begin
                  if(ram_rdata == MULTIPLE_BOMB)
                    begin
-                      if (temp_return_addr == 1)
+                      if (player_num == 1)
                         multiple_bomb1 <= multiple_bomb1 + 10;
-                      if (temp_return_addr == 2)
+                      if (player_num == 2)
                         multiple_bomb2 <= multiple_bomb2 + 10;
                    end
                  if(ram_rdata == HUGE_FLAME)
                    begin
-                      if (temp_return_addr == 1)
+                      if (player_num == 1)
                         huge_flame1 <= TIME_HUGE_FLAME*72;
-                      if (temp_return_addr == 2)
+                      if (player_num == 2)
                         huge_flame2 <= TIME_HUGE_FLAME*72;
                    end
                  if(ram_rdata == SPEED_UP)
                    begin
-                      if ((temp_return_addr == 1) && (v1<128))
+                      if ((player_num == 1) && (v1<128))
                         begin
                            v1 <= v1+32;
                            speed_up_delay1 <= SPEED_UP_DELAY * 72;
                         end
-                      if ((temp_return_addr == 2) && (v2<128))
+                      if ((player_num == 2) && (v2<128))
                         begin
                            v2 <= v2+32;
                            speed_up_delay2 <= SPEED_UP_DELAY * 72;
@@ -1529,9 +1528,9 @@ module controleur (input              clk,
                    end
                  if(ram_rdata == GHOST)
                    begin
-                      if (temp_return_addr == 1)
+                      if (player_num == 1)
                         ghost1 <= 72*3;
-                      if (temp_return_addr == 2)
+                      if (player_num == 2)
                         ghost2 <= 72*3;
                    end
                  ram_wdata <= WALL_EMPTY;
@@ -1562,34 +1561,40 @@ module controleur (input              clk,
               // Sinon, on retire une autre case au hasard.
               if(ram_rdata == WALL_EMPTY)
                 begin
-                   if(alea1[1:0]==0)
-                     begin
-                        ram_wdata <= HUGE_FLAME;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 200;
-                     end
-                   else if(alea1[1:0]==1)
-                     begin
-                        ram_wdata <= PUSH_BOMB;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 200;
-                     end
-                   else if(alea1[1:0]==2)
-                     begin
-                        ram_wdata <= SPEED_UP;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 200;
-                     end
-                   else
-                     begin
-                        ram_wdata <= GHOST;
-                        ram_we <= 1;
-                        ram_waddr <= ram_raddr;
-                        state <= 250;
-                     end // else: !if( alea1[31:21] <1000)
+                   case(alea1[2:0])
+                     0, 1:
+                       begin
+                          ram_wdata <= HUGE_FLAME;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     2, 3:
+                       begin
+                          ram_wdata <= PUSH_BOMB;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     4, 5:
+                       begin
+                          ram_wdata <= SPEED_UP;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     6, 7:
+                       begin
+                          ram_wdata <= GHOST;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                     7:
+                       begin
+                          ram_wdata <= MULTIPLE_BOMB;
+                          ram_we <= 1;
+                          ram_waddr <= ram_raddr;
+                       end
+                   endcase
+
+                   state <= return_addr2;
                 end // if (ram_rdata == WALL_EMPTY)
               else
                 state <= 501;
