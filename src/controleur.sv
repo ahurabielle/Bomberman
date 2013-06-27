@@ -1768,18 +1768,16 @@ module controleur (input              clk,
                  if(speed_up_delay1 != 0)
                    speed_up_delay1 <= speed_up_delay1 - 1;
                  if(speed_up_delay2 != 0)
-                   speed_up_delay2 <= speed_up_delay1 - 2;
+                   speed_up_delay2 <= speed_up_delay2 - 2;
+                 if(speed_up_delay1 == 0)
+                   v1 <= 32;
+                 if(speed_up_delay2 == 0)
+                   v2 <= 32;
 
                  if(push_bomb_delay1 != 0)
                    push_bomb_delay1 <= push_bomb_delay1 - 1;
                  if(push_bomb_delay2 != 0)
                    push_bomb_delay2 <= push_bomb_delay1 - 2;
-
-                 if(speed_up_delay1 == 0)
-                   v1 <= 32;
-
-                 if(speed_up_delay2 == 0)
-                   v2 <= 32;
 
                  state <= return_addr;
               end // case: 550
