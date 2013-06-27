@@ -1,0 +1,27 @@
+# Une ligne qui commence par un dièse est un commentaire
+# Le dessin ci-desssous représente le labyrinthe : 25 colonnes par 17 lignes
+# Les diférents éléments :
+#   * : mur
+#   < : porte vers la gauche
+#   > : porte verd la droite
+#   ^ : porte vers le haut
+#   v : porte vers le bas
+#   1 : position initiale du joueur 1
+#   2 : position initiale du joueur 2
+*************************
+*1      o ooooooooooo  **
+*v*******************  **
+*oooooo ooo o o ooooooo**
+*  ********** ********^**
+* oooooooo oooooooooooo**
+*******************v**o**
+* oooooooooooooooooooo **
+* *********v*************
+*  *  >        *      2**
+*  o  o *  * o   o  *  **
+*  o  *   o *  * *  *  **
+*  * ** *** ** * ********
+*oooooooooooooooooooooo**
+*********************o **
+* oooooooooooooooo     **
+*************************
