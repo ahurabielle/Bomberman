@@ -22,7 +22,7 @@ module life(input logic clk,
    // inutile pour l'instant mais ....
    localparam integer                 CONTOUR = 0;
    // longueur du support horizontal
-   localparam integer                 LONGUEUR_SUPPORT_HORIZONTAL = 100;
+   localparam integer                 LONGUEUR_SUPPORT_HORIZONTAL = 110;
    // début de la barre de vie en elle meme
    localparam integer                 LIFE1_STARTX  = STARTX1 + ESPACE + CONTOUR + LARGEUR;
    localparam integer                 LIFE1_STARTY  = STARTY1 + CONTOUR;
