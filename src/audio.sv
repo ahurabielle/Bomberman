@@ -19,6 +19,14 @@
                 output logic [31:0] debug
                );
 
+   // Les signaux de lancement de son (tictac et explosion) sont synchrones sur une
+   // horloge à 50MHz. Or ce module est synchrone sur l'horloge du codec (12Mhz). Il faut
+   // donc d'abord les resynchroniser. La version avec "_r" est le signal resynchronisé sur 12MHz.
+   logic                            tictac_r;
+   logic                            explosion_r;
+
+   resync r1(.clk(clk_50), .in(tictac), .out(tictac_r));
+   resync r2(.clk(clk_50), .in(explosion), .out(explosion_r));
 
    // Audio data IN and OUT
    logic [15:0]  adc_data_l;
@@ -92,13 +100,13 @@
             begin
                // Si on demande à jouer un son, on charge ses adresses de début et fin
                // et on lance la lecture (active=1)
-               if (tictac)
+               if (tictac_r)
                  begin
                     snd_address <= tictac_start;
                     end_address <= tictac_end;
                     active <= 1;
                  end
-               if (explosion)
+               if (explosion_r)
                  begin
                     snd_address <= explosion_start;
                     end_address <= explosion_end;

@@ -593,6 +593,7 @@ set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL OFF
 set_global_assignment -name PHYSICAL_SYNTHESIS_ASYNCHRONOUS_SIGNAL_PIPELINING OFF
 set_global_assignment -name STRICT_RAM_RECOGNITION ON
 set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT FAST
+set_global_assignment -name SYSTEMVERILOG_FILE src/resync.sv
 set_global_assignment -name VERILOG_FILE mf_src/pll12.v
 set_global_assignment -name VERILOG_FILE src/codec_ctrl.v
 set_global_assignment -name SYSTEMVERILOG_FILE src/codec.sv
