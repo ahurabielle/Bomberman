@@ -363,6 +363,174 @@
    seven_seg s6 (debug[27:24], hex6);
    seven_seg s7 (debug[31:28], hex7);
 
+   // Instantiation de life
+   life vie(.clk(vga_clk),
+            .spotX(vga_spotX),
+            .spotY(vga_spotY),
+            .life1(life1),
+            .life2(life2),
+            .life_rgb(life_rgb)
+            );
+
+   // Instanciation du module de synchro
+   synchro sync1(.clk(vga_clk) ,
+                 .reset_n(reset_n),
+                 .blank(vga_blank),
+                 .HS(vga_hs),
+                 .VS(vga_vs),
+                 .SOF(vga_SOF),
+                 .EOF(vga_EOF),
+                 .SOL(vga_SOL),
+                 .EOL(vga_EOL),
+                 .spotX(vga_spotX),
+                 .spotY(vga_spotY),
+                 .sync(vga_sync));
+
+   //Instantiation du clavier PS/2
+   keyboard kb(  .clk(vga_clk),
+                 .reset_n(reset_n),
+                 .ps2_clk(ps2_clk),
+                 .ps2_data(ps2_dat),
+                 .j1_up(j1_up),
+                 .j1_down(j1_down),
+                 .j1_right(j1_right),
+                 .j1_left(j1_left),
+                 .j1_drop(j1_drop),
+                 .j2_up(j2_up),
+                 .j2_down(j2_down),
+                 .j2_right(j2_right),
+                 .j2_left(j2_left),
+                 .j2_drop(j2_drop),
+                 .game_over(game_over),
+                 .new_game(new_game),
+                 .data_out(data_out)
+                 );
+
+
+   // Instantiation du module controleur
+   controleur ctr(.clk(vga_clk),
+		          .reset_n(reset_n),
+		          .SOF(vga_SOF),
+		          .EOF(vga_EOF),
+                  .j1_up(j1_up),
+                  .j1_down(j1_down),
+                  .j1_right(j1_right),
+                  .j1_left(j1_left),
+                  .j1_drop(j1_drop),
+                  .j2_up(j2_up),
+                  .j2_down(j2_down),
+                  .j2_right(j2_right),
+                  .j2_left(j2_left),
+                  .j2_drop(j2_drop),
+                  .player1_sprite(player1_sprite),
+                  .player2_sprite(player2_sprite),
+		          .player1X(player1X),
+		          .player1Y(player1Y),
+                  .player2X(player2X),
+                  .player2Y(player2Y),
+                  .new_game(new_game),
+                  .bck_r(bck_r),
+                  .bck_g(bck_g),
+                  .bck_b(bck_b),
+                  .ram_waddr(maze_ram_waddr),
+                  .ram_wdata(maze_ram_wdata),
+                  .ram_we(maze_ram_we),
+                  .ram_raddr(maze_ram_raddr),
+                  .ram_rdata(maze_ram_rdata),
+                  .flame_ram_raddr(flame_ram_raddr),
+                  .flame_ram_waddr(flame_ram_waddr),
+                  .flame_ram_we(flame_ram_we),
+                  .flame_ram_wdata(flame_ram_wdata),
+                  .flame_ram_rdata(flame_ram_rdata),
+                  .life1(life1),
+                  .life2(life2),
+                  .maze_num(maze_num),
+                  .tictac_sound(explosion),
+                  .explosion_sound(tictac),
+                  .debug()
+		          );
+
+   // Instanciation du module maze
+   maze maze(.clk(vga_clk),
+             .spotX(vga_spotX),
+             .spotY(vga_spotY),
+             .wall_num(wall_sprite),
+		     .wallX(wallX),
+		     .wallY(wallY),
+             .ram_waddr(maze_ram_waddr),
+             .ram_wdata(maze_ram_wdata),
+             .ram_we(maze_ram_we),
+             .ram_raddr(maze_ram_raddr),
+             .ram_rdata(maze_ram_rdata),
+             .maze_num(maze_num),
+             .active(vga_blank)
+             );
+   // Instantiation du module background
+   background bck(.clk(vga_clk),
+		          .spotX(vga_spotX),
+                  .bck_r(bck_r),
+                  .bck_g(bck_g),
+                  .bck_b(bck_b),
+		          .bck_rgb(bck_rgb)
+		          );
+
+   //Instantiation du module joueur1
+   player #(.player_num(1)) p1(.clk(vga_clk),
+                               .spotX(vga_spotX),
+                               .spotY(vga_spotY),
+		                       .playerX(player1X),
+		                       .playerY(player1Y),
+                               .sprite_num(player1_sprite),
+                               .player_color(player1_color)
+		                       );
+
+   //Instantiation du module joueur2
+   player #(.player_num(2)) p2(.clk(vga_clk),
+                               .spotX(vga_spotX),
+                               .spotY(vga_spotY),
+		                       .playerX(player2X),
+		                       .playerY(player2Y),
+                               .sprite_num(player2_sprite),
+                               .player_color(player2_color)
+		                       );
+
+   //Instantiation du module flame
+   flame flame(.clk(vga_clk),
+               .spotX(vga_spotX),
+               .spotY(vga_spotY),
+               .flame_color(flame_color),
+               .flame_ram_raddr(flame_ram_raddr),
+               .flame_ram_waddr(flame_ram_waddr),
+               .flame_ram_we(flame_ram_we),
+               .flame_ram_wdata(flame_ram_wdata),
+               .flame_ram_rdata(flame_ram_rdata),
+               .active(vga_blank)
+		       );
+
+   //Instantiation du module wall
+   wall wall(.clk(vga_clk),
+             .spotX(vga_spotX),
+             .spotY(vga_spotY),
+		     .wallX(wallX),
+		     .wallY(wallY),
+             .sprite_num(wall_sprite),
+             .wall_color(wall_color)
+		     );
+
+   // Instantiation du mixer
+   mixer mix(.clk(vga_clk),
+             .active(vga_blank),
+             .bck_rgb(bck_rgb),
+	         .player2_color(player2_color),
+             .flame_color(flame_color),
+             .wall_color(wall_color),
+             .player1_color(player1_color),
+             .vga_r(vga_r),
+             .vga_g(vga_g),
+             .vga_b(vga_b),
+             .life_rgb(life_rgb)
+	         );
+
    // Contrôleur de son
    audio audio (.clk_50(clock_50),
                 .reset_n(reset_n),
@@ -383,9 +551,5 @@
                 .explosion(explosion),
                 .debug(debug)
                );
-
-
-   assign explosion = sw[0];
-   assign tictac = sw[1];
 
 endmodule
