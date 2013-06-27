@@ -91,11 +91,11 @@ module controleur (input              clk,
    logic [7:0]                                ghost2;
    logic                                      multiple_bomb1;
    logic                                      multiple_bomb2;
-   logic [10:0]                               huge_flame1;
-   logic [10:0]                               huge_flame2;
+   logic [10:0]                               huge_flame1, huge_flame2;
    logic [32:0]                               alea1;
    logic [9:0]                                alea;
    logic [10:0]                               speed_up_delay1, speed_up_delay2;
+   logic [10:0]                               push_bomb_delay1, push_bomb_delay2;
 
    // Numéros de sprites des flammes
    localparam FLAME_EMPTY = 0;
@@ -115,6 +115,9 @@ module controleur (input              clk,
 
    // Paramètres du speed_up : 10 secondes de durée
    localparam SPEED_UP_DELAY = 10;
+
+   // Délai d'activité du push_bomb
+   localparam PUSH_BOMB_DELAY = 10;
 
    // Constante de déplacement = 32 (taille du sprite)
    localparam SIZE    = 32;
@@ -215,6 +218,8 @@ module controleur (input              clk,
           speed_up_delay1 <= 0;
           speed_up_delay2 <= 0;
           player_num <= 0;
+          push_bomb_delay1 <= 0;
+          push_bomb_delay2 <= 0;
        end
      else
        begin
@@ -258,6 +263,8 @@ module controleur (input              clk,
                  v1 <= 32;
                  v2 <= 32;
                  player_num <= 0;
+                 push_bomb_delay1 <= 0;
+                 push_bomb_delay2 <= 0;
               end
 
             1:
@@ -662,12 +669,24 @@ module controleur (input              clk,
 
             207 :
               begin
-                 // Si il y a une bombe, on annule le mouvement
+                 // Si il y a une bombe, soit on annule le mouvement soit (si le joueur est en
+                 // push_bomb) on fait faire un saut quantique à la bombe et on continue le mouvement
                  if (ram_rdata == BOMB)
-                   state <= 218;
+                   begin
+                      if (push_bomb_delay1 != 0)
+                        begin
+                           // Fait faire un saut quantique à la bombe. En revenant, on est sûr que
+                           // l'emplacement actuel est vide donc on peut continuer tranquillement
+                           // le mouvement
+                           state <= 350;
+                           return_addr2 <= state + 1;
+                        end
+                      else
+                        // Annule le mouvement
+                        state <= 218;
+                   end
                  else
                    state <= state +1;
-
               end
 
             208: // Si on a un objet on le traite
@@ -888,14 +907,27 @@ module controleur (input              clk,
                state <= state + 1;
             end // case: 206
 
-            257 : begin
-               // Si il y a une bombe, on annule le mouvement
-               if (ram_rdata == BOMB)
-                 state <= 268;
-               else
-                 state <= state +1;
-            end
-
+            257 :
+              begin
+                 // Si il y a une bombe, soit on annule le mouvement soit (si le joueur est en
+                 // push_bomb) on fait faire un saut quantique à la bombe et on continue le mouvement
+                 if (ram_rdata == BOMB)
+                   begin
+                      if (push_bomb_delay2 != 0)
+                        begin
+                           // Fait faire un saut quantique à la bombe. En revenant, on est sûr que
+                           // l'emplacement actuel est vide donc on peut continuer tranquillement
+                           // le mouvement
+                           state <= 350;
+                           return_addr2 <= state + 1;
+                        end
+                      else
+                        // Annule le mouvement
+                        state <= 268;
+                   end
+                 else
+                   state <= state +1;
+              end
 
             258 :// Si on a un objet on le traite sinon on arrete le mouvement
               begin
@@ -1087,8 +1119,105 @@ module controleur (input              clk,
             310 :
               state <= return_addr;
 
-            /***********************
-             ******Timers***********
+
+            /****************************************************************
+             * Saut quantique des bombes
+             * Si la bombe a déjà explosé, on ne fait rien.
+             * Sinon, on cherche une case libre, et on y déplace la bombe
+             ***************************************************************/
+            350: begin
+               // Si on a une flamme à l'emplacement courant, la bombe a déjà explosé, on ne fait rien.
+               // BTW ram_raddr contient {player1_goalY[13:9], player1_goalX[13:9]} (ou player2)
+               flame_ram_raddr <= ram_raddr;
+               state <= state + 1;
+            end
+
+            351: begin
+               // Attente lecture RAM
+               state <= state + 1;
+            end
+
+            352: begin
+               if(flame_ram_rdata != FLAME_EMPTY)
+                 state <= return_addr2;
+               else
+                 state <= state + 1;
+            end
+
+            353: begin
+               // Tire une case au hasard et lit ce qui se trouve là
+               if((alea[4:0] < 25) && (alea[9:5]<17))
+                begin
+                   ram_raddr <= alea;
+                   state <= state+1;
+                end
+            end
+
+            354:
+              // État d'attente pour lecture sur la ram
+              state <= state + 1;
+
+            355:
+              // Si la case tirée au hasard ne contient rien, on y écrit le sprite
+              // de la bombe, sinon on en retire une autre.
+              if(ram_rdata == WALL_EMPTY)
+                begin
+                   ram_wdata <= BOMB;
+                   ram_we <= 1;
+                   ram_waddr <= ram_raddr;
+                   state <= state + 1;
+                end
+              else
+                state <= 353;
+
+            356: begin
+               // Cherche dans la RAM bombes l'entrée correspondant à la bombe actuelle
+               bomb_ram_raddr <= 0;
+               state <= state + 1;
+            end
+
+            357: begin
+               // Cycle attente RAM
+               state <= state + 1;
+            end
+
+            358: begin
+               // Actualise la position de la bombe
+               if(bomb_ram_rdata[9:0] == flame_ram_raddr)
+                 begin
+                    bomb_ram_wdata <= bomb_ram_rdata;
+                    bomb_ram_wdata[9:0] <= ram_raddr;
+                    bomb_ram_we <= 1;
+                    bomb_ram_waddr <= bomb_ram_raddr;
+                    state <= state + 1;
+                 end
+               else
+                 begin
+                    state <= 357;
+                    bomb_ram_raddr <= bomb_ram_raddr + 1;
+                 end
+            end
+
+            359: begin
+               // Efface la bombe de son emplacement d'origine
+               // ram_raddr a été modifié, la case d'origine est sauvée dans flame_ram_raddr
+               ram_waddr <= flame_ram_raddr;
+               ram_raddr <= flame_ram_raddr;
+               ram_we <= 1;
+               ram_wdata <= WALL_EMPTY;
+               state <= state + 1;
+            end
+
+            360:
+              // Retour
+              state <= return_addr2;
+
+
+
+
+
+            /**********************
+             *     Timers         *
              **********************/
             400:
               // A chaque fin de trame, on va décrémenter les timers
@@ -1541,6 +1670,15 @@ module controleur (input              clk,
                       if (player_num == 2)
                         ghost2 <= 72*3;
                    end
+                 if(ram_rdata == PUSH_BOMB)
+                   begin
+                      if (player_num == 1)
+                        push_bomb_delay1 <= 72*PUSH_BOMB_DELAY;
+                      if (player_num == 2)
+                        push_bomb_delay2 <= 72*PUSH_BOMB_DELAY;
+                   end
+
+
                  ram_wdata <= WALL_EMPTY;
                  ram_we <= 1;
                  ram_waddr <= ram_raddr;
@@ -1631,6 +1769,11 @@ module controleur (input              clk,
                    speed_up_delay1 <= speed_up_delay1 - 1;
                  if(speed_up_delay2 != 0)
                    speed_up_delay2 <= speed_up_delay1 - 2;
+
+                 if(push_bomb_delay1 != 0)
+                   push_bomb_delay1 <= push_bomb_delay1 - 1;
+                 if(push_bomb_delay2 != 0)
+                   push_bomb_delay2 <= push_bomb_delay1 - 2;
 
                  if(speed_up_delay1 == 0)
                    v1 <= 32;
