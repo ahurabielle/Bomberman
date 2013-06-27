@@ -241,11 +241,11 @@
    input logic            enet_int;     // dm9000a interrupt
    output logic           enet_clk;     // dm9000a clock 25 mhz
    // Audio codec
-   output logic           aud_adclrck;  // audio codec adc lr clock
+   input logic            aud_adclrck;  // audio codec adc lr clock
    input logic            aud_adcdat;   // audio codec adc data
-   output logic           aud_daclrck;  // audio codec dac lr clock
+   input logic            aud_daclrck;  // audio codec dac lr clock
    output logic           aud_dacdat;   // audio codec dac data
-   output logic           aud_bclk;     // audio codec bit-stream clock
+   input logic            aud_bclk;     // audio codec bit-stream clock
    output logic           aud_mclk;     // audio codec chip clock
    // TV  Decoder
    input logic [7:0]      td_data;      // tv decoder data bus 8 bits
@@ -345,6 +345,9 @@
    logic [2:0]      flame_ram_wdata, flame_ram_rdata;
    logic            flame_ram_we;
 
+   // Signaux déclenchant des sons
+   logic            tictac, explosion;
+
    // Horloge VGA
    always  @(*)
      vga_clk <= clock_50;
@@ -442,7 +445,9 @@
                   .life1(life1),
                   .life2(life2),
                   .maze_num(maze_num),
-                  .debug(debug)
+                  .tictac_sound(explosion),
+                  .explosion_sound(tictac),
+                  .debug()
 		          );
 
    // Instanciation du module maze
@@ -525,5 +530,26 @@
              .vga_b(vga_b),
              .life_rgb(life_rgb)
 	         );
+
+   // Contrôleur de son
+   sound sound(
+               .clk(clock_50),       // Horloge système
+               .nrst(reset_n),        // RESET
+               .I2C_SCLK(i2c_sclk),  // Horloge I2C
+               .I2C_SDAT(i2c_sdat),  // Données I2C
+               .AUD_XCK(aud_mclk)     // Horloge du CODEC
+               );
+
+   audio audio (.clk(clock_50),
+                .reset_n(reset_n),
+
+                .audio_lr(aud_daclrck),
+                .audio_clk(aud_bclk),
+                .audio_data(aud_dacdat),
+
+                .tictac(tictac),
+                .explosion(explosion),
+                .debug(debug)
+                );
 
 endmodule

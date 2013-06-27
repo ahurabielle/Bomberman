@@ -1,5 +1,5 @@
 OBJS = tictac.raw explosion.raw
-DEST = sons.lst
+DEST = sounds.lst
 DAT = $(patsubst %.lst,%.dat,$(DEST))
 
 all: $(DEST)

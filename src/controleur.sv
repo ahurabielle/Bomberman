@@ -47,6 +47,10 @@ module controleur (input              clk,
                    // Numéro du labyrinthe
                    output logic [2:0]         maze_num,
 
+                   // Signaux déclenchant des sons
+                   output logic               explosion_sound,
+                   output logic               tictac_sound,
+
                    // Debug
                    output logic [31:0]        debug
 		           );
@@ -221,6 +225,8 @@ module controleur (input              clk,
           player_num <= 0;
           push_bomb_delay1 <= 0;
           push_bomb_delay2 <= 0;
+          explosion_sound <= 0;
+          tictac_sound <= 0;
        end
      else
        begin
@@ -228,6 +234,9 @@ module controleur (input              clk,
           ram_we <= 0;
           bomb_ram_we <= 0;
           flame_ram_we <= 0;
+          // ... et on n'envoie pas de son
+          explosion_sound <= 0;
+          tictac_sound <= 0;
 
           case(state)
             /**************************
@@ -1378,6 +1387,8 @@ module controleur (input              clk,
                  flame_ram_wdata <= FLAME_INTERSECT;
                  flame_ram_we <= 1;
                  flame_ram_waddr <= bomb_ram_rdata[9:0];
+                 // On déclenche un son
+                 explosion_sound <= 1;
                  state <= state +1;
               end
 

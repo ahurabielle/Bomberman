@@ -4,7 +4,7 @@
  *
  **********************************************************/
 
-module Sound(
+module sound(
              clk,          // Horloge système
              nrst,         // RESET
              I2C_SCLK,     // Horloge I2C
@@ -51,7 +51,7 @@ module Sound(
    // Si plus de précision est necessaire,
    // utiliser une pll
 
-   logic i2c_en =  cpt_clk[9] & !cpt_clk_r;
+   wire i2c_en =  cpt_clk[9] & !cpt_clk_r;
 
    /***********************************************************
     *
@@ -82,8 +82,8 @@ module Sound(
        SAMPLE_CTRL  : rom_data <= 16'h10_0C;      // Fréquence d'échantillonage
        L_IN_CTRL    : rom_data <= 16'h00_17;      // Volume D'entrée G
        R_IN_CTRL    : rom_data <= 16'h02_17;      // Volume D'entrée D
-       L_HEAD_CTRL  : rom_data <= {8'h04,8'h7f};  // Volume Sortie G
-       R_HEAD_CTRL  : rom_data <= {8'h06,8'h7f};  // Volume Sortie D
+       L_HEAD_CTRL  : rom_data <= {8'h01,8'h7f};  // Volume Sortie G
+       R_HEAD_CTRL  : rom_data <= {8'h01,8'h7f};  // Volume Sortie D
        ACTIVE       : rom_data <= {8'h12,8'h01};  // Activer
        default      : rom_data <= {16{1'b0}};
      endcase
