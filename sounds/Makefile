@@ -1,4 +1,4 @@
-OBJS = tir_missile.raw explosion-asteroides.raw
+OBJS = cri.wav explosion.wav
 DEST = sons.lst
 DAT = $(patsubst %.lst,%.dat,$(DEST))
 
