@@ -346,7 +346,7 @@
    logic            flame_ram_we;
 
    // Signaux déclenchant des sons
-   logic            tictac, explosion, pick_item, cri, ouch, heart_beat;
+   logic            tictac, explosion, pick_item, cri, ouch;
 
    // Changement de couleur des personnages
    logic [2:0]      player1_sprite_state;
@@ -451,9 +451,9 @@
                   .maze_num(maze_num),
                   .cri_sound(cri),
                   .ouch_sound(ouch),
-                  .heart_beat_sound(heart_beat),
-                  .tictac_sound(explosion),
-                  .explosion_sound(tictac),
+                  .tictac_sound(tictac),
+                  .explosion_sound(explosion),
+                  .pick_item_sound(pick_item),
                   .player1_sprite_state(player1_sprite_state),
                   .player2_sprite_state(player2_sprite_state),
                   .debug()
@@ -558,8 +558,11 @@
                 .aud_bclk(aud_bclk),
                 .aud_mclk(aud_mclk),
 
+                .cri(cri),
+                .ouch(ouch),
                 .tictac(tictac),
                 .explosion(explosion),
+                .pick_item(pick_item),
                 .debug(debug)
                );
 
