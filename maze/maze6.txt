@@ -15,12 +15,12 @@
 *  ** *  *** ********^o**
 * ooo  ooo oo ooo ooooo**
 *****  ************v**o**
-* ooo<ooo o oooo<ooo   **
+* ooo<ooo o oooo<ooo   o*
 * *********v*************
-*  *  *   *  o o <   < o*
-*  o  * * *  <o  < < < o*
-*  o  *   * *o * <  o< o*
-*  * ** * * ** * ********
+*  *  ** **  < < << << o*
+*  o  * * *  o<  < < < o*
+*  o  *   * *< * <  o< o*
+*  * *o * o ** * ********
 *oooooooooooooooooooooo**
 *********************o **
 *ooooooooooooooooo     **
