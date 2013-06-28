@@ -50,6 +50,11 @@ module controleur (input              clk,
                    // Signaux déclenchant des sons
                    output logic               explosion_sound,
                    output logic               tictac_sound,
+                   output logic               pick_item_sound,
+                   output logic               ouch_sound,
+                   output logic               cri_sound,
+                   output logic               heart_beat_sound,
+
 
                    // Debug
                    output logic [31:0]        debug
@@ -77,7 +82,7 @@ module controleur (input              clk,
    localparam GATE_LEFT    = 4;
    localparam GATE_UP      = 5;
    localparam GATE_DOWN    = 6;
-   localparam HEART= 7;
+   localparam HEART        = 7;
    localparam HUGE_FLAME   = 8;
    localparam SPEED_UP     = 9;
    localparam GHOST        = 10;
@@ -113,7 +118,7 @@ module controleur (input              clk,
    localparam FLAME_DOWN = 7;
 
    // Détermine les paramètres de flammes
-   logic [3:0] bomb_radius;
+   logic [3:0]                                bomb_radius;
    localparam TIME_HUGE_FLAME  = 8;
    localparam SMALL_FLAME_SIZE = 3;
    localparam HUGE_FLAME_SIZE  = 7;
@@ -227,6 +232,10 @@ module controleur (input              clk,
           push_bomb_delay2 <= 0;
           explosion_sound <= 0;
           tictac_sound <= 0;
+          pick_item_sound <=0;
+          ouch_sound <= 0;
+          cri_sound <= 0;
+          heart_beat_sound <= 0;
        end
      else
        begin
@@ -237,6 +246,7 @@ module controleur (input              clk,
           // ... et on n'envoie pas de son
           explosion_sound <= 0;
           tictac_sound <= 0;
+          pick_item_sound <=0;
 
           case(state)
             /**************************
@@ -462,7 +472,13 @@ module controleur (input              clk,
                  state <= 14;
             end // case: 13
 
-            17:
+            17 :
+            begin
+               if ((life1<50) ||(life2<50))
+                 heart_beat_sound <= 1;
+               state <= state+1;
+            end
+            18:
               state <= 100;
 
 
@@ -711,6 +727,7 @@ module controleur (input              clk,
                       state <= 500;
                       player_num <= 1;
                       return_addr2 <= 220;
+                      pick_item_sound <= 1;
                    end
                  else
                    state <= 220;
@@ -956,7 +973,8 @@ module controleur (input              clk,
                  else state <= 280;
               end
 
-            268 : begin
+            268 :
+              begin
                // Annule le mouvement
                dx2 <= 0;
                dy2 <= 0;
@@ -1503,7 +1521,7 @@ module controleur (input              clk,
                         ram_we <= 1;
                         ram_waddr <= ram_raddr ;
                      end
-                   if (count == (bomb_radius - 1))
+                  if (count == (bomb_radius - 1))
                      begin
                         flame_ram_wdata <= FLAME_RIGHT;
                         flame_ram_we <= 1;
@@ -1905,18 +1923,22 @@ module controleur (input              clk,
             end
 
             702 : begin
-               // Si on a une flamme, alors on marque le joueur1 comme mort
+               // Si on a une flamme, alors on marque le joueur1 perdant de la vie
                if (flame_ram_rdata != FLAME_EMPTY)
                  begin
                     if((life1 > 100) || (life1 == 0))
                       begin
                          game_state <= GAME_OVER;
+                         cri_sound <= 1;
                          player1_state <= DEAD;
                          life1 <= 0;
                          player1_sprite <= DEATH;
                       end
                     else
-                    life1 <= life1 - BOMB_DMG;
+                      begin
+                         life1 <= life1 - BOMB_DMG;
+                         ouch_sound <= 1;
+                      end
                  end
 
                        state <= state + 1;
