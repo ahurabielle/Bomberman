@@ -91,7 +91,7 @@
    localparam cri_end   = cri_start + 39167;
 
    localparam heart_beat_start = cri_end +1;
-   localparam heart_beat_end   = heart_beat_start + 456365
+   localparam heart_beat_end   = heart_beat_start + 456365;
 
    localparam taille_sons = pick_item_end;
 
