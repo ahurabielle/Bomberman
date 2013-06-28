@@ -1,4 +1,4 @@
-OBJS = tictac.raw explosion.raw
+OBJS = tictac.raw explosion.raw cri.raw heart_beat.raw ouch.raw pick_item.raw
 DEST = sounds.lst
 DAT = $(patsubst %.lst,%.dat,$(DEST))
 

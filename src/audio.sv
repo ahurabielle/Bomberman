@@ -23,9 +23,6 @@
                 output logic [31:0] debug
                );
 
-   // XXX TODO : REMPLACER LA TAILLE DU SON
-   localparam taille = 5000;
-
    // Les signaux de lancement de son (tictac et explosion) sont synchrones sur une
    // horloge à 50MHz. Or ce module est synchrone sur l'horloge du codec (12Mhz). Il faut
    // donc d'abord les resynchroniser. La version avec "_r" est le signal resynchronisé sur 12MHz.
@@ -85,16 +82,16 @@
    localparam explosion_end = explosion_start + 8117;
 
    localparam pick_item_start = explosion_end +1;
-   localparam pick_item_end   = pick_item_start + taille;
+   localparam pick_item_end   = pick_item_start + 2400;
 
    localparam ouch_start = pick_item_end +1;
-   localparam ouch_end   = ouch_start + taille;
+   localparam ouch_end   = ouch_start + 31349;
 
    localparam cri_start = ouch_end +1;
-   localparam cri_end   = cri_start + taille;
+   localparam cri_end   = cri_start + 39167;
 
    localparam heart_beat_start = cri_end +1;
-   localparam heart_beat_end   = heart_beat_start + taille;
+   localparam heart_beat_end   = heart_beat_start + 456365
 
    localparam taille_sons = pick_item_end;
 
