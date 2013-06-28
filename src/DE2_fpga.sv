@@ -346,7 +346,7 @@
    logic            flame_ram_we;
 
    // Signaux déclenchant des sons
-   logic            tictac, explosion;
+   logic            tictac, explosion, pick_item, cri, ouch, heart_beat;
 
    // Horloge VGA
    always  @(*)
@@ -445,6 +445,9 @@
                   .life1(life1),
                   .life2(life2),
                   .maze_num(maze_num),
+                  .cri_sound(cri),
+                  .ouch_sound(ouch),
+                  .heart_beat_sound(heart_beat),
                   .tictac_sound(explosion),
                   .explosion_sound(tictac),
                   .debug()

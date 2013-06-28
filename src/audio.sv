@@ -85,15 +85,12 @@
    localparam pick_item_end   = pick_item_start + 2400;
 
    localparam ouch_start = pick_item_end +1;
-   localparam ouch_end   = ouch_start + 31349;
+   localparam ouch_end   = ouch_start + 3520;
 
    localparam cri_start = ouch_end +1;
-   localparam cri_end   = cri_start + 39167;
+   localparam cri_end   = cri_start + 3520;
 
-   localparam heart_beat_start = cri_end +1;
-   localparam heart_beat_end   = heart_beat_start + 456365
-
-   localparam taille_sons = heart_beat_end;
+   localparam taille_sons = cri_end;
 
    // ROM des sons
    integer             snd_address;
