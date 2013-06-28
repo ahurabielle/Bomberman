@@ -348,6 +348,10 @@
    // Signaux déclenchant des sons
    logic            tictac, explosion;
 
+   // Changement de couleur des personnages
+   logic [2:0]      player1_sprite_state;
+   logic [2:0]      player2_sprite_state;
+
    // Horloge VGA
    always  @(*)
      vga_clk <= clock_50;
@@ -447,6 +451,8 @@
                   .maze_num(maze_num),
                   .tictac_sound(explosion),
                   .explosion_sound(tictac),
+                  .player1_sprite_state(player1_sprite_state),
+                  .player2_sprite_state(player2_sprite_state),
                   .debug()
 		          );
 
@@ -481,7 +487,8 @@
 		                       .playerX(player1X),
 		                       .playerY(player1Y),
                                .sprite_num(player1_sprite),
-                               .player_color(player1_color)
+                               .player_color(player1_color),
+                               .state(player1_sprite_state)
 		                       );
 
    //Instantiation du module joueur2
@@ -491,7 +498,8 @@
 		                       .playerX(player2X),
 		                       .playerY(player2Y),
                                .sprite_num(player2_sprite),
-                               .player_color(player2_color)
+                               .player_color(player2_color),
+                               .state(player2_sprite_state)
 		                       );
 
    //Instantiation du module flame

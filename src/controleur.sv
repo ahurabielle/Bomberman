@@ -55,6 +55,9 @@ module controleur (input              clk,
                    output logic               cri_sound,
                    output logic               heart_beat_sound,
 
+                   // Etas des joueurs (prise d'objets)
+                   output logic [2:0]         player1_sprite_state,
+                   output logic [2:0]         player2_sprite_state,
 
                    // Debug
                    output logic [31:0]        debug
@@ -1991,6 +1994,13 @@ module controleur (input              clk,
 
           endcase // case (state)
        end
+
+   // Génération des états de joueurs
+   always @(*)
+     begin
+        player1_sprite_state <= {(huge_flame1 != 0), (ghost1 != 0), (push_bomb_delay1 != 0)};
+        player2_sprite_state <= {(huge_flame2 != 0), (ghost2 != 0), (push_bomb_delay2 != 0)};
+     end
 
    // BOMB RAM
    always @(posedge clk)
