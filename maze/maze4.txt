@@ -9,19 +9,19 @@
 #   1 : position initiale du joueur 1
 #   2 : position initiale du joueur 2
 *************************
-*1      o ooooooooooo  **
-*v*******************  **
-*oooooo ooo o o ooooooo**
-*  ********** ********^**
-* oooooooo oooooooooooo**
-*******************v**o**
-* oooooooooooooooooooo **
-* *********v*************
-*  *  >        *      2**
-*  o  o *  * o   o  *  **
-*  o  *   o *  * *  *  **
-*  * ** *** ** * ********
-*oooooooooooooooooooooo**
-*********************o **
-* oooooooooooooooo     **
+*o*o*o*ooo**ooooo      **
+*ooooooovooooooooooooo **
+*  *  * * *   ooooo    **
+*  ** <     **********^**
+*     * * *oooooooo    **
+*  ** * *o* *******v*****
+*  *  * * *   o        **
+*     *********** *******
+*  *  > oo     * o    2**
+*  * o*      * **** *  **
+*  * o  * **** *    *o***
+*  * o <  *  * * ***** **
+*  *****  *  * *    *o **
+***   *****  *   ****oo**
+*  *  *   > *  *   o o***
 *************************
