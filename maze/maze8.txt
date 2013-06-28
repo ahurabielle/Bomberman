@@ -9,7 +9,7 @@
 #   1 : position initiale du joueur 1
 #   2 : position initiale du joueur 2
 *************************
-*   *o*  o*o*o*o*o o*o*o*
+*   *o*  o*o*o*o   o*o*o*
 *o o*o*o*o*o*o*o*o^o*o***
 *o*o*o*o < o*o* *o o*o***
 *o o*o o*o*o o*o*o*o*o* *
