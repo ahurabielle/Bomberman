@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "11.1 SP2"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "23:56:10  JUNE 17, 2012"
-set_global_assignment -name LAST_QUARTUS_VERSION "12.0 SP2"
+set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name FLOW_ENABLE_IO_ASSIGNMENT_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
