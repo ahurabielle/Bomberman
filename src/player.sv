@@ -4,8 +4,9 @@ module player(input logic                clk,
               input logic [9:0]         playerX,
               input logic [9:0]         playerY,
               input logic [2:0]         sprite_num,
-		      output logic [7:0]        player_color
-               );
+		      output logic [7:0]        player_color,
+              input logic [2:0]         state
+              );
 
    parameter player_num = 1;
 
@@ -35,7 +36,8 @@ module player(input logic                clk,
         player_color <= 8'd137;
         if ((spotX>=playerX) && (spotX<(playerX+32)) &&
             (spotY>=playerY) && (spotY<(playerY+32)))
-	      player_color <= color_pixel;
+          if (color_pixel != 8'd137)
+	        player_color <= color_pixel ^ {state, state};
      end
 
 endmodule // player

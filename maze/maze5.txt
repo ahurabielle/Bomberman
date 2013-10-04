@@ -8,21 +8,20 @@
 #   v : porte vers le bas
 #   1 : position initiale du joueur 1
 #   2 : position initiale du joueur 2
-#   o : mur destructible
 *************************
-*1      <        o     **
-*v*******************  **
-*  *  * * *  <   >     **
-*  *  <     **o*******^**
-*     * * * oo         **
-*  *  * * * *******v*****
-*  *  * * *            **
-*     ***********o*******
-*  *  >        *      2**
-*  *  *  v   * **o* *  **
-*  *    * **** *    *  **
-*  *   <  *  * * o***  **
-*  *o***  *  * *    *  **
-***   *****  *   o***  **
-*  *      >    *       **
+*1      <              **
+*v****oo*****oo******  **
+* **  * *    *o*       **
+* **  * *   o*o*ooooooo**
+* <   * * o  *o*       **
+* **  * * o o*o*ooooooo**
+* **o** * o  *o*       **
+* **  *o*o****o***ooooo**
+*o ovo*o*o*o o*o*o*o*o* *
+* **  o *    *o*ooooo  **
+* **    * ooo*o*    o  **
+* **   o* o  *oo*oooo  **
+* **oooo* o  *oo*   o  **
+*o*   ooooo  *o* oooo  **
+*  o      o  ooo       **
 *************************

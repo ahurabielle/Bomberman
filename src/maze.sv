@@ -10,6 +10,7 @@ module maze (input logic         clk,
              input logic [3:0]         ram_wdata,
              input logic               ram_we,
              output logic [3:0]        ram_rdata,
+             input [2:0]               maze_num,
              input logic               active
              );
 
@@ -21,7 +22,7 @@ module maze (input logic         clk,
 
 
    // RAM qui contient le plan du labyrinthe(25X17 --> 32x32)
-   logic [3:0]                         ram[0:32*32-1];
+   logic [3:0]                         ram[0:8*32*32-1];
    logic [9:0]                         ram_raddr_internal;
 
    // On définit les coins (en haut à gauche)des sprites à afficher
@@ -42,16 +43,16 @@ module maze (input logic         clk,
 
    // On charge le plan du jeu dans la RAM
    initial
-     $readmemh("../maze/maze2.lst", ram);
+     $readmemh("../maze/maze.lst", ram);
 
    // Partie lecture de la RAM
    always @(posedge clk)
-     ram_rdata <= ram[ram_raddr_internal];
+     ram_rdata <= ram[{maze_num, ram_raddr_internal}];
 
    // Partie écriture de la RAM : on n'écrit que si ram_we est haut.
    always @(posedge clk)
      if(ram_we)
-       ram[ram_waddr]<= ram_wdata;
+       ram[{maze_num, ram_waddr}]<= ram_wdata;
 
    // Si on est en dehors du labyrinthe, on affiche du vide
    always @(*)

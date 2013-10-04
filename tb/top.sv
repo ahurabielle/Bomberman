@@ -25,6 +25,8 @@
    logic [8:0]    ledg;         // led green[8:0]
    logic [17:0]   ledr;         // led red[17:0]
 
+   logic [3:0]    key;
+
    // PS2
    logic          ps2_dat = 1;      // ps2 data
    logic          ps2_clk = 1;      // ps2 clock
@@ -55,6 +57,7 @@
 
    // Valeurs des switchs, etc.
    assign sw = 0;
+   assign key=4'b1111;
 
 endmodule
 

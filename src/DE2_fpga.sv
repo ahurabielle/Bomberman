@@ -238,26 +238,26 @@
    output logic           enet_wr_n;    // dm9000a write
    output logic           enet_rd_n;    // dm9000a read
    output logic           enet_rst_n;   // dm9000a reset
-   input logic            enet_int;     // dm9000a interrupt
+   input  logic           enet_int;     // dm9000a interrupt
    output logic           enet_clk;     // dm9000a clock 25 mhz
    // Audio codec
    output logic           aud_adclrck;  // audio codec adc lr clock
-   input logic            aud_adcdat;   // audio codec adc data
+   input  logic           aud_adcdat;   // audio codec adc data
    output logic           aud_daclrck;  // audio codec dac lr clock
    output logic           aud_dacdat;   // audio codec dac data
    output logic           aud_bclk;     // audio codec bit-stream clock
    output logic           aud_mclk;     // audio codec chip clock
    // TV  Decoder
-   input logic [7:0]      td_data;      // tv decoder data bus 8 bits
-   input logic            td_hs;        // tv decoder h_sync
-   input logic            td_vs;        // tv decoder v_sync
+   input  logic [7:0]     td_data;      // tv decoder data bus 8 bits
+   input  logic           td_hs;        // tv decoder h_sync
+   input  logic           td_vs;        // tv decoder v_sync
    output logic           td_reset;     // tv decoder reset
-   input logic            td_clk;       // tv decoder clock
+   input  logic           td_clk;       // tv decoder clock
    // GPIO
    inout wire [35:0]      gpio_0;       // gpio connection 0
    inout wire [35:0]      gpio_1;       // gpio connection 1
 
-   // GÃ©nÃ©ration d'un reset
+   // Génération d'un reset
    logic                  reset_n;
    gene_reset gene_reset(.clk(clock_50), .in(key[0]), .reset_n(reset_n));
 
@@ -313,8 +313,6 @@
    logic [9:0]            player1X, player1Y;
    // coin haut gauche du sprite du joueur2
    logic [9:0]            player2X, player2Y;
-   // coin haut gauche du sprite des flammes
-   logic [9:0]            flameX, flameY;
    // coin haut gauche du sprite des murs et objets
    logic [9:0]            wallX, wallY;
    logic [7:0]            data_out;
@@ -340,20 +338,23 @@
    logic [3:0]      maze_ram_wdata;
    logic            maze_ram_we;
    logic [3:0]      maze_ram_rdata;
+   logic [2:0]      maze_num;
 
    // Interface avec la RAM qui stocke les flammes
    logic [9:0]      flame_ram_raddr, flame_ram_waddr;
    logic [2:0]      flame_ram_wdata, flame_ram_rdata;
    logic            flame_ram_we;
 
+   // Signaux déclenchant des sons
+   logic            tictac, explosion, pick_item, cri, ouch;
+
+   // Changement de couleur des personnages
+   logic [2:0]      player1_sprite_state;
+   logic [2:0]      player2_sprite_state;
+
    // Horloge VGA
    always  @(*)
      vga_clk <= clock_50;
-
-   // XXX Pour le moment, on donne des valeurs de flameX et flameY
-   // alors qu'Ã  terme ces positions seront donnÃ©es par le maze
-   assign  flameX        =        100;
-   assign  flameY        =        100;
 
    // Instanciation des decodeurs 7 segments pour le debug
    logic [31:0]           debug;
@@ -447,7 +448,15 @@
                   .flame_ram_rdata(flame_ram_rdata),
                   .life1(life1),
                   .life2(life2),
-                  .debug(debug)
+                  .maze_num(maze_num),
+                  .cri_sound(cri),
+                  .ouch_sound(ouch),
+                  .tictac_sound(tictac),
+                  .explosion_sound(explosion),
+                  .pick_item_sound(pick_item),
+                  .player1_sprite_state(player1_sprite_state),
+                  .player2_sprite_state(player2_sprite_state),
+                  .debug()
 		          );
 
    // Instanciation du module maze
@@ -462,6 +471,7 @@
              .ram_we(maze_ram_we),
              .ram_raddr(maze_ram_raddr),
              .ram_rdata(maze_ram_rdata),
+             .maze_num(maze_num),
              .active(vga_blank)
              );
    // Instantiation du module background
@@ -480,7 +490,8 @@
 		                       .playerX(player1X),
 		                       .playerY(player1Y),
                                .sprite_num(player1_sprite),
-                               .player_color(player1_color)
+                               .player_color(player1_color),
+                               .state(player1_sprite_state)
 		                       );
 
    //Instantiation du module joueur2
@@ -490,7 +501,8 @@
 		                       .playerX(player2X),
 		                       .playerY(player2Y),
                                .sprite_num(player2_sprite),
-                               .player_color(player2_color)
+                               .player_color(player2_color),
+                               .state(player2_sprite_state)
 		                       );
 
    //Instantiation du module flame
@@ -529,5 +541,29 @@
              .vga_b(vga_b),
              .life_rgb(life_rgb)
 	         );
+
+   // Contrôleur de son
+   audio audio (.clk_50(clock_50),
+                .reset_n(reset_n),
+
+                // I2C configuration port
+                .i2c_sclk(i2c_sclk),
+                .i2c_sdat(i2c_sdat),
+
+                // Codec chip ports (codec in slave mode)
+                .aud_adclrck(aud_adclrck),
+                .aud_adcdat(aud_adcdat),
+                .aud_daclrck(aud_daclrck),
+                .aud_dacdat(aud_dacdat),
+                .aud_bclk(aud_bclk),
+                .aud_mclk(aud_mclk),
+
+                .cri(cri),
+                .ouch(ouch),
+                .tictac(tictac),
+                .explosion(explosion),
+                .pick_item(pick_item),
+                .debug(debug)
+               );
 
 endmodule

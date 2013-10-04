@@ -47,6 +47,17 @@ module controleur (input              clk,
                    // Numéro du labyrinthe
                    output logic [2:0]         maze_num,
 
+                   // Signaux déclenchant des sons
+                   output logic               explosion_sound,
+                   output logic               tictac_sound,
+                   output logic               pick_item_sound,
+                   output logic               ouch_sound,
+                   output logic               cri_sound,
+
+                   // Etas des joueurs (prise d'objets)
+                   output logic [2:0]         player1_sprite_state,
+                   output logic [2:0]         player2_sprite_state,
+
                    // Debug
                    output logic [31:0]        debug
 		           );
@@ -73,7 +84,7 @@ module controleur (input              clk,
    localparam GATE_LEFT    = 4;
    localparam GATE_UP      = 5;
    localparam GATE_DOWN    = 6;
-   localparam HEART= 7;
+   localparam HEART        = 7;
    localparam HUGE_FLAME   = 8;
    localparam SPEED_UP     = 9;
    localparam GHOST        = 10;
@@ -93,7 +104,7 @@ module controleur (input              clk,
    logic                                      heart1;
    logic                                      heart2;
    logic [10:0]                               huge_flame1, huge_flame2;
-   logic [32:0]                               alea1;
+   logic [31:0]                               alea1;
    logic [9:0]                                alea;
    logic [10:0]                               speed_up_delay1, speed_up_delay2;
    logic [10:0]                               push_bomb_delay1, push_bomb_delay2;
@@ -109,7 +120,7 @@ module controleur (input              clk,
    localparam FLAME_DOWN = 7;
 
    // Détermine les paramètres de flammes
-   logic [3:0] bomb_radius;
+   logic [3:0]                                bomb_radius;
    localparam TIME_HUGE_FLAME  = 8;
    localparam SMALL_FLAME_SIZE = 3;
    localparam HUGE_FLAME_SIZE  = 7;
@@ -221,6 +232,11 @@ module controleur (input              clk,
           player_num <= 0;
           push_bomb_delay1 <= 0;
           push_bomb_delay2 <= 0;
+          explosion_sound <= 0;
+          tictac_sound <= 0;
+          pick_item_sound <=0;
+          ouch_sound <= 0;
+          cri_sound <= 0;
        end
      else
        begin
@@ -228,7 +244,12 @@ module controleur (input              clk,
           ram_we <= 0;
           bomb_ram_we <= 0;
           flame_ram_we <= 0;
-          flame_ram_waddr <= 0;
+          // ... et on n'envoie pas de son
+          explosion_sound <= 0;
+          tictac_sound <= 0;
+          pick_item_sound <=0;
+          ouch_sound <=0;
+          //cri_sound <= 0;
 
           case(state)
             /**************************
@@ -266,6 +287,7 @@ module controleur (input              clk,
                  player_num <= 0;
                  push_bomb_delay1 <= 0;
                  push_bomb_delay2 <= 0;
+                 cri_sound <= 0;
               end
 
             1:
@@ -293,6 +315,8 @@ module controleur (input              clk,
             3: // Ré-initialisation de la RAM bomb
               begin
                  bomb_ram_waddr <= 0;
+                 bomb_ram_wdata <= 0;
+                 bomb_ram_we <= 1;
                  state <= state + 1;
               end
 
@@ -308,12 +332,14 @@ module controleur (input              clk,
             5: // Ré-initialisation de la RAM flammes
               begin
                  flame_ram_waddr <= 0;
+                 flame_ram_wdata <= FLAME_EMPTY;
+                 flame_ram_we <= 1;
                  state <= state + 1;
               end
 
             6: // Ré-initialisation de la RAM flammes
               begin
-                 flame_ram_wdata <= 0;
+                 flame_ram_wdata <= FLAME_EMPTY;
                  flame_ram_we <= 1;
                  flame_ram_waddr <= flame_ram_waddr + 1;
                  if (flame_ram_waddr == (32*32-1))
@@ -450,7 +476,11 @@ module controleur (input              clk,
                  state <= 14;
             end // case: 13
 
-            17:
+            17 :
+            begin
+               state <= state+1;
+            end
+            18:
               state <= 100;
 
 
@@ -699,6 +729,7 @@ module controleur (input              clk,
                       state <= 500;
                       player_num <= 1;
                       return_addr2 <= 220;
+                      pick_item_sound <= 1;
                    end
                  else
                    state <= 220;
@@ -944,7 +975,8 @@ module controleur (input              clk,
                  else state <= 280;
               end
 
-            268 : begin
+            268 :
+              begin
                // Annule le mouvement
                dx2 <= 0;
                dy2 <= 0;
@@ -1242,11 +1274,26 @@ module controleur (input              clk,
                  // Une seconde avant que la bombe disparaisse, on déclenche les flammes.
                  if(bomb_ram_rdata[18:10] <= 72)
                    state <= 420;
-                 // Après les flammes, on fait disparaitre la bombe
+
+                 // Au moment de l'explosion on déclenche un son
+                 if(bomb_ram_rdata[18:10] == 72)
+                   explosion_sound <= 1;
+
+                 // Si une bombe n'est pas active, on passe à la suite
+                 if(bomb_ram_rdata[18:10] == 0)
+                      state <= state + 1;
+
+                 // Si on a affiché les flammes pendant 1 sec et que le timer est sur le
+                 // point de revenir à 0, on fait disparaitre la bombe et les flammes (état 410)
                  if(bomb_ram_rdata[18:10] == 1)
                    state <= 410;
-                 else if(bomb_ram_rdata[18:10] != 0)
+                 // Décrémente le timer (s'il n'est pas nul)
+                 if(bomb_ram_rdata[18:10] != 0)
                    begin
+                      if(bomb_ram_rdata[18:10] > 72)
+                        tictac_sound <= 1;
+                      else
+                        tictac_sound <= 0;
                       bomb_ram_waddr <= bomb_ram_raddr;
                       bomb_ram_we <= 1;
                       bomb_ram_wdata[9:0] <= bomb_ram_rdata[9:0];
@@ -1365,7 +1412,7 @@ module controleur (input              clk,
              * Gestion des flammes
              * (on doit revenir en 403)
              ****************************************/
-            420 :
+            420:
               begin
                  // On commence par mettre une intersection flamme à l'endroit où se trouve la bombe
                  flame_ram_wdata <= FLAME_INTERSECT;
@@ -1485,7 +1532,7 @@ module controleur (input              clk,
                         ram_we <= 1;
                         ram_waddr <= ram_raddr ;
                      end
-                   if (count == (bomb_radius - 1))
+                  if (count == (bomb_radius - 1))
                      begin
                         flame_ram_wdata <= FLAME_RIGHT;
                         flame_ram_we <= 1;
@@ -1782,7 +1829,7 @@ module controleur (input              clk,
                  if(push_bomb_delay1 != 0)
                    push_bomb_delay1 <= push_bomb_delay1 - 1;
                  if(push_bomb_delay2 != 0)
-                   push_bomb_delay2 <= push_bomb_delay1 - 2;
+                   push_bomb_delay2 <= push_bomb_delay2 - 1;
 
                  state <= return_addr;
               end // case: 550
@@ -1887,18 +1934,22 @@ module controleur (input              clk,
             end
 
             702 : begin
-               // Si on a une flamme, alors on marque le joueur1 comme mort
+               // Si on a une flamme, alors on marque le joueur1 perdant de la vie
                if (flame_ram_rdata != FLAME_EMPTY)
                  begin
                     if((life1 > 100) || (life1 == 0))
                       begin
                          game_state <= GAME_OVER;
+                         cri_sound <= 1;
                          player1_state <= DEAD;
                          life1 <= 0;
                          player1_sprite <= DEATH;
                       end
                     else
-                    life1 <= life1 - BOMB_DMG;
+                      begin
+                         life1 <= life1 - BOMB_DMG;
+                         ouch_sound <= 1;
+                      end
                  end
 
                        state <= state + 1;
@@ -1927,6 +1978,7 @@ module controleur (input              clk,
                             game_state <= GAME_OVER;
                             player2_state <= DEAD;
                             player2_sprite <= DEATH;
+                            cri_sound <= 1;
                             life2 <= 0;
                          end
                     else
@@ -1951,6 +2003,13 @@ module controleur (input              clk,
 
           endcase // case (state)
        end
+
+   // Génération des états de joueurs
+   always @(*)
+     begin
+        player1_sprite_state <= {(huge_flame1 != 0), (ghost1 != 0), (push_bomb_delay1 != 0)};
+        player2_sprite_state <= {(huge_flame2 != 0), (ghost2 != 0), (push_bomb_delay2 != 0)};
+     end
 
    // BOMB RAM
    always @(posedge clk)
